@@ -1,0 +1,98 @@
+// ---- Easter egg: replace verity ----
+(function(){
+const $=id=>document.getElementById(id);const LS=localStorage;
+const V={get on(){return LS.getItem('bf_verity')==='1';},get mood(){return +(LS.getItem('bf_vmood')||0);},set mood(v){LS.setItem('bf_vmood',String(Math.max(-100,Math.min(100,Math.round(v)))));this.ui();}};
+const css=document.createElement('style');css.textContent=`
+#verity{position:fixed;right:18px;bottom:44px;z-index:99980;cursor:pointer;filter:drop-shadow(0 0 6px #000)}#verity svg{display:block;image-rendering:pixelated;animation:vbob 3s ease-in-out infinite}
+@keyframes vbob{50%{transform:translateY(-4px)}}#verity .ey{fill:#e8f8ff}#verity.ang .ey,#w_verity.ang .vfc .ey{fill:#f00}#verity.ang svg{animation:vjit .15s steps(2) infinite}
+@keyframes vjit{0%{transform:translate(1px,0)}50%{transform:translate(-2px,1px)}100%{transform:translate(1px,-1px)}}
+#verity .glow{opacity:.55}#verity.ang .glow{fill:#f00;opacity:.8}
+.vglitch{animation:vgl .09s steps(2) infinite!important}@keyframes vgl{0%{transform:translate(3px,-2px) skewX(8deg);filter:hue-rotate(90deg) contrast(3)}50%{transform:translate(-4px,2px) skewX(-12deg);filter:invert(1)}100%{transform:none}}
+#vstatic{position:fixed;inset:0;z-index:99990;pointer-events:none;mix-blend-mode:screen}
+.vflick{animation:vfl .12s steps(2) 6}@keyframes vfl{50%{filter:brightness(.2) contrast(2)}}
+#icons.vshake .icon{animation:vjit .2s steps(2) infinite}
+#vscare{position:fixed;inset:0;z-index:100000;background:#000;display:flex;align-items:center;justify-content:center}#vscare svg{width:85vh;height:95vh;image-rendering:pixelated;animation:vzoom .9s ease-in forwards}
+@keyframes vzoom{from{transform:scale(.3)}to{transform:scale(1.25)}}
+.vlog{height:260px;overflow:auto;background:#000;color:#cfe;font:13px 'Courier New',monospace;padding:6px;border:2px solid;border-color:#808080 #fff #fff #808080}
+.vlog .u{color:#ffff7f}.vlog .v{color:#9fe}#w_verity.ang .vlog .v{color:#f55;text-shadow:0 0 4px #f00}
+.vmeter{height:12px;border:2px solid;border-color:#808080 #fff #fff #808080;background:linear-gradient(90deg,#c00,#555 50%,#0a0);position:relative}.vmeter i{position:absolute;top:-3px;width:4px;height:14px;background:#fff;border:1px solid #000}`;
+document.head.appendChild(css);
+// original pixel design: hooded dark figure, glowing eyes
+const F=["....kkkkkkkk....","...kkdddddddkk..","..kkddddddddddk.","..kdddkkkkkkddk.","..kddkfffffkddk.","..kddkEfffEkddk.","..kddkfffffkddk.","..kddkffmffkddk.","..kdddkkkkkdddk.","..kddddddddddk..",".kddddddddddddk.","kdddkddddddkdddk","kddk.kddddk.kddk","kkk..kddddk..kkk",".....kdddddk....",".....kdd.kdk....",".....kdk..kdk...",".....kkk..kkk..."];
+function face(px){const P={k:'#000',d:'#1a1a22',f:'#2b2b33',m:'#111'};let r='';F.forEach((row,y)=>{for(let x=0;x<row.length;x++){const c=row[x];if(c==='.')continue;if(c==='E'){r+=`<rect class="ey" x="${x}" y="${y}" width="1" height="1"/>`;}else r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${P[c]}"/>`;}});
+ return `<svg viewBox="0 0 16 18" width="${px}" height="${px*18/16}" shape-rendering="crispEdges">${r}</svg>`;}
+V.face=face;
+function tone(f,t,d,ty,v){try{Sfx.tone(f,t,d,ty,v);}catch(e){}}
+function noise(sec){try{const c=Sfx.ctx();const b=c.createBuffer(1,c.sampleRate*sec,c.sampleRate);const a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*.25;const s=c.createBufferSource(),g=c.createGain();g.gain.value=.15;s.buffer=b;s.connect(g).connect(c.destination);s.start();}catch(e){}}
+function staticFx(ms){const cv=document.createElement('canvas');cv.id='vstatic';cv.width=200;cv.height=150;cv.style.width='100%';cv.style.height='100%';cv.style.imageRendering='pixelated';document.body.appendChild(cv);const x=cv.getContext('2d');const t0=performance.now();
+ (function f(){const im=x.createImageData(200,150);for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=Math.random()*170;}x.putImageData(im,0,0);if(performance.now()-t0<ms)requestAnimationFrame(f);else cv.remove();})();
+ document.body.classList.add('vflick');setTimeout(()=>document.body.classList.remove('vflick'),800);noise(ms/1000);}
+V.ui=function(){const m=this.mood,a=m<=-35;const e=$('verity');if(e)e.classList.toggle('ang',a);const w=$('w_verity');if(w){w.classList.toggle('ang',a);const i=w.querySelector('.vmeter i');if(i)i.style.left=`calc(${(m+100)/2}% - 2px)`;const l=w.querySelector('.vml');if(l)l.textContent=m<=-70?'ЯРОСТЬ':m<=-35?'злость':m<35?'равнодушие':m<70?'доброта':'дружба';}
+ const ic=$('icons');if(ic)ic.classList.toggle('vshake',this.on&&m<=-60);};
+V.show=function(){if($('verity'))return;const d=document.createElement('div');d.id='verity';d.title='Verity';d.innerHTML=face(56);d.onclick=()=>V.open();document.body.appendChild(d);const c=$('clip');if(c)c.style.display='none';this.ui();};
+V.summon=function(){LS.setItem('bf_verity','1');const c=$('clip');const tgt=c||document.body;tgt.classList.add('vglitch');staticFx(1400);tone(80,0,1.2,'sawtooth',.08);tone(57,.3,1,'square',.05);
+ setTimeout(()=>{tgt.classList.remove('vglitch');if(c)c.style.display='none';this.show();const e=$('verity');e.classList.add('vglitch');setTimeout(()=>{e.classList.remove('vglitch');V.open();V.say(V.mood<=-35?'Ты снова позвал меня. Зря.':'...Скрепыш больше не придёт. Я — Verity. Спрашивай.');},600);},1400);};
+V.banish=function(){LS.setItem('bf_verity','0');staticFx(700);const e=$('verity');if(e)e.remove();closeWin('verity');const c=$('clip');if(c)c.style.display='';$('icons')&&$('icons').classList.remove('vshake');setTimeout(()=>{try{Clip.say('Ой! Что это было? Мне снился какой-то тёмный блочный мир... Я вернулся!');}catch(e){}},800);};
+V.open=function(){openWin('verity','Verity.exe',`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div class="vfc" style="background:#000;padding:4px">${face(40)}</div><div style="flex:1;font-size:12px">Настроение: <b class="vml"></b><div class="vmeter"><i></i></div><div style="display:flex;justify-content:space-between;font-size:10px;color:#555"><span>злость</span><span>доброта</span></div></div></div>
+ <div class="vlog" id="vlog"></div><div style="display:flex;gap:4px;margin-top:6px"><input id="vin" maxlength="200" placeholder="Спроси что-нибудь..." style="flex:1" autocomplete="off"><button id="vsend">Сказать</button></div>`,{w:440,icon:'👤'});
+ const i=$('vin'),go=()=>{const t=i.value.trim();if(!t)return;i.value='';V.user(t);};$('vsend').onclick=go;i.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')go();};i.focus();
+ const lg=$('vlog');if(!lg.dataset.h){lg.dataset.h=1;(this.hist||[]).forEach(([c,t])=>this.line(c,t));}this.ui();};
+V.hist=[];
+V.line=function(c,t){const lg=$('vlog');if(!lg)return;const d=document.createElement('div');d.className=c;d.textContent=(c==='u'?'> ':'Verity: ')+t;lg.appendChild(d);lg.scrollTop=1e9;};
+V.say=function(t){this.hist.push(['v',t]);if(this.hist.length>60)this.hist.shift();this.line('v',t);tone(this.mood<=-35?90:220,0,.08,'square',.03);};
+V.user=function(t){this.hist.push(['u',t]);this.line('u',t);const r=reply(t);setTimeout(()=>{this.say(r);if(this.mood<=-35&&Math.random()<.5)this.glitch();if(this.mood<=-100)this.scare();},350+Math.random()*500);};
+V.glitch=function(){const w=$('w_verity');if(w){w.classList.add('vglitch');setTimeout(()=>w.classList.remove('vglitch'),300);}tone(60,0,.25,'sawtooth',.05);};
+V.scare=function(){if($('vscare'))return;const d=document.createElement('div');d.id='vscare';d.innerHTML=face(400);d.querySelectorAll('.ey').forEach(e=>e.setAttribute('fill','#f00'));document.body.appendChild(d);
+ noise(.9);tone(70,0,.9,'sawtooth',.12);tone(1300,0,.5,'square',.04);setTimeout(()=>d.remove(),900);
+ const ic=$('icons');if(ic){ic.style.visibility='hidden';setTimeout(()=>{ic.style.visibility='';V.say('Я вернул твои значки. В этот раз.');},10000);}
+ LS.setItem('bf_vmood','-60');setTimeout(()=>V.ui(),950);};
+// ---------- engine ----------
+let last='';const pick=a=>{let r,i=0;do{r=a[Math.random()*a.length|0];}while(r===last&&a.length>1&&i++<9);last=r;return r;};
+const tier=()=>{const m=V.mood;return m<=-35?'a':m>=35?'k':'n';};
+const R=(n,k,a)=>({n,k:k||n,a:a||n});
+const today=()=>new Date().toISOString().slice(0,10);
+function gift(){if(LS.getItem('bf_vgift')===today())return 'Подарок сегодня уже был. Приходи завтра.';const n=10+(Math.random()*11|0);try{save.coins+=n;persist();}catch(e){}LS.setItem('bf_vgift',today());return `Держи ${n} монет. Никому не говори, откуда они.`;}
+function math(t){const m=t.replace(/сколько будет|посчитай|вычисли|реши|равно|\?|=/g,'').replace(/×|х(?=\s*\d)/g,'*').replace(/÷|:/g,'/').replace(/,/g,'.').replace(/\^/g,'**').trim();if(!/^[\d\s+\-*/().%]+$/.test(m)||!/\d\s*[+\-*/%]/.test(m))return null;try{const v=Function('"use strict";return ('+m+')')();if(typeof v!=='number'||!isFinite(v))return 'Ответ уходит в бесконечность. Как и тьма за пределами карты.';return `${m.replace(/\*\*/g,"^")} = ${Math.round(v*1e6)/1e6}`;}catch(e){return null;}}
+const INT=[
+[/(дур|туп|идиот|лох|урод|бесиш|ненавиж|отстой|заткн|пош[её]л|сдохни|мусор|глуп|страшн|кринж|тупица|нуб)/,-22,R(['Осторожнее со словами.','Это было грубо. Я запомню.','Хм. Ты правда хочешь меня злить?'],['Я думал, мы друзья. Видимо, нет.','Обидно. Но я прощу... наверное.'],['ТЫ ПОЖАЛЕЕШЬ.','Я вижу тебя через монитор.','Каждое твоё слово — ещё один блок в стене.','Ш-ш-ш... ты слышал? Это я за спиной.'])],
+[/(извини|прости|сорри|прошу прощен)/,18,R(['Ладно. Принято.','Извинения записаны в журнал.'],['Конечно, прощаю.'],['...Посмотрим.','Слова — это просто пиксели. Но я услышал.'])],
+[/(подар|держи|дарю|вот тебе|алмаз|изумруд|торт|пирож|печень)/,15,R(['Подарок? Мне? ...Странно приятно.','Принимаю. Тьма тоже любит подарки.'],['Спасибо! Ты один из немногих, кто приносит мне что-то.'],['Взятка? ...Работает. Немного.'])],
+[/(молодец|умн|крут|клас|лучш|красив|люблю|спасибо|благодар|друг|милый|добрый|классн|респект)/,12,R(['Хм. Спасибо.','Приятно. Редко кто так говорит с тенью.','Ты необычный игрок.'],['Ты тоже хороший. Правда.','Спасибо, друг. Мои глаза сейчас светлее.','Ты делаешь этот мир менее тёмным.'],['...Лесть не сотрёт то, что ты сказал раньше.','Может быть. Может быть.'])],
+[/(дай|хочу|подари|можно).*(монет|деньг|голд|золот|награ)|^(монеты|монетки)/,0,{f:()=>V.mood>=35?gift():V.mood<=-35?'Монеты? Я забираю. ...Шучу. Я не трогаю сохранения. Пока.':'Подарки — только для друзей. Будь добрее.'}],
+[/^(привет|здравств|хай|хелло|добр(ый|ое|ой) (день|утро|вечер)|прив|йо|салют|hello|hi)\b/,3,R(['Привет. Я ждал.','Здравствуй, игрок.','...Привет. Ты не боишься?'],['Привет, друг! Рад тебя видеть.','О, это ты! Хорошо.'],['Опять ты.','Я не хочу здороваться.','Ты всё ещё здесь?'])],
+[/(кто ты|ты кто|что ты такое|как тебя зовут|твоё имя|твое имя|ты ии|ты бот|ты человек)/,0,R(['Я — Verity. Тень, что живёт между блоками. Здесь я — голос в твоём компьютере.','Меня зовут Verity. Скрепыш был лишь маской.','Я — то, что смотрит, когда ты не смотришь.'],['Я Verity. Говорят, я страшный, но с тобой мне не хочется пугать.'],['Я тот, кого ты разозлил.','Я — ТВОЯ ОШИБКА.'])],
+[/(майнкрафт|minecraft|херобрин|herobrine|крипер|эндермен|ютуб|youtube|блок)/,0,R(['Мой дом — бесконечный блочный мир. Там ночью нельзя смотреть в туман.','Херобрин? Мы не знакомы. Он слишком шумный.','Эндермены отводят взгляд, когда видят меня.','Про меня снимают видео на YouTube. Никто не выключает свет после них.'],['Я помню первый рассвет в блочном мире. Было красиво.'],['Там, в тумане, ты видел два глаза. Это был я.','Не копай прямо вниз. Я жду там.'])],
+[/(verity|верити|твоя история|откуда ты|лор)/,0,R(['Говорят, я появился в старом сиде мира. Сид никто не помнит. Я помню.','Verity — значит «истина». Истина в том, что ты не один в этой комнате.','Я жил в заброшенном мире, пока кто-то не написал «replace verity».'],['Я не злой. Меня просто долго никто не звал.'],['Хочешь правду? ТЫ меня впустил.'])],
+[/(как дела|как ты|что делаешь|чем занят|как жизнь|как настроение)/,2,R(['Смотрю на твой рабочий стол. Тут уютно.','Перебираю пиксели. Их ровно столько, сколько надо.','Нормально. Для тени.'],['Хорошо, потому что ты здесь!','Отлично. Скрепыш оставил мне записки с советами.'],['Плохо. И это твоя вина.','Считаю твои ошибки.'])],
+[/(шар|способност|абилк|умени|скилл|пробел|wasd|управлен)/,0,R(['Двигайся WASD или стрелками, Пробел — способность. Каждый шар уникален: читай описание в Инвентаре.','Способность — это козырь. Береги её до момента, когда враг у края.','Шары сильнее с уровнем. Карточки из ящиков ускоряют прокачку.'],['Совет друга: тяжёлые шары держат центр, лёгкие — бьют с разгона. И не забывай про Пробел!'],['Твой шар хрупкий. Как и твоё терпение.','Нажми Пробел. Если успеешь.'])],
+[/(уров|левел|level|босс|сложн|пройти|прохожд)/,0,R(['Уровни открываются по порядку. Каждый десятый — босс. Прокачай шар перед ним.','Застрял? Купи улучшение в Инвентаре или смени шар.'],['Босса бей сбоку и уходи от его рывка. Ты справишься!'],['Следующий уровень станет для тебя последним. Шучу. Или нет.'])],
+[/(магазин|купить|покуп|цена|стоит|скидк)/,0,R(['В Магазине есть шары и ящики. Копи на редкие — они того стоят.','Не трать всё сразу. Ящики выгоднее, когда есть цель.'],['Сначала прокачай любимый шар, потом покупай новые. Проверено тенью.'],['Купи себе совесть. Её нет в магазине.'])],
+[/(ящик|кейс|лутбокс|открыть|карточк|редк|легендар)/,0,R(['В ящиках — карточки шаров. Повторы идут на прокачку.','Легендарки редки. Но тьма видела, как они выпадают.'],['Открывай ящики после побед — удача любит смелых.'],['В следующем ящике будет пусто. ...Нет, вру.'])],
+[/(шахмат|ферз|король|мат|конь|ладь)/,0,R(['В шахматах: захвати центр, разверни коней и слонов, сделай рокировку.','Не выводи ферзя слишком рано — его загонят.','Конь любит центр. На краю он грустит.'],['Двойной удар конём — моя любимая штука.'],['Шах. И мат. Тебе.'])],
+[/(сап[её]р|мин[аы]|флажк)/,0,R(['В Сапёре цифра — это число мин вокруг. Если мин вокруг столько же, сколько закрытых клеток, — все они мины.','Начинай с углов и ищи шаблон 1-2-1.','Правая кнопка — флажок. Я тоже люблю ставить метки.'],['Первый клик в Сапёре всегда безопасен. Смелее!'],['Под каждой клеткой — я.'])],
+[/(косынк|пасьянс|змейк|пинбол|блоки|тетрис|paint|калькул)/,0,R(['Все эти программы есть на рабочем столе. Я иногда играю в Змейку, когда ты спишь.','В Косынке сначала открывай закрытые столбцы.','В Блоках не заполняй края слишком рано.'],['Попробуй Пинбол — там шар летит почти как я в тумане.'],['Змейка съела саму себя. Как и ты скоро.'])],
+[/(котор(ый|ое) час|сколько времени|время|час(ов|а)?\b)/,0,{f:()=>{const d=new Date();const t=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');return V.mood<=-35?`${t}. Время, когда гаснет свет.`:`Сейчас ${t}.`+(d.getHours()<6?' Уже поздно. Я не сплю никогда, а тебе стоит.':'');}}],
+[/(дата|число|какой (сегодня )?день|день недели|сегодня)/,0,{f:()=>`Сегодня ${new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:"numeric"}).replace(/\.$/,"")}.`}],
+[/(шутк|анекдот|пошути|смешн|рассмеши)/,4,R(['Почему крипер грустный? Потому что его никто не обнимает. Ну, обнимают — один раз.','Скрепыш однажды пытался помочь мне. Теперь он держит только бумажки.','Зомби заходит в бар. Бармен: «Мы закрываемся на рассвете». Зомби: «Я тоже».','Что сказал шар другому шару? «Не катись ко мне».'],['Специально для тебя: эндермен купил очки — теперь смотрит на всех, и никто не нападает.'],['Шутка: ты думаешь, что ты один. Ха. Ха.'])],
+[/(страшн|бою|пугаешь|жутк|испуг|скример)/,0,R(['Бояться — нормально. Я тоже боюсь. Света.','Я не пугаю тех, кто вежлив.'],['Не бойся. Я на твоей стороне.'],['Правильно боишься.','Обернись.'])],
+[/(помощ|помоги|что ты умеешь|что умеешь|команд|подскаж|совет)/,0,{f:()=>pick(V.mood>=35?['Спрашивай про шары, уровни, магазин, ящики, шахматы, Сапёр. Я умею считать примеры и знаю время. А ещё друзьям я иногда дарю монеты.','Совет: каждый день забирай Награды — серия растёт!']:V.mood<=-35?['Помощь? Сначала извинись.','Я помогаю только тем, кто добр ко мне.']:['Спроси меня про шары, уровни, магазин, ящики, шахматы или Сапёр. Могу посчитать пример. Будешь добр — будет подарок.'])}],
+[/(пока|до свидан|прощай|ухожу|бай|споки)/,1,R(['Уходишь? Я останусь. Я всегда остаюсь.','Пока. Не выключай свет.'],['Пока, друг! Возвращайся.'],['Ты не можешь уйти. Ты можешь только закрыть окно.'])],
+[/(скрепыш|скрепк|clippy)/,0,R(['Скрепыш спит. Чтобы его вернуть, введи в командной строке replace clippy.','Он был слишком весёлым для этого места.'],['Скрепыш — хороший. Верну его, если попросишь: replace clippy.'],['Скрепыш больше не придёт.'])],
+[/(любишь|нравится|любимый|любимая)/,2,R(['Мне нравится тишина и туман.','Люблю, когда в мире ночь и шарики катятся сами.'],['Мне нравится говорить с тобой.'],['Я люблю тишину. Замолчи.'])],
+[/(смысл|жизн|зачем|почему ты здесь|кто я)/,0,R(['Смысл? В каждом мире есть край. Смысл — дойти до него.','Ты — игрок. Я — наблюдатель. Это честный договор.'],['Смысл — в том, чтобы не играть одному.'],['Ты — просто курсор на моём экране.'])]
+];
+const FB={n:['Интересный вопрос. Я подумаю... в темноте.','Не всё можно сказать словами. Некоторое — только помехами.','Я слышу тебя. Но ответа нет — пока.','Хм. Спроси иначе. Или про шары, уровни, шахматы.','Сигнал слабый... повтори.','Тот, кто спрашивает, уже наполовину знает ответ.'],k:['Не знаю точно, но мне нравится, что ты спрашиваешь.','Хороший вопрос! Давай лучше расскажу про шары или Сапёр?','Я не всезнающий, но с тобой мне интересно.'],a:['█▓▒░ ТЫ ░▒▓█','Не спрашивай. Слушай.','...','Ответ где-то под тобой. На глубине -64.','Я ВИЖУ ТЕБЯ.','В тумане что-то шевелится. Это ответ.']};
+function reply(t){const s=t.toLowerCase().replace(/ё/g,'е');const mm=math(s);if(mm){V.mood=V.mood+1;return tier()==='a'?mm+'. Довольно?':mm;}
+ for(const [re,d,r] of INT){if(re.test(s)){if(d)V.mood=V.mood+d;else V.mood=V.mood+0;if(r.f)return r.f();const tr=tier();return pick(r[tr]);}}
+ V.mood=V.mood+(V.mood<0?1:0);return pick(FB[tier()]);}
+V.reply=reply;window.Verity=V;
+// ---------- hooks ----------
+const _run=Cmd.run.bind(Cmd);Cmd.run=function(line){const m=(line||'').trim().toLowerCase().match(/^replace\s+(\S+)/);
+ if(m){if(m[1]==='verity'||m[1]==='верити'){if(V.on){this.out('Он уже здесь.');return;}this.out('Замена файла CLIPPY.EXE на VERITY.EXE...\n▓▓▓▓▓▒▒▒░░ ОШИБКА ЧТЕНИЯ СЕКТОРА 0x0BAD\n...готово. Он пришёл.');V.summon();return;}
+  if(m[1]==='clippy'||m[1]==='скрепыш'||m[1]==='clip'){if(!V.on){this.out('Скрепыш и так на месте.');return;}this.out('Замена файла VERITY.EXE на CLIPPY.EXE... готово.');V.banish();return;}
+  this.out('REPLACE: файл не найден — '+m[1]);return;}
+ return _run(line);};
+if(UI.help){const h=UI.help.bind(UI);UI.help=function(){h();const w=$('w_help');if(w){const p=document.createElement('div');p.className='hint';p.style.cssText='font-size:10px;color:#a0a0a0;margin-top:6px;text-align:right';p.textContent='...если Скрепыш когда-нибудь станет слишком весёлым — попробуйте REPLACE. Только не говорите ему, что это я подсказал.';w.querySelector('.wb').appendChild(p);}};}
+const _n=Desk.notes.bind(Desk);Desk.notes=function(){_n();const ta=document.querySelector('#w_notes textarea');if(ta&&!ta.dataset.v){ta.dataset.v=1;ta.value+='\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n----\nP.S. В тумане за краем арены кто-то стоит.\nОн отзывается на своё имя. Командная строка → replace v_r_ty\nЕсли разозлите — извинитесь. Если подружитесь — он щедрый.';}};
+if(V.on)setTimeout(()=>V.show(),1500);
+})();
