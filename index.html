@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v13-scare">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v14-logos">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -392,7 +392,7 @@ function render(st,me){const A=ARENAS[st.arena]||ARENAS[0];ctx.save();ctx.clearR
 function drawBall(b,i,me,st){const d=BY[b.id];let col=b.fx.frozen>0?'#cdefff':d.color;if(b.hitT>0.1)col='#ffffff';
  if(b.fx.blades>0)for(let k=0;k<3;k++){const a=st.time*5+k*2.094;const p=P(b.x+Math.cos(a)*(b.r+26),b.y+Math.sin(a)*(b.r+26));ctx.save();ctx.translate(p.x,p.y-b.r*p.k);ctx.rotate(a*3);ctx.fillStyle='#eceff1';ctx.strokeStyle='#455a64';ctx.beginPath();ctx.moveTo(-12,0);ctx.lineTo(0,-4);ctx.lineTo(12,0);ctx.lineTo(0,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
  const s=drawSphere(b.x,b.y,b.r,col);
- ctx.fillStyle='rgba(255,255,255,.85)';ctx.font=`bold ${Math.round(s.R*.9)}px Tahoma`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.sym,s.x,s.y+1);ctx.textBaseline='alphabetic';
+ if(!(window.LOGO&&LOGO.draw(ctx,d.id,s.x,s.y,s.R))){ctx.fillStyle='rgba(255,255,255,.85)';ctx.font=`bold ${Math.round(s.R*.9)}px Tahoma`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.sym,s.x,s.y+1);ctx.textBaseline='alphabetic';}
  if(b.fx.spikes>0){ctx.strokeStyle='#3e2723';ctx.lineWidth=3;for(let a=0;a<12;a++){const an=a/12*6.28+G_t;ctx.beginPath();ctx.moveTo(s.x+Math.cos(an)*s.R,s.y+Math.sin(an)*s.R);ctx.lineTo(s.x+Math.cos(an)*s.R*1.35,s.y+Math.sin(an)*s.R*1.35);ctx.stroke();}}
  if(b.fx.shield>0){ctx.strokeStyle='rgba(120,220,255,.9)';ctx.lineWidth=4;ctx.fillStyle='rgba(120,220,255,.18)';ctx.beginPath();ctx.arc(s.x,s.y,s.R*1.3,0,7);ctx.fill();ctx.stroke();}
  if(b.fx.magnet>0){ctx.strokeStyle='rgba(200,200,255,.6)';ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.lineDashOffset=-G_t*60;ctx.beginPath();ctx.arc(s.x,s.y,s.R*2+Math.sin(G_t*10)*6,0,7);ctx.stroke();ctx.setLineDash([]);}
@@ -411,7 +411,7 @@ function drawHUD(st,me){ctx.textAlign='left';
  [0,1].forEach(i=>{const b=st.balls[i],d=BY[b.id];const x=i?604:16,y=10,w=380;
   bevel(x,y,w,94);const g=ctx.createLinearGradient(x,0,x+w,0);g.addColorStop(0,me===i?'#000080':'#808080');g.addColorStop(1,me===i?'#1084d0':'#b5b5b5');ctx.fillStyle=g;ctx.fillRect(x+3,y+3,w-6,18);
   ctx.fillStyle='#fff';ctx.font='bold 12px Tahoma';ctx.fillText(st.names[i]+' — '+d.name+' (ур.'+(b.lvl||1)+')',x+8,y+16);
-  ctx.fillStyle=RAR[d.rar].c;ctx.fillRect(x+8,y+26,40,40);ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(x+28,y+46,16,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 14px Tahoma';ctx.textAlign='center';ctx.fillText(d.sym,x+28,y+51);ctx.textAlign='left';
+  ctx.fillStyle=RAR[d.rar].c;ctx.fillRect(x+8,y+26,40,40);ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(x+28,y+46,16,0,7);ctx.fill();if(!(window.LOGO&&LOGO.draw(ctx,d.id,x+28,y+46,16))){ctx.fillStyle='#fff';ctx.font='bold 14px Tahoma';ctx.textAlign='center';ctx.fillText(d.sym,x+28,y+51);}ctx.textAlign='left';
   prog(x+56,y+26,w-66,16,b.hp/b.maxHp,b.hp/b.maxHp>.3?'#000080':'#c00000');
   ctx.fillStyle='#000';ctx.font='11px Tahoma';ctx.fillText('HP '+Math.ceil(b.hp)+'/'+b.maxHp,x+56,y+56);
   const cdf=b.cd/d.cd;prog(x+150,y+46,w-160,14,1-cdf,cdf<=0?'#008000':'#808080');
@@ -449,7 +449,7 @@ document.getElementById('icons').innerHTML=MENU.map(m=>`<div class="icon" tabind
 document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" id="smmus" onclick="toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Завершение работы...</div>';
 function toggleStart(e){if(e)e.stopPropagation();document.getElementById('startmenu').classList.toggle('hide');}
 addEventListener('click',e=>{const sm=document.getElementById('startmenu');if(!sm.contains(e.target)&&e.target.id!=='startbtn')sm.classList.add('hide');});
-function ballIco(b,sz){return `<div class="ballico" style="${sz?`width:${sz}px;height:${sz}px;`:''}background:radial-gradient(circle at 35% 35%,${shade(b.color,.6)},${b.color} 55%,${shade(b.color,-.55)})">${b.sym}</div>`;}
+function ballIco(b,sz){const lg=window.LOGO&&LOGO.has(b.id);return `<div class="ballico" style="${sz?`width:${sz}px;height:${sz}px;`:''}position:relative;background:${window.SKIN?SKIN.css(b):''}radial-gradient(circle at 35% 35%,${shade(b.color,.6)},${b.color} 55%,${shade(b.color,-.55)})">${lg?LOGO.svg(b.id):b.sym}</div>`;}
 function showGame(v){document.getElementById('gamewin').classList.toggle('hide',!v);if(v)front(document.getElementById('gamewin'));updTasks();}
 function leaveGame(){if(mode==='game'&&G&&G.phase!=='over'){paused=true;UI.msg('Покинуть бой?','Текущий матч будет засчитан как поражение (кроме режима «Вдвоём»).',[['Да, выйти','forfeit()'],['Отмена','paused=false']],'⚠️');}else UI.home();}
 function forfeit(){if(G&&G.kind==='online'){Net.close();}else if(G&&G.kind!=='local'){save.stats.matches++;save.stats.losses++;persist();}paused=false;UI.home();}
@@ -546,7 +546,7 @@ function pickReroll(pi){const s=pickState;const p=s.panels[pi];if(!s||p.rerolled
 function pickChoose(pi,k){const s=pickState;if(!s||s.choice[pi])return;s.choice[pi]=s.panels[pi].opts[k];drawPick();if(s.choice.every(x=>x)){const c=s.choice;s.cb(c);}}
 function closePick(){pickState=null;closeWin('pick');}
 function onKey(code){
- if(mode==='pick'&&pickState){pickState.panels.forEach((p,pi)=>{if(!p.keyset||pickState.choice[pi])return;const ks=p.keyset;
+ if(mode==='pick'&&pickState){pickState.panels.forEach((p,pi)=>{if(!pickState||!p.keyset||pickState.choice[pi])return;const ks=p.keyset;
    if(code===ks[0])pickState.cur[pi]=(pickState.cur[pi]+p.opts.length-1)%p.opts.length,drawPick();if(code===ks[1])pickState.cur[pi]=(pickState.cur[pi]+1)%p.opts.length,drawPick();
    if(code===ks[2])pickChoose(pi,pickState.cur[pi]);if(code===ks[3])pickReroll(pi);});}
  if(mode==='game'&&G){if(code==='Escape'){if(G.kind==='online')leaveGame();else paused=!paused;}if(paused&&code==='KeyQ'){paused=false;forfeit();}}}
@@ -706,5 +706,5 @@ Cloud.startup();
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
+<script src="logos98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
 </body></html>
