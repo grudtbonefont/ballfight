@@ -177,3 +177,103 @@ const Sol={W:71,H:96,
   const step=()=>{if(!this.won||!document.getElementById('solc')){this.anim=0;return;}for(let n=0;n<3;n++){if(!cur||cur.x<-this.W||cur.x>620){if(k>=cards.length){this.anim=0;g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,220,620,60);g.fillStyle='#fff';g.font='bold 24px Tahoma';g.textAlign='center';g.fillText('Победа! Нажмите «Новая раздача»',310,258);return;}cur=Object.assign({vx:(Math.random()<.5?-1:1)*(2+Math.random()*4),vy:-Math.random()*6},cards[k++]);}
     cur.x+=cur.vx;cur.y+=cur.vy;cur.vy+=.5;if(cur.y>520-this.H){cur.y=520-this.H;cur.vy*=-.8;}this.card(g,cur.c,cur.x,cur.y);}this.anim=requestAnimationFrame(step);};step();}};
 window.EXTRA.push({k:'Косынка',ico:ICO.cards,run:'Sol.open()',cat:'game'});
+// ===================== общие клавиши =====================
+let KF=null;document.addEventListener('pointerdown',e=>{const w=e.target.closest&&e.target.closest('.win');KF=w?w.id:null;},true);
+const kOn=id=>{const w=document.getElementById('w_'+id);return w&&!w.classList.contains('hide')&&KF==='w_'+id;};
+const padBtns=(o)=>`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px">${o.map(([l,f])=>`<button style="min-width:0;padding:2px 10px" onpointerdown="${f};event.preventDefault()">${l}</button>`).join('')}</div>`;
+// ===================== ПИНБОЛ =====================
+const Pin={
+ open(){openWin('pin','Пинбол — Космический кадет 98',`<div style="display:flex;gap:6px"><canvas id="pinc" width="360" height="540" style="height:min(540px,65vh);background:#000;touch-action:none;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="width:150px;flex:none;font-size:12px"><div style="background:#000;color:#f80;font:bold 22px monospace;padding:4px;text-align:right;border:2px inset" id="pins">0</div><div id="pinb" style="margin:6px 0">Шары: 3</div>
+  <button style="width:100%" onclick="Pin.reset()">Новая игра (F2)</button><p style="margin-top:8px;color:#333">Z / ← — левый флиппер<br>/ / → — правый флиппер<br>Пробел (держать) — запуск<br>Мышь: левая/правая половина стола — флипперы, низ лунки — запуск</p><div id="pinr" style="color:#060"></div></div></div>`,{w:560,icon:'🎯'});
+  KF='w_pin';const c=document.getElementById('pinc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');this.bind(c);}if(!this.st)this.reset();cancelAnimationFrame(this.raf);this.loop();},
+ reset(){this.st=1;this.score=0;this.balls=3;this.L={a:.5,v:0,up:false};this.R={a:.5,v:0,up:false};this.lights=[0,0,0];this.mult=1;this.plung=0;this.hold=false;this.over=false;this.newBall();this.hud();},
+ newBall(){this.b={x:328,y:490,vx:0,vy:0,r:7,lane:true};},
+ walls:[[20,540,20,90],[20,90,60,35],[60,35,300,20],[300,20,340,60],[340,60,340,540],[315,540,315,140],[20,410,105,478],[315,410,255,478],[60,120,60,290],[290,300,262,250]],
+ bump:[[130,150,20],[210,130,20],[175,215,20]],
+ lanes:[110,170,230],
+ seg(b,x1,y1,x2,y2,e,vx0,vy0){const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy;let t=((b.x-x1)*dx+(b.y-y1)*dy)/l2;t=Math.max(0,Math.min(1,t));const px=x1+t*dx,py=y1+t*dy;let nx=b.x-px,ny=b.y-py;const d=Math.hypot(nx,ny);if(d>=b.r||d===0)return false;nx/=d;ny/=d;b.x=px+nx*b.r;b.y=py+ny*b.r;
+  const rvx=b.vx-(vx0||0),rvy=b.vy-(vy0||0),vn=rvx*nx+rvy*ny;if(vn<0){b.vx-=(1+e)*vn*nx;b.vy-=(1+e)*vn*ny;}return true;},
+ flip(f,side){const px=side<0?105:255,len=56,ang=side<0?f.a:Math.PI-f.a;return [px,478,px+Math.cos(ang)*len,478+Math.sin(ang)*len];},
+ step(){const b=this.b,S=6;for(const f of [this.L,this.R]){const tgt=f.up?-.45:.5,old=f.a;f.a+=Math.max(-.07,Math.min(.07,tgt-f.a))/S*S;f.a=Math.max(-.45,Math.min(.5,f.a));f.v=f.a-old;}
+  if(this.hold)this.plung=Math.min(1,this.plung+.02);
+  for(let s=0;s<S;s++){b.vy+=.18/S;b.x+=b.vx/S;b.y+=b.vy/S;
+   if(b.x>315&&b.y>=490&&b.vy>=0){b.y=490;b.vy=0;b.vx=0;b.x=328;b.lane=true;}
+   if(b.y<150)b.lane=false;
+   for(const w of this.walls)this.seg(b,...w,.5);
+   for(const [side,f] of [[-1,this.L],[1,this.R]]){const [x1,y1,x2,y2]=this.flip(f,side);const t=Math.max(0,Math.min(1,((b.x-x1)*(x2-x1)+(b.y-y1)*(y2-y1))/3136));
+    if(this.seg(b,x1,y1,x2,y2,.3)&&f.v<0){const sa=Math.sin(f.a),ca=Math.cos(f.a),k=-f.v*56*t*3/S*S;const nx=side<0?sa:-sa,ny=-ca;if(b.vx*nx+b.vy*ny<k){b.vx+=nx*k;b.vy+=ny*k;}}}
+   for(const bm of this.bump){const dx=b.x-bm[0],dy=b.y-bm[1],d=Math.hypot(dx,dy);if(d<bm[2]+b.r){const nx=dx/d,ny=dy/d;b.x=bm[0]+nx*(bm[2]+b.r);b.y=bm[1]+ny*(bm[2]+b.r);const vn=b.vx*nx+b.vy*ny;b.vx-=vn*nx*2;b.vy-=vn*ny*2;b.vx+=nx*4;b.vy+=ny*4;bm[3]=8;this.add(100);Sfx.tone(660+Math.random()*200,0,.05);}}
+   const sp=Math.hypot(b.vx,b.vy);if(sp>16){b.vx*=16/sp;b.vy*=16/sp;}}
+  if(b.y<60&&!b.lane)this.lanes.forEach((x,i)=>{if(Math.abs(b.x-x)<12&&!this.lights[i]){this.lights[i]=1;this.add(500);Sfx.ding();if(this.lights.every(v=>v)){this.lights=[0,0,0];this.mult=Math.min(5,this.mult+1);toast(`🎯 Множитель x${this.mult}!`);}}});
+  if(b.y>560){this.balls--;Sfx.error();if(this.balls<=0){this.over=true;if(this.score>=20000)Reward.give('pin',5,`🎯 Пинбол: ${this.score} очков`);}else this.newBall();this.mult=1;this.hud();}},
+ add(n){this.score+=n*this.mult;this.hud();},
+ hud(){const s=document.getElementById('pins');if(s)s.textContent=this.score;const b=document.getElementById('pinb');if(b)b.textContent=`Шары: ${Math.max(0,this.balls)} · x${this.mult}`;},
+ draw(){const g=this.g,b=this.b;g.fillStyle='#000814';g.fillRect(0,0,360,540);
+  g.fillStyle='#123';for(let i=0;i<40;i++){g.fillRect((i*97)%360,(i*53)%540,2,2);}
+  g.strokeStyle='#4af';g.lineWidth=3;g.lineCap='round';for(const w of this.walls){g.beginPath();g.moveTo(w[0],w[1]);g.lineTo(w[2],w[3]);g.stroke();}
+  this.lanes.forEach((x,i)=>{g.fillStyle=this.lights[i]?'#ff0':'#440';g.beginPath();g.arc(x,45,6,0,7);g.fill();});
+  for(const bm of this.bump){const h=bm[3]>0;if(h)bm[3]--;const gr=g.createRadialGradient(bm[0]-5,bm[1]-5,2,bm[0],bm[1],bm[2]);gr.addColorStop(0,'#fff');gr.addColorStop(1,h?'#ff0':'#c03');g.fillStyle=gr;g.beginPath();g.arc(bm[0],bm[1],bm[2],0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=2;g.stroke();}
+  g.lineWidth=9;g.strokeStyle='#f80';for(const [s,f] of [[-1,this.L],[1,this.R]]){const [x1,y1,x2,y2]=this.flip(f,s);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();}
+  g.fillStyle='#888';g.fillRect(320,500+this.plung*30,16,40);
+  const gr=g.createRadialGradient(b.x-2,b.y-2,1,b.x,b.y,b.r);gr.addColorStop(0,'#fff');gr.addColorStop(1,'#888');g.fillStyle=gr;g.beginPath();g.arc(b.x,b.y,b.r,0,7);g.fill();
+  g.fillStyle='#4af';g.font='bold 14px Tahoma';g.textAlign='center';g.fillText('КОСМИЧЕСКИЙ КАДЕТ',175,90);
+  if(this.over){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(30,230,280,80);g.fillStyle='#ff0';g.font='bold 22px Tahoma';g.fillText('ИГРА ОКОНЧЕНА',170,265);g.font='13px Tahoma';g.fillText('F2 или «Новая игра»',170,290);}},
+ loop(){if(!document.getElementById('pinc')){this.raf=0;return;}const w=document.getElementById('w_pin');if(!w.classList.contains('hide')&&!this.over)this.step();this.draw();this.raf=requestAnimationFrame(()=>this.loop());},
+ launch(){if(this.b.lane&&this.b.y>=489){this.b.vy=-(8+this.plung*9);Sfx.tone(220,0,.1);}this.plung=0;this.hold=false;},
+ bind(c){const side=e=>{const r=c.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*360,y=(e.clientY-r.top)/r.height*540;return x>310&&y>440?'P':x<180?'L':'R';};
+  const ups={};c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);const s=side(e);ups[e.pointerId]=s;if(s==='P')this.hold=true;else{this[s].up=true;Sfx.click();}});
+  const end=e=>{const s=ups[e.pointerId];delete ups[e.pointerId];if(s==='P')this.launch();else if(s)this[s].up=false;};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+  document.addEventListener('keydown',e=>{if(!kOn('pin'))return;const k=e.key;if(k==='z'||k==='Z'||k==='я'||k==='ArrowLeft'){this.L.up=true;e.preventDefault();}else if(k==='/'||k==='.'||k==='ArrowRight'){this.R.up=true;e.preventDefault();}else if(k===' '){this.hold=true;e.preventDefault();}else if(k==='F2'){this.reset();e.preventDefault();}});
+  document.addEventListener('keyup',e=>{const k=e.key;if(k==='z'||k==='Z'||k==='я'||k==='ArrowLeft')this.L.up=false;else if(k==='/'||k==='.'||k==='ArrowRight')this.R.up=false;else if(k===' '&&this.hold)this.launch();});}};
+// ===================== ЗМЕЙКА =====================
+const Snake={N:20,C:18,
+ open(){openWin('snake','Змейка',`<canvas id="snc" width="360" height="360" style="width:min(360px,80vw);display:block;background:#9bbc0f;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span id="sns">Счёт: 0</span><span>Рекорд: <b id="snh">${localStorage.bf_snake||0}</b></span><button style="min-width:0;padding:1px 8px" onclick="Snake.reset()">Заново</button></div>
+  ${padBtns([['◀',"Snake.dir(-1,0)"],['▲',"Snake.dir(0,-1)"],['▼',"Snake.dir(0,1)"],['▶',"Snake.dir(1,0)"]])}`,{w:390,icon:'🐍'});
+  KF='w_snake';const c=document.getElementById('snc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');}
+  if(!this.bound){this.bound=1;document.addEventListener('keydown',e=>{if(!kOn('snake'))return;const m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1],ф:[-1,0],в:[1,0],ц:[0,-1],ы:[0,1]}[e.key];if(m){this.dir(...m);e.preventDefault();}else if(e.key===' '){this.reset();e.preventDefault();}});}
+  this.reset();},
+ reset(){clearInterval(this.iv);this.s=[[10,10],[9,10],[8,10]];this.d=[1,0];this.q=[];this.sc=0;this.dead=false;this.food();this.iv=setInterval(()=>this.tick(),120);this.draw();},
+ dir(x,y){const l=this.q.at(-1)||this.d;if(l[0]===-x&&l[1]===-y||l[0]===x&&l[1]===y)return;if(this.q.length<3)this.q.push([x,y]);},
+ food(){do{this.f=[Math.random()*20|0,Math.random()*20|0];}while(this.s.some(p=>p[0]===this.f[0]&&p[1]===this.f[1]));},
+ tick(){if(!document.getElementById('snc')){clearInterval(this.iv);return;}if(document.getElementById('w_snake').classList.contains('hide'))return;if(this.q.length)this.d=this.q.shift();
+  const h=[this.s[0][0]+this.d[0],this.s[0][1]+this.d[1]];if(h[0]<0||h[1]<0||h[0]>=20||h[1]>=20||this.s.some(p=>p[0]===h[0]&&p[1]===h[1])){this.dead=true;clearInterval(this.iv);Sfx.error();
+   if(this.sc>(+localStorage.bf_snake||0)){localStorage.bf_snake=this.sc;document.getElementById('snh').textContent=this.sc;}if(this.sc>=20)Reward.give('snake',5,`🐍 Змейка: ${this.sc} яблок`);this.draw();return;}
+  this.s.unshift(h);if(h[0]===this.f[0]&&h[1]===this.f[1]){this.sc++;Sfx.tone(880,0,.04);this.food();document.getElementById('sns').textContent='Счёт: '+this.sc;}else this.s.pop();this.draw();},
+ draw(){const g=this.g,C=this.C;g.fillStyle='#9bbc0f';g.fillRect(0,0,360,360);g.fillStyle='#8bac0f';for(let i=0;i<20;i++)for(let j=0;j<20;j++)if((i+j)%2)g.fillRect(i*C,j*C,C,C);
+  g.fillStyle='#c00';g.beginPath();g.arc(this.f[0]*C+9,this.f[1]*C+10,7,0,7);g.fill();g.fillStyle='#060';g.fillRect(this.f[0]*C+9,this.f[1]*C+1,2,4);
+  this.s.forEach((p,i)=>{g.fillStyle=i?'#306230':'#0f380f';g.fillRect(p[0]*C+1,p[1]*C+1,C-2,C-2);});const h=this.s[0];g.fillStyle='#fff';g.fillRect(h[0]*C+5,h[1]*C+5,3,3);g.fillRect(h[0]*C+11,h[1]*C+5,3,3);
+  if(this.dead){g.fillStyle='rgba(15,56,15,.8)';g.fillRect(40,140,280,80);g.fillStyle='#9bbc0f';g.font='bold 22px Tahoma';g.textAlign='center';g.fillText('КОНЕЦ ИГРЫ',180,175);g.font='13px Tahoma';g.fillText('Пробел или «Заново»',180,200);}}};
+// ===================== БЛОКИ =====================
+const Blocks={C:22,
+ P:[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]],COL:['#0ff','#ff0','#a0f','#00f','#f80','#f00','#0c0'],
+ open(){openWin('blocks','Блоки',`<div style="display:flex;gap:8px"><canvas id="blc" width="220" height="440" style="height:min(440px,62vh);background:#000;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="width:120px;flex:none;font-size:12px">Следующая:<canvas id="bln" width="88" height="66" style="display:block;width:88px;height:66px;background:#000;margin:3px 0 8px;border:2px inset"></canvas>
+  <div id="bls">Очки: 0<br>Линии: 0<br>Уровень: 1</div><button style="width:100%;margin-top:8px" onclick="Blocks.reset()">Новая игра</button><button style="width:100%;margin-top:4px" onclick="Blocks.pause()">Пауза (P)</button>
+  <p style="color:#333">← → — двигать<br>↑ — повернуть<br>↓ — ускорить<br>Пробел — сбросить</p></div></div>
+  ${padBtns([['◀',"Blocks.mv(-1)"],['⟳',"Blocks.rot()"],['▼',"Blocks.down()"],['▶',"Blocks.mv(1)"],['⤓',"Blocks.drop()"]])}`,{w:440,icon:'🧱'});
+  KF='w_blocks';const c=document.getElementById('blc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');this.gn=document.getElementById('bln').getContext('2d');}
+  if(!this.bound){this.bound=1;document.addEventListener('keydown',e=>{if(!kOn('blocks'))return;const f={ArrowLeft:()=>this.mv(-1),ArrowRight:()=>this.mv(1),ArrowUp:()=>this.rot(),ArrowDown:()=>this.down(),' ':()=>this.drop(),p:()=>this.pause(),з:()=>this.pause()}[e.key];if(f){f();e.preventDefault();}});}
+  this.reset();},
+ reset(){clearTimeout(this.to);this.b=Array.from({length:20},()=>Array(10).fill(0));this.sc=0;this.ln=0;this.lv=1;this.over=false;this.paused=false;this.rew=false;this.nx=Math.random()*7|0;this.spawn();this.hud();this.sched();},
+ spawn(){this.t=this.nx;this.m=this.P[this.t].map(r=>r.slice());this.nx=Math.random()*7|0;this.x=(10-this.m[0].length)>>1;this.y=0;if(this.hit(this.x,this.y,this.m)){this.over=true;Sfx.error();clearTimeout(this.to);}this.draw();},
+ hit(x,y,m){return m.some((r,i)=>r.some((v,j)=>v&&(x+j<0||x+j>=10||y+i>=20||(y+i>=0&&this.b[y+i][x+j]))));},
+ ok(){return !this.over&&!this.paused&&document.getElementById('blc');},
+ mv(d){if(this.ok()&&!this.hit(this.x+d,this.y,this.m)){this.x+=d;this.draw();}},
+ rot(){if(!this.ok())return;const m=this.m[0].map((_,j)=>this.m.map(r=>r[j]).reverse());for(const k of [0,-1,1,-2,2])if(!this.hit(this.x+k,this.y,m)){this.x+=k;this.m=m;Sfx.click();this.draw();return;}},
+ down(){if(!this.ok())return false;if(!this.hit(this.x,this.y+1,this.m)){this.y++;this.draw();return true;}this.lock();return false;},
+ drop(){if(!this.ok())return;let n=0;while(!this.hit(this.x,this.y+1,this.m)){this.y++;n++;}this.sc+=n*2;this.lock();},
+ lock(){this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v&&this.y+i>=0)this.b[this.y+i][this.x+j]=this.t+1;}));let n=0;this.b=this.b.filter(r=>!r.every(v=>v));n=20-this.b.length;while(this.b.length<20)this.b.unshift(Array(10).fill(0));
+  if(n){this.sc+=[0,100,300,500,800][n]*this.lv;this.ln+=n;this.lv=1+Math.floor(this.ln/10);Sfx.ding();if(this.ln>=10&&!this.rew){this.rew=true;Reward.give('blocks',5,`🧱 Блоки: ${this.ln} линий`);}}else Sfx.tone(180,0,.03);this.hud();this.spawn();},
+ pause(){if(this.over)return;this.paused=!this.paused;if(!this.paused)this.sched();this.draw();},
+ sched(){clearTimeout(this.to);this.to=setTimeout(()=>{if(!document.getElementById('blc'))return;if(this.over||this.paused)return;if(!document.getElementById('w_blocks').classList.contains('hide'))this.down();this.sched();},Math.max(80,600-(this.lv-1)*55));},
+ hud(){const e=document.getElementById('bls');if(e)e.innerHTML=`Очки: ${this.sc}<br>Линии: ${this.ln}<br>Уровень: ${this.lv}`;},
+ cell(g,x,y,col,C){g.fillStyle=col;g.fillRect(x,y,C,C);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(x,y,C,3);g.fillRect(x,y,3,C);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(x,y+C-3,C,3);g.fillRect(x+C-3,y,3,C);},
+ draw(){const g=this.g,C=this.C;if(!g)return;g.fillStyle='#000';g.fillRect(0,0,220,440);g.strokeStyle='#111';for(let i=0;i<=10;i++){g.beginPath();g.moveTo(i*C,0);g.lineTo(i*C,440);g.stroke();}
+  this.b.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(g,j*C,i*C,this.COL[v-1],C);}));
+  let gy=this.y;while(!this.hit(this.x,gy+1,this.m))gy++;g.strokeStyle='#666';this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v)g.strokeRect((this.x+j)*C+1,(gy+i)*C+1,C-2,C-2);}));
+  this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(g,(this.x+j)*C,(this.y+i)*C,this.COL[this.t],C);}));
+  const n=this.gn;n.fillStyle='#000';n.fillRect(0,0,88,66);const pm=this.P[this.nx];pm.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(n,8+j*18+(4-pm[0].length)*9,12+i*18,this.COL[this.nx],18);}));
+  if(this.over||this.paused){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,180,220,70);g.fillStyle='#fff';g.font='bold 20px Tahoma';g.textAlign='center';g.fillText(this.over?'ИГРА ОКОНЧЕНА':'ПАУЗА',110,220);}}};
+window.EXTRA.push({k:'Пинбол',ico:ICO.pin,run:'Pin.open()',cat:'game'},{k:'Змейка',ico:ICO.snake,run:'Snake.open()',cat:'game'},{k:'Блоки',ico:ICO.blocks,run:'Blocks.open()',cat:'game'});
