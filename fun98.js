@@ -117,14 +117,16 @@ const TIPS={_:['Похоже, вы пытаетесь победить шар. �
  snake:['Не ешьте свой хвост. Это невежливо.'],blocks:['Совет: дыры в полу — это плохо. Особенно в Блоках.'],cmd:['Похоже, вы хакер! Наберите help, чтобы казаться ещё хакернее.'],
  media:['Сделайте погромче! Соседи всё равно не спят.'],explorer:['Не удаляйте System32. Тем более, его тут нет.'],icq:['Ого, Аська! Не забудьте статус «Злой» перед боем.'],
  win:['Поздравляю с победой! Я знал, что вы сможете. Ну, почти знал.'],lose:['Не расстраивайтесь! Даже лучшие шары иногда сдуваются.']};
+const HELPER={get(){return localStorage.getItem('bf_verity')==='1'?'verity':localStorage.getItem('bf_clip')==='0'?'none':'clippy';},sync(){localStorage.setItem('bf_helper',this.get());}};window.HELPER=HELPER;
+(()=>{const h=localStorage.getItem('bf_helper');if(h&&h!==HELPER.get()){localStorage.setItem('bf_verity',h==='verity'?'1':'0');if(h!=='verity')localStorage.setItem('bf_clip',h==='none'?'0':'1');}HELPER.sync();})();
 const Clip={get on(){return localStorage.getItem('bf_clip')!=='0';},
  init(){if($('clip'))return;const d=document.createElement('div');d.id='clip';d.innerHTML=`<div class="bub" style="display:none"></div>${CLIP_SVG}`;document.body.appendChild(d);this.d=d;
-  d.querySelector('svg').addEventListener('click',()=>this.say(this.pick('_')));d.classList.toggle('hide',!this.on);
+  d.querySelector('svg').addEventListener('click',()=>this.say(this.pick('_')));d.classList.toggle('hide',!this.on);if(HELPER.get()==='verity')d.style.display='none';
   this.iv=setInterval(()=>{if(this.on&&mode==='menu'&&Math.random()<.5)this.say(this.pick('_'));},95000);},
  pick(k){const a=TIPS[k]||TIPS._;return a[Math.random()*a.length|0];},
- say(t,btns){if(!this.on||!this.d)return;const b=this.d.querySelector('.bub');b.innerHTML=`<span class="x" title="Закрыть">✕</span><div></div><div class="bt"><button data-a="ok">Спасибо</button><button data-a="off">Больше не показывать</button></div>`;b.children[1].textContent=t;b.style.display='';
+ say(t,btns){if(!this.on||!this.d||HELPER.get()==='verity')return;const b=this.d.querySelector('.bub');b.innerHTML=`<span class="x" title="Закрыть">✕</span><div></div><div class="bt"><button data-a="ok">Спасибо</button><button data-a="off">Больше не показывать</button></div>`;b.children[1].textContent=t;b.style.display='';
   b.querySelector('.x').onclick=b.querySelector('[data-a=ok]').onclick=()=>b.style.display='none';b.querySelector('[data-a=off]').onclick=()=>this.toggle(false);clearTimeout(this.to);this.to=setTimeout(()=>b.style.display='none',12000);},
- toggle(v){if(v==null)v=!this.on;localStorage.setItem('bf_clip',v?'1':'0');if(!this.d)this.init();this.d.classList.toggle('hide',!v);if(v)this.say('Я вернулся! Скучали? Я — Скрепыш, ваш помощник. Кликните по мне, чтобы получить совет.');else toast('📎 Скрепыш выключен. Включить: Пуск → Программы → Стандартные → Скрепыш');}};
+ toggle(v){if(v==null)v=!this.on;if(v&&HELPER.get()==='verity'&&window.Verity){Verity.banish();}localStorage.setItem('bf_clip',v?'1':'0');HELPER.sync();if(!this.d)this.init();if(v)this.d.style.display='';this.d.classList.toggle('hide',!v);if(v)this.say('Я вернулся! Скучали? Я — Скрепыш, ваш помощник. Кликните по мне, чтобы получить совет.');else toast('📎 Скрепыш выключен. Включить: Пуск → Программы → Стандартные → Скрепыш');}};
 window.Clip=Clip;
 
 // ---------- КОМАНДНАЯ СТРОКА ----------
