@@ -3,25 +3,26 @@
 const $=id=>document.getElementById(id);const LS=localStorage;
 const V={get on(){return LS.getItem('bf_verity')==='1';},get mood(){return +(LS.getItem('bf_vmood')||0);},set mood(v){LS.setItem('bf_vmood',String(Math.max(-100,Math.min(100,Math.round(v)))));this.ui();}};
 const css=document.createElement('style');css.textContent=`
-#verity{position:fixed;right:18px;bottom:44px;z-index:99980;cursor:pointer;filter:drop-shadow(0 0 6px #000)}#verity svg{display:block;image-rendering:pixelated;animation:vbob 3s ease-in-out infinite}
-@keyframes vbob{50%{transform:translateY(-4px)}}#verity .ey{fill:#e8f8ff}#verity.ang .ey,#w_verity.ang .vfc .ey{fill:#f00}#verity.ang svg{animation:vjit .15s steps(2) infinite}
+#verity{position:fixed;right:18px;bottom:44px;z-index:99980;cursor:pointer;filter:drop-shadow(0 0 6px #000)}#verity svg{display:block;animation:vbob 3s ease-in-out infinite}
+@keyframes vbob{50%{transform:translateY(-4px)}}#verity .ey,.vsph .ey{fill:#000}.vsph .sma{display:none}#verity.ang .sma,#w_verity.ang .vfc .sma,#vscare .sma{display:inline}#verity.ang .sm,#w_verity.ang .vfc .sm,#vscare .sm{display:none}#verity.ang .eyes,#w_verity.ang .vfc .eyes{animation:vjit .12s steps(2) infinite}#verity.ang .vsph{filter:drop-shadow(0 0 6px #f00)}#verity.ang .ey,#w_verity.ang .vfc .ey{fill:#f00}#verity.ang svg{animation:vjit .15s steps(2) infinite}
 @keyframes vjit{0%{transform:translate(1px,0)}50%{transform:translate(-2px,1px)}100%{transform:translate(1px,-1px)}}
 #verity .glow{opacity:.55}#verity.ang .glow{fill:#f00;opacity:.8}
 .vglitch{animation:vgl .09s steps(2) infinite!important}@keyframes vgl{0%{transform:translate(3px,-2px) skewX(8deg);filter:hue-rotate(90deg) contrast(3)}50%{transform:translate(-4px,2px) skewX(-12deg);filter:invert(1)}100%{transform:none}}
 #vstatic{position:fixed;inset:0;z-index:99990;pointer-events:none;mix-blend-mode:screen}
 .vflick{animation:vfl .12s steps(2) 6}@keyframes vfl{50%{filter:brightness(.2) contrast(2)}}
 #icons.vshake .icon{animation:vjit .2s steps(2) infinite}
-#vscare{position:fixed;inset:0;z-index:100000;background:#000;display:flex;align-items:center;justify-content:center}#vscare svg{width:85vh;height:95vh;image-rendering:pixelated;animation:vzoom .9s ease-in forwards}
+#vscare .ey{fill:#f00!important}#vscare{position:fixed;inset:0;z-index:100000;background:#000;display:flex;align-items:center;justify-content:center}#vscare svg{width:85vh;height:85vh;animation:vzoom .9s ease-in forwards}
 @keyframes vzoom{from{transform:scale(.3)}to{transform:scale(1.25)}}
 .vlog{height:260px;overflow:auto;background:#000;color:#cfe;font:13px 'Courier New',monospace;padding:6px;border:2px solid;border-color:#808080 #fff #fff #808080}
 .vlog .u{color:#ffff7f}.vlog .v{color:#9fe}#w_verity.ang .vlog .v{color:#f55;text-shadow:0 0 4px #f00}
 .vmeter{height:12px;border:2px solid;border-color:#808080 #fff #fff #808080;background:linear-gradient(90deg,#c00,#555 50%,#0a0);position:relative}.vmeter i{position:absolute;top:-3px;width:4px;height:14px;background:#fff;border:1px solid #000}`;
 document.head.appendChild(css);
-// original pixel design: hooded dark figure, glowing eyes
-const F=["....kkkkkkkk....","...kkdddddddkk..","..kkddddddddddk.","..kdddkkkkkkddk.","..kddkfffffkddk.","..kddkEfffEkddk.","..kddkfffffkddk.","..kddkffmffkddk.","..kdddkkkkkdddk.","..kddddddddddk..",".kddddddddddddk.","kdddkddddddkdddk","kddk.kddddk.kddk","kkk..kddddk..kkk",".....kdddddk....",".....kdd.kdk....",".....kdk..kdk...",".....kkk..kkk..."];
-function face(px){const P={k:'#000',d:'#1a1a22',f:'#2b2b33',m:'#111'};let r='';F.forEach((row,y)=>{for(let x=0;x<row.length;x++){const c=row[x];if(c==='.')continue;if(c==='E'){r+=`<rect class="ey" x="${x}" y="${y}" width="1" height="1"/>`;}else r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${P[c]}"/>`;}});
- return `<svg viewBox="0 0 16 18" width="${px}" height="${px*18/16}" shape-rendering="crispEdges">${r}</svg>`;}
-V.face=face;
+// Verity: lemon-yellow floating sphere, black oval eyes, simple smile
+function face(px){return `<svg class="vsph" viewBox="0 0 40 40" width="${px}" height="${px}"><defs><radialGradient id="vg${px}" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#fffbb0"/><stop offset=".55" stop-color="#ffe92e"/><stop offset="1" stop-color="#c9a800"/></radialGradient></defs>
+<circle cx="20" cy="20" r="17" fill="url(#vg${px})" stroke="#6b5a00" stroke-width="1"/><ellipse class="glare" cx="14" cy="11" rx="4" ry="2.2" fill="#fff" opacity=".6"/>
+<g class="eyes"><ellipse class="ey" cx="14.5" cy="17" rx="2.2" ry="3.6"/><ellipse class="ey" cx="25.5" cy="17" rx="2.2" ry="3.6"/></g>
+<path class="sm" d="M12 25 Q20 31 28 25" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/><path class="sma" d="M12 27 L15 24 L18 28 L21 24 L24 28 L28 25" fill="none" stroke="#000" stroke-width="1.8" stroke-linejoin="bevel"/></svg>`;}
+V.face=face;window.PX&&(PX.BYK['Verity.exe']=null);
 function tone(f,t,d,ty,v){try{Sfx.tone(f,t,d,ty,v);}catch(e){}}
 function noise(sec){try{const c=Sfx.ctx();const b=c.createBuffer(1,c.sampleRate*sec,c.sampleRate);const a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=(Math.random()*2-1)*.25;const s=c.createBufferSource(),g=c.createGain();g.gain.value=.15;s.buffer=b;s.connect(g).connect(c.destination);s.start();}catch(e){}}
 function staticFx(ms){const cv=document.createElement('canvas');cv.id='vstatic';cv.width=200;cv.height=150;cv.style.width='100%';cv.style.height='100%';cv.style.imageRendering='pixelated';document.body.appendChild(cv);const x=cv.getContext('2d');const t0=performance.now();
@@ -31,16 +32,20 @@ V.ui=function(){const m=this.mood,a=m<=-35;const e=$('verity');if(e)e.classList.
  const ic=$('icons');if(ic)ic.classList.toggle('vshake',this.on&&m<=-60);};
 V.show=function(){if($('verity'))return;const d=document.createElement('div');d.id='verity';d.title='Verity';d.innerHTML=face(56);d.onclick=()=>V.open();document.body.appendChild(d);const c=$('clip');if(c)c.style.display='none';this.ui();};
 V.summon=function(){LS.setItem('bf_verity','1');const c=$('clip');const tgt=c||document.body;tgt.classList.add('vglitch');staticFx(1400);tone(80,0,1.2,'sawtooth',.08);tone(57,.3,1,'square',.05);
- setTimeout(()=>{tgt.classList.remove('vglitch');if(c)c.style.display='none';this.show();const e=$('verity');e.classList.add('vglitch');setTimeout(()=>{e.classList.remove('vglitch');V.open();V.say(V.mood<=-35?'Ты снова позвал меня. Зря.':'...Скрепыш больше не придёт. Я — Verity. Спрашивай.');},600);},1400);};
+ setTimeout(()=>{tgt.classList.remove('vglitch');if(c)c.style.display='none';this.show();const e=$('verity');e.classList.add('vglitch');setTimeout(()=>{e.classList.remove('vglitch');V.open();V.say(V.mood<=-35?'Ты снова позвал меня. Зря.':'Привееет! Я Verity, твой личный друг-помощник. Спрашивай что угодно, я знаю всё.');},600);},1400);};
 V.banish=function(){LS.setItem('bf_verity','0');staticFx(700);const e=$('verity');if(e)e.remove();closeWin('verity');const c=$('clip');if(c)c.style.display='';$('icons')&&$('icons').classList.remove('vshake');setTimeout(()=>{try{Clip.say('Ой! Что это было? Мне снился какой-то тёмный блочный мир... Я вернулся!');}catch(e){}},800);};
-V.open=function(){openWin('verity','Verity.exe',`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div class="vfc" style="background:#000;padding:4px">${face(40)}</div><div style="flex:1;font-size:12px">Настроение: <b class="vml"></b><div class="vmeter"><i></i></div><div style="display:flex;justify-content:space-between;font-size:10px;color:#555"><span>злость</span><span>доброта</span></div></div></div>
- <div class="vlog" id="vlog"></div><div style="display:flex;gap:4px;margin-top:6px"><input id="vin" maxlength="200" placeholder="Спроси что-нибудь..." style="flex:1" autocomplete="off"><button id="vsend">Сказать</button></div>`,{w:440,icon:'👤'});
+V.open=function(){openWin('verity','Verity.exe',`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div class="vfc" style="background:#000;padding:4px;display:flex">${face(40)}</div><div style="flex:1;font-size:12px">Настроение: <b class="vml"></b><div class="vmeter"><i></i></div><div style="display:flex;justify-content:space-between;font-size:10px;color:#555"><span>злость</span><span>доброта</span></div></div></div>
+ <div class="vlog" id="vlog"></div><div style="display:flex;gap:4px;margin-top:6px"><input id="vin" maxlength="300" placeholder="Спроси что-нибудь..." style="flex:1" autocomplete="off"><button id="vsend">Сказать</button></div>`,{w:440,icon:'👤'});
  const i=$('vin'),go=()=>{const t=i.value.trim();if(!t)return;i.value='';V.user(t);};$('vsend').onclick=go;i.onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')go();};i.focus();
  const lg=$('vlog');if(!lg.dataset.h){lg.dataset.h=1;(this.hist||[]).forEach(([c,t])=>this.line(c,t));}this.ui();};
 V.hist=[];
 V.line=function(c,t){const lg=$('vlog');if(!lg)return;const d=document.createElement('div');d.className=c;d.textContent=(c==='u'?'> ':'Verity: ')+t;lg.appendChild(d);lg.scrollTop=1e9;};
 V.say=function(t){this.hist.push(['v',t]);if(this.hist.length>60)this.hist.shift();this.line('v',t);tone(this.mood<=-35?90:220,0,.08,'square',.03);};
-V.user=function(t){this.hist.push(['u',t]);this.line('u',t);const r=reply(t);setTimeout(()=>{this.say(r);if(this.mood<=-35&&Math.random()<.5)this.glitch();if(this.mood<=-100)this.scare();},350+Math.random()*500);};
+V.busy=0;V.user=async function(t){if(this.busy)return;t=t.slice(0,300);this.hist.push(['u',t]);this.line('u',t);this.busy=1;const lg=$('vlog');const ty=document.createElement('div');ty.className='v';ty.textContent='Verity печатает...';lg&&lg.appendChild(ty);let r;
+ try{const api=(window.Cloud&&Cloud.api)||'https://ballfight-api.onrender.com';const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),25000);
+  const res=await fetch(api+'/api/verity',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({mood:this.mood,history:this.hist.slice(-12).map(([c,x])=>({role:c==='u'?'user':'model',text:x}))})});clearTimeout(tm);
+  if(!res.ok)throw 0;const j=await res.json();if(!j.reply)throw 0;r=j.reply;this.mood=this.mood+(+j.moodDelta||0);this.src='ai';}catch(e){r=reply(t);this.src='off';await new Promise(z=>setTimeout(z,300));}
+ ty.remove();this.busy=0;this.say(r);if(this.mood<=-35&&Math.random()<.5)this.glitch();if(this.mood<=-100)this.scare();};
 V.glitch=function(){const w=$('w_verity');if(w){w.classList.add('vglitch');setTimeout(()=>w.classList.remove('vglitch'),300);}tone(60,0,.25,'sawtooth',.05);};
 V.scare=function(){if($('vscare'))return;const d=document.createElement('div');d.id='vscare';d.innerHTML=face(400);d.querySelectorAll('.ey').forEach(e=>e.setAttribute('fill','#f00'));document.body.appendChild(d);
  noise(.9);tone(70,0,.9,'sawtooth',.12);tone(1300,0,.5,'square',.04);setTimeout(()=>d.remove(),900);

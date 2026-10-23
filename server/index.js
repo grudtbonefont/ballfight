@@ -22,6 +22,16 @@ async function auth(req){const m=/^Bearer ([a-f0-9]{64})$/.exec(req.headers.auth
 async function newSession(uid){const t=crypto.randomBytes(32).toString('hex');await pool.query('INSERT INTO bf.sessions(token,user_id) VALUES($1,$2)',[t,uid]);
  await pool.query('DELETE FROM bf.sessions WHERE user_id=$1 AND token NOT IN (SELECT token FROM bf.sessions WHERE user_id=$1 ORDER BY created DESC LIMIT 10)',[uid]);return t;}
 async function getSave(uid){const r=await pool.query('SELECT data,updated FROM bf.saves WHERE user_id=$1',[uid]);return r.rows[0]?{save:r.rows[0].data,updated:r.rows[0].updated}:{save:null,updated:null};}
+const VP=require('fs').readFileSync(__dirname+'/verity_prompt.txt','utf8');
+const VSYS=m=>VP+`\n\nAlways reply in the player's language (usually Russian). Всегда отвечай только на русском языке, даже если игрок пишет на другом языке. Your catchphrase in Russian: «Привееет! Я Verity, твой личный друг-помощник. Спрашивай что угодно, я знаю всё.» You live inside the game Битва Шаров 98 on a Windows 98 desktop; you know its balls, modes (Бой с ботом, Вдвоём, Онлайн-бой, Выживание, Турнир), shop, cases (Ящики), inventory, achievements, daily rewards and minigames (Сапёр, Шахматы, Косынка, Пинбол, Змейка, Блоки, Paint, Калькулятор, MS-DOS, Аська). Controls: WASD/arrows to move, Space for the ability. You are Verity, never admit to being Gemini, Google or any model. Never ask for passwords or personal data. Current mood: ${m} (-100 angry .. 100 kind). Replies under ~80 words. End with hidden tag [mood:+N] or [mood:-N] (N 0-20) showing how the player's last message changed your mood.`;
+async function verity(b){const m=Math.max(-100,Math.min(100,Math.round(+b.mood||0)));const h=(Array.isArray(b.history)?b.history:[]).slice(-12).map(x=>({role:x&&x.role==='model'?'model':'user',parts:[{text:String(x&&x.text||'').slice(0,300)}]})).filter(x=>x.parts[0].text);
+ while(h.length&&h[0].role!=='user')h.shift();if(!h.length||h[h.length-1].role!=='user')throw Object.assign(new Error('hist'),{code:400});
+ const ac=new AbortController();const to=setTimeout(()=>ac.abort(),20000);
+ try{const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','X-goog-api-key':process.env.GEMINI_API_KEY||''},
+  body:JSON.stringify({systemInstruction:{parts:[{text:VSYS(m)}]},contents:h,generationConfig:{maxOutputTokens:400,temperature:.9,thinkingConfig:{thinkingBudget:0}}})});
+  const j=await r.json();if(!r.ok){console.error('gemini',r.status,JSON.stringify(j).slice(0,300));throw new Error('gemini');}
+  let t=((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();let d=0;t=t.replace(/\[\s*mood\s*:\s*([+-]?\d+)\s*\]/gi,(_,n)=>{d=Math.max(-20,Math.min(20,+n));return '';}).trim();
+  if(!t)throw new Error('empty');return {reply:t.slice(0,800),moodDelta:d};}finally{clearTimeout(to);}}
 const ip=req=>(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
 http.createServer(async(req,res)=>{const o=req.headers.origin;
  if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Origin':ORIGINS.includes(o)?o:ORIGINS[0],'Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization','Access-Control-Max-Age':'86400','Vary':'Origin'});return res.end();}
@@ -29,6 +39,8 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
  try{
   if(url==='/'||url==='/api/health')return send(res,200,{ok:true,service:'ballfight-api'},o);
   if(limited('all:'+ip(req),300,60000))return send(res,429,{error:'Слишком много запросов'},o);
+  if(req.method==='POST'&&url==='/api/verity'){if(limited('v1:'+ip(req),15,60000)||limited('vd:'+ip(req),200,86400000))return send(res,429,{error:'Verity устал. Подожди немного.'},o);
+   const b=await body(req);try{return send(res,200,await verity(b),o);}catch(e){if(e.code===400)return send(res,400,{error:'bad history'},o);console.error('verity',e.message);return send(res,502,{error:'offline'},o);}}
   if(req.method==='POST'&&(url==='/api/register'||url==='/api/login')){const b=await body(req);const nick=String(b.nick||'').trim(),pass=String(b.pass||'');
    if(limited('auth:'+ip(req),20,600000)||limited('nick:'+nick.toLowerCase(),10,600000))return send(res,429,{error:'Слишком много попыток. Подождите 10 минут.'},o);
    if(!NICK.test(nick))return send(res,400,{error:'Ник: 3–16 символов (буквы, цифры, _ -)'},o);
