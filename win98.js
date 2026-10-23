@@ -61,7 +61,7 @@ const Desk={pos:{},binned:[],sel:new Set(),
  load(){try{const d=JSON.parse(localStorage.getItem('bf_icons'))||{};this.pos=d.pos||{};this.binned=d.bin||[];}catch(e){}},
  store(){try{localStorage.setItem('bf_icons',JSON.stringify({pos:this.pos,bin:this.binned}));}catch(e){}},
  rows(){return Math.max(1,Math.floor((innerHeight-30-8)/GY));},cols(){return Math.max(1,Math.floor((innerWidth-8)/GX));},
- vis(){return APPS.filter(a=>!this.binned.includes(a.k));},
+ vis(){return APPS.filter(a=>!a.nodesk&&!this.binned.includes(a.k));},
  occ(skip){const o={};for(const a of this.vis())if(a.k!==skip&&this.pos[a.k])o[this.pos[a.k].join()]=a.k;return o;},
  free(c,r,skip){const o=this.occ(skip),R=this.rows(),C=this.cols();c=clamp(c,0,C-1);r=clamp(r,0,R-1);if(!o[[c,r].join()])return [c,r];
   for(let d=1;d<40;d++)for(let dc=-d;dc<=d;dc++)for(let dr=-d;dr<=d;dr++){const x=c+dc,y=r+dr;if(x>=0&&y>=0&&x<C&&y<R&&!o[[x,y].join()])return [x,y];}return [c,r];},
