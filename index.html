@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v14-logos">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v15-social">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -391,7 +391,7 @@ function render(st,me){const A=ARENAS[st.arena]||ARENAS[0];ctx.save();ctx.clearR
  drawFront(A);ctx.restore();drawHUD(st,me);}
 function drawBall(b,i,me,st){const d=BY[b.id];let col=b.fx.frozen>0?'#cdefff':d.color;if(b.hitT>0.1)col='#ffffff';
  if(b.fx.blades>0)for(let k=0;k<3;k++){const a=st.time*5+k*2.094;const p=P(b.x+Math.cos(a)*(b.r+26),b.y+Math.sin(a)*(b.r+26));ctx.save();ctx.translate(p.x,p.y-b.r*p.k);ctx.rotate(a*3);ctx.fillStyle='#eceff1';ctx.strokeStyle='#455a64';ctx.beginPath();ctx.moveTo(-12,0);ctx.lineTo(0,-4);ctx.lineTo(12,0);ctx.lineTo(0,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
- const s=drawSphere(b.x,b.y,b.r,col);
+ const s=drawSphere(b.x,b.y,b.r,col);if(window.SKIN)SKIN.paint(ctx,b,i,s);
  if(!(window.LOGO&&LOGO.draw(ctx,d.id,s.x,s.y,s.R))){ctx.fillStyle='rgba(255,255,255,.85)';ctx.font=`bold ${Math.round(s.R*.9)}px Tahoma`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.sym,s.x,s.y+1);ctx.textBaseline='alphabetic';}
  if(b.fx.spikes>0){ctx.strokeStyle='#3e2723';ctx.lineWidth=3;for(let a=0;a<12;a++){const an=a/12*6.28+G_t;ctx.beginPath();ctx.moveTo(s.x+Math.cos(an)*s.R,s.y+Math.sin(an)*s.R);ctx.lineTo(s.x+Math.cos(an)*s.R*1.35,s.y+Math.sin(an)*s.R*1.35);ctx.stroke();}}
  if(b.fx.shield>0){ctx.strokeStyle='rgba(120,220,255,.9)';ctx.lineWidth=4;ctx.fillStyle='rgba(120,220,255,.18)';ctx.beginPath();ctx.arc(s.x,s.y,s.R*1.3,0,7);ctx.fill();ctx.stroke();}
@@ -662,7 +662,7 @@ const Cloud={api:'https://ballfight-api.onrender.com',auth:null,state:'off',msg:
   const slow=setTimeout(()=>this.set('wake','Сервер просыпается… (бесплатный хостинг, до ~60 с)'),2500);
   try{const r=await fetch(this.api+path,{method:method||'GET',signal:c.signal,headers:Object.assign({'Content-Type':'application/json'},this.auth?{Authorization:'Bearer '+this.auth.token}:{}),body:body?JSON.stringify(body):undefined});
    let j={};try{j=await r.json();}catch(e){}if(r.status===401&&this.auth&&path!=='/api/login'){this.auth=null;this.store();}
-   if(!r.ok)throw new Error(j.error||('Ошибка '+r.status));return j;}
+   if(!r.ok)throw Object.assign(new Error(j.error||('Ошибка '+r.status)),{status:r.status,data:j});return j;}
   catch(e){if(e.name==='AbortError')throw new Error('Сервер не отвечает. Попробуйте позже.');if(e instanceof TypeError)throw new Error('Нет связи с сервером');throw e;}
   finally{clearTimeout(t);clearTimeout(slow);}},
  set(st,msg){this.state=st;this.msg=msg||'';this.ui();},
@@ -706,5 +706,5 @@ Cloud.startup();
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="logos98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
+<script src="logos98.js"></script><script src="social98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
 </body></html>

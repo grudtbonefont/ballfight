@@ -1,6 +1,6 @@
 'use strict';
 const http=require('http'),crypto=require('crypto'),{Pool}=require('pg');
-const PORT=process.env.PORT||3000,MAXB=64*1024;
+const PORT=process.env.PORT||3000,MAXB=160*1024;
 const ORIGINS=(process.env.ORIGINS||'https://ballfight.onrender.com').split(',');
 const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:/render\.com/.test(process.env.DATABASE_URL||'')?{rejectUnauthorized:false}:false,max:5});
 async function init(){await pool.query(`CREATE SCHEMA IF NOT EXISTS bf;
@@ -33,7 +33,7 @@ async function ask(model,m,h){const ac=new AbortController();const to=setTimeout
   const j=await r.json();if(!r.ok){console.error('gemini',model,r.status,JSON.stringify(j).slice(0,300));throw new Error('gemini');}
   let t=((j.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();let d=0,f='';t=t.replace(/\[\s*face\s*:\s*([a-z0-9]+)\s*\]/gi,(_,n)=>{f=n.toLowerCase();return '';});t=t.replace(/\[\s*mood\s*:\s*([+-]?\d+)\s*\]/gi,(_,n)=>{d=Math.max(-20,Math.min(20,+n));return '';}).trim();
   if(!t)throw new Error('empty');return {reply:t.slice(0,800),moodDelta:d,face:f};}finally{clearTimeout(to);}}
-const ip=req=>(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
+let SOC;const ip=req=>(req.headers['x-forwarded-for']||req.socket.remoteAddress||'').split(',')[0].trim();
 http.createServer(async(req,res)=>{const o=req.headers.origin;
  if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Origin':ORIGINS.includes(o)?o:ORIGINS[0],'Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization','Access-Control-Max-Age':'86400','Vary':'Origin'});return res.end();}
  const url=req.url.split('?')[0];
@@ -54,15 +54,17 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
    const h=await hashPw(pass,u?u.salt:'x'.repeat(32));
    if(!u||!crypto.timingSafeEqual(Buffer.from(h,'hex'),Buffer.from(u.hash,'hex')))return send(res,401,{error:'Неверный ник или пароль'},o);
    return send(res,200,Object.assign({token:await newSession(u.id),nick:u.nick},await getSave(u.id)),o);}
+  if(SOC&&await SOC.handle(req,res,url,o))return;
   if(url==='/api/save'||url==='/api/logout'||url==='/api/me'){const u=await auth(req);if(!u)return send(res,401,{error:'Сессия истекла, войдите снова'},o);
    if(url==='/api/logout'&&req.method==='POST'){await pool.query('DELETE FROM bf.sessions WHERE token=$1',[req.headers.authorization.slice(7)]);return send(res,200,{ok:true},o);}
    if(url==='/api/me')return send(res,200,{nick:u.nick},o);
    if(req.method==='GET')return send(res,200,Object.assign({nick:u.nick},await getSave(u.id)),o);
    if(req.method==='PUT'||req.method==='POST'){if(limited('save:'+u.id,60,60000))return send(res,429,{error:'Слишком часто'},o);
     const b=await body(req);const s=b.save;if(!s||typeof s!=='object'||Array.isArray(s)||typeof s.owned!=='object')return send(res,400,{error:'Неверное сохранение'},o);
+    const cur=await pool.query('SELECT data FROM bf.saves WHERE user_id=$1',[u.id]);const cr=cur.rows[0]&&cur.rows[0].data&&cur.rows[0].data._rev|0;if(cr>(s._rev|0))return send(res,409,{error:'conflict',save:cur.rows[0].data},o);
     const r=await pool.query('INSERT INTO bf.saves(user_id,data,updated) VALUES($1,$2,now()) ON CONFLICT(user_id) DO UPDATE SET data=EXCLUDED.data,updated=now() RETURNING updated',[u.id,JSON.stringify(s)]);
     return send(res,200,{ok:true,updated:r.rows[0].updated},o);}}
   send(res,404,{error:'not found'},o);
  }catch(e){if(e.code===413)return send(res,413,{error:'Слишком большое сохранение'},o);if(e.code===400)return send(res,400,{error:'Плохой JSON'},o);console.error(e);send(res,500,{error:'Ошибка сервера'},o);}
 }).listen(PORT,()=>console.log('listening',PORT));
-init().then(()=>console.log('db ready')).catch(e=>console.error('db init failed',e.message));
+SOC=require('./social')(pool,{send,body,auth,limited,ip});init().then(()=>SOC.init()).then(()=>console.log('db ready')).catch(e=>console.error('db init failed',e.message));
