@@ -45,7 +45,7 @@ V.hist=[];
 V.line=function(c,t){const lg=$('vlog');if(!lg)return;const d=document.createElement('div');d.className=c;d.textContent=(c==='u'?'> ':'Verity: ')+t;lg.appendChild(d);lg.scrollTop=1e9;};
 V.say=function(t,fc){V.ti=V.ti||0;this.talk(fc);this.hist.push(['v',t]);if(this.hist.length>60)this.hist.shift();this.line('v',t);tone(this.mood<=-35?90:220,0,.08,'square',.03);};
 V.busy=0;V.user=async function(t){if(this.busy)return;t=t.slice(0,300);this.hist.push(['u',t]);this.line('u',t);this.busy=1;const lg=$('vlog');const ty=document.createElement('div');ty.className='v';ty.textContent='Verity печатает...';lg&&lg.appendChild(ty);let r,fc=null;
- try{const api=(window.Cloud&&Cloud.api)||'https://ballfight-api.onrender.com';const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),50000);
+ try{const api=(window.Cloud&&Cloud.api)||'https://ballfight-api.onrender.com';const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),65000);
   const res=await fetch(api+'/api/verity',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({mood:this.mood,history:this.hist.slice(-12).map(([c,x])=>({role:c==='u'?'user':'model',text:x}))})});clearTimeout(tm);
   if(!res.ok)throw 0;const j=await res.json();if(!j.reply)throw 0;r=j.reply;this.mood=this.mood+(+j.moodDelta||0);this.src='ai';fc=FACES.includes(j.face)?j.face:null;}catch(e){r=reply(t);this.src='off';await new Promise(z=>setTimeout(z,300));}
  ty.remove();this.busy=0;this.say(r,fc);if(this.mood<=-35&&Math.random()<.5)this.glitch();if(this.mood<=-100)this.scare();};
