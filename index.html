@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v4-accounts">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v5-win98">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -8,11 +8,11 @@ body{background:#008080;color:#000;font:13px Tahoma,"MS Sans Serif","Microsoft S
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:99999;background:repeating-linear-gradient(0deg,rgba(0,0,0,.09) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.35));}
 #desk{position:fixed;inset:0 0 30px 0}
 #logo{position:absolute;right:30px;bottom:20px;color:rgba(255,255,255,.22);font:bold 56px "Courier New",monospace;text-align:right;line-height:1}
-#icons{position:absolute;top:8px;left:8px;bottom:8px;display:flex;flex-direction:column;flex-wrap:wrap;gap:6px;align-content:flex-start}
-.icon{width:86px;text-align:center;color:#fff;cursor:pointer;padding:4px 2px}
+#icons{position:absolute;inset:0}
+.icon{position:absolute;width:86px;text-align:center;color:#fff;cursor:pointer;padding:4px 2px}
 .icon .im{font-size:30px;line-height:38px;filter:drop-shadow(1px 1px 0 #000)}
 .icon span{display:inline-block;padding:1px 3px;font-size:12px}
-.icon:hover span,.icon:focus span{background:#000080;outline:1px dotted #fff}
+.icon.sel span{background:#000080;outline:1px dotted #fff}.icon.sel .im{opacity:.75}
 .win{position:absolute;background:#c0c0c0;border:2px solid;border-color:#dfdfdf #000 #000 #dfdfdf;box-shadow:inset -1px -1px #808080,inset 1px 1px #fff;padding:3px;max-width:100vw}
 .tb{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;padding:2px 3px 2px 5px;display:flex;align-items:center;justify-content:space-between;cursor:move;height:22px}
 .win.inactive .tb{background:linear-gradient(90deg,#808080,#b5b5b5)}
@@ -428,17 +428,17 @@ function drawHUD(st,me){ctx.textAlign='left';
 // ===================== ОКНА =====================
 let zTop=10;
 function openWin(id,title,html,o){o=o||{};let w=document.getElementById('w_'+id);
- if(!w){w=document.createElement('div');w.className='win';w.id='w_'+id;w.innerHTML=`<div class="tb"><span class="tt"></span><span><button class="tbb" onclick="closeWin('${id}')">✕</button></span></div><div class="wb"></div>`;document.body.appendChild(w);dragify(w);w.addEventListener('mousedown',()=>front(w));}
+ if(!w){w=document.createElement('div');w.className='win';w.id='w_'+id;w.innerHTML=`<div class="tb"><span class="tt"></span><span><button class="tbb" title="Свернуть" onclick="minWin('${id}')">_</button><button class="tbb" title="Развернуть" onclick="maxWin('${id}')">□</button><button class="tbb" title="Закрыть" onclick="closeWin('${id}')">✕</button></span></div><div class="wb"></div><div class="grip"></div>`;document.body.appendChild(w);dragify(w);resizify(w);w.addEventListener('mousedown',()=>front(w));}
  w.querySelector('.tt').textContent=(o.icon||'🗔')+' '+title;w.querySelector('.wb').innerHTML=html;w.dataset.title=title;w.dataset.icon=o.icon||'🗔';w.dataset.modal=o.modal?1:'';
- const ww=Math.min(o.w||560,innerWidth-8);w.style.width=ww+'px';w.classList.remove('hide');front(w);
+ const ww=Math.min(o.w||560,innerWidth-8);w.style.width=ww+'px';w.classList.remove('hide','mini');front(w);if(typeof Sfx!=='undefined')Sfx.open();
  if(!w.dataset.placed||o.modal){w.style.left=Math.max(0,(innerWidth-ww)/2+(o.modal?0:rnd(-60,60)))+'px';w.style.top=Math.max(0,Math.min(o.modal?(innerHeight-30-w.offsetHeight)/2:40+rnd(0,40),innerHeight-40-w.offsetHeight))+'px';w.dataset.placed=1;}
  updTasks();return w;}
 function front(w){w.style.zIndex=(w.dataset.modal?3000:(w.id==='gamewin'?900:1000))+(++zTop);document.querySelectorAll('.win').forEach(x=>x.classList.toggle('inactive',x!==w));updTasks();}
 function closeWin(id){const w=document.getElementById('w_'+id);if(w)w.classList.add('hide');if(id==='pick'&&mode==='pick'){pickState=null;mode='menu';Net.close();}updTasks();}
 function dragify(w){const tb=w.querySelector('.tb');tb.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;const sx=e.clientX-w.offsetLeft,sy=e.clientY-w.offsetTop;
  const mv=ev=>{w.style.left=clamp(ev.clientX-sx,-w.offsetWidth+60,innerWidth-60)+'px';w.style.top=clamp(ev.clientY-sy,0,innerHeight-60)+'px';};const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);};addEventListener('mousemove',mv);addEventListener('mouseup',up);});}
-function updTasks(){const t=document.getElementById('tasks');const ws=[...document.querySelectorAll('.win:not(.hide)')];
- t.innerHTML='';ws.forEach(w=>{const b=document.createElement('button');b.textContent=(w.id==='gamewin'?'🎮 Куб-Арена':(w.dataset.icon+' '+w.dataset.title));if(!w.classList.contains('inactive'))b.className='act';b.onclick=()=>front(w);t.appendChild(b);});}
+function updTasks(){const t=document.getElementById('tasks');const ws=[...document.querySelectorAll('.win:not(.hide)')];const act=ws.filter(w=>!w.classList.contains('mini')).sort((a,b)=>(+b.style.zIndex||0)-(+a.style.zIndex||0))[0];
+ t.innerHTML='';ws.forEach(w=>{const b=document.createElement('button');b.textContent=(w.id==='gamewin'?'🎮 Куб-Арена':(w.dataset.icon+' '+w.dataset.title));if(w===act&&!w.classList.contains('inactive'))b.className='act';b.onclick=()=>{if(w.id==='gamewin'){front(w);return;}if(w.classList.contains('mini')){w.classList.remove('mini');front(w);}else if(w===act)minWin(w.id.slice(2));else front(w);};t.appendChild(b);});}
 function updTray(){document.getElementById('trc').textContent='🪙 '+save.coins;document.getElementById('trg').textContent='💎 '+save.gems;document.getElementById('trl').textContent='★ Ур.'+save.plvl;}
 setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');},1000);
 function toast(t,b){const d=document.createElement('div');d.className='toast';d.innerHTML=`<b>${t}</b>${b||''}`;document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),4500);}
@@ -702,4 +702,7 @@ UI.account=function(){const a=Cloud.auth;
   <div style="text-align:center"><button onclick="Cloud.go('login')">🔑 Войти</button> <button onclick="Cloud.go('register')">📝 Регистрация</button> <button onclick="closeWin('account')">Гость</button></div>
   <p class="hint" style="font-size:11px">Ник 3–16 символов, пароль от 6 символов. Первый вход может занять до минуты — бесплатный сервер просыпается.</p>`,{w:440,icon:'👤'});Cloud.ui();};
 Cloud.startup();
-</script></body></html>
+</script>
+<script src="games98.js"></script>
+<script src="win98.js"></script>
+</body></html>
