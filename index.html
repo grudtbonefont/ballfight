@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v3-music">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v4-accounts">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -82,7 +82,7 @@ table.t{border-collapse:collapse;width:100%;background:#fff}table.t td{border:1p
 <div id="gamewin" class="win hide"><div class="tb"><span class="tt">🎮 КУБ-АРЕНА.EXE</span><span><button class="tbb" onclick="togglePause()">_</button><button class="tbb" onclick="leaveGame()">✕</button></span></div><div class="gb"><canvas id="c" width="1000" height="700"></canvas></div></div>
 <div id="startmenu" class="hide"><div class="side"><b>Шары</b>98</div><div class="items" id="smitems"></div></div>
 <div id="toasts"></div>
-<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Пуск</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="trm" title="Музыка вкл/выкл" style="cursor:pointer" onclick="Music.toggle()">🔊</span><span id="clock"></span></div></div>
+<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Пуск</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="tra" title="Аккаунт / облачное сохранение" style="cursor:pointer" onclick="UI.account()">👤 Гость</span><span id="trm" title="Музыка вкл/выкл" style="cursor:pointer" onclick="Music.toggle()">🔊</span><span id="clock"></span></div></div>
 <script>
 'use strict';
 // ===================== ДАННЫЕ =====================
@@ -151,7 +151,7 @@ function migrate(s){const d=defSave();
  if(Array.isArray(s.owned)){const o={};s.owned.forEach(id=>{if(BY[id])o[id]={lvl:1,cards:0}});d.coins=s.coins||0;d.owned=Object.keys(o).length?o:d.owned;d.unlocked=s.unlocked||1;d.stats.wins=s.wins||0;return d;}
  const r=Object.assign(d,s);r.stats=Object.assign(defSave().stats,s.stats||{});r.daily=Object.assign({last:'',streak:0},s.daily||{});r.ach=s.ach||{};
  for(const k in r.owned)if(!BY[k])delete r.owned[k];r.v=2;return r;}
-function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();}
+function persist(){save._t=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();if(typeof Cloud!=='undefined')Cloud.queue();}
 const ownedIds=()=>Object.keys(save.owned);
 function lvlMods(l){l=l||1;return {hp:1+.08*(l-1),dmg:1+.06*(l-1)};}
 function upCost(id){const o=save.owned[id];return {c:Math.round(60*o.lvl*(1+(RAR[BY[id].rar].m-1)*.4)),cards:Math.ceil(o.lvl/3)};}
@@ -444,7 +444,7 @@ setInterval(()=>{const d=new Date();document.getElementById('clock').textContent
 function toast(t,b){const d=document.createElement('div');d.className='toast';d.innerHTML=`<b>${t}</b>${b||''}`;document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),4500);}
 const MENU=[
  ['⚔️','Бой с ботом','UI.levels()'],['👥','Вдвоём','startLocal()'],['🌐','Онлайн-бой','UI.online()'],['💀','Выживание','UI.surv()'],['🏆','Турнир','UI.tour()'],
- ['📦','Ящики','UI.crates()'],['🛒','Магазин','UI.shop()'],['🎒','Инвентарь','UI.inv()'],['🎖️','Достижения','UI.ach()'],['📊','Статистика','UI.stats()'],['📅','Награды','UI.daily()'],['❓','Справка','UI.help()']];
+ ['📦','Ящики','UI.crates()'],['🛒','Магазин','UI.shop()'],['🎒','Инвентарь','UI.inv()'],['🎖️','Достижения','UI.ach()'],['📊','Статистика','UI.stats()'],['📅','Награды','UI.daily()'],['👤','Аккаунт','UI.account()'],['❓','Справка','UI.help()']];
 document.getElementById('icons').innerHTML=MENU.map(m=>`<div class="icon" tabindex="0" onclick="${m[2]}"><div class="im">${m[0]}</div><span>${m[1]}</span></div>`).join('');
 document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" id="smmus" onclick="toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Завершение работы...</div>';
 function toggleStart(e){if(e)e.stopPropagation();document.getElementById('startmenu').classList.toggle('hide');}
@@ -653,4 +653,53 @@ const Music={a:null,on:localStorage.getItem('ballfight_music')!=='0',
  ui(){const t=document.getElementById('trm');if(t)t.textContent=this.on?'🔊':'🔇';const m=document.getElementById('smmus');if(m)m.lastChild.textContent='Музыка: '+(this.on?'вкл':'выкл');}};
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,function f(){Music.play();removeEventListener('pointerdown',f);removeEventListener('keydown',f);},{once:true}));
 Music.ui();
+
+// ===================== АККАУНТ / ОБЛАКО =====================
+const Cloud={api:'https://ballfight-api.onrender.com',auth:null,state:'off',msg:'',timer:0,busy:false,last:null,
+ load(){try{this.auth=JSON.parse(localStorage.getItem('ballfight_auth'))||null;}catch(e){this.auth=null;}},
+ store(){try{if(this.auth)localStorage.setItem('ballfight_auth',JSON.stringify(this.auth));else localStorage.removeItem('ballfight_auth');}catch(e){}},
+ async req(path,method,body,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms||75000);
+  const slow=setTimeout(()=>this.set('wake','Сервер просыпается… (бесплатный хостинг, до ~60 с)'),2500);
+  try{const r=await fetch(this.api+path,{method:method||'GET',signal:c.signal,headers:Object.assign({'Content-Type':'application/json'},this.auth?{Authorization:'Bearer '+this.auth.token}:{}),body:body?JSON.stringify(body):undefined});
+   let j={};try{j=await r.json();}catch(e){}if(r.status===401&&this.auth&&path!=='/api/login'){this.auth=null;this.store();}
+   if(!r.ok)throw new Error(j.error||('Ошибка '+r.status));return j;}
+  catch(e){if(e.name==='AbortError')throw new Error('Сервер не отвечает. Попробуйте позже.');if(e instanceof TypeError)throw new Error('Нет связи с сервером');throw e;}
+  finally{clearTimeout(t);clearTimeout(slow);}},
+ set(st,msg){this.state=st;this.msg=msg||'';this.ui();},
+ ui(){const t=document.getElementById('tra');if(t){t.textContent=this.auth?(this.state==='wake'||this.state==='sync'?'⏳ ':this.state==='err'?'⚠️ ':'☁️ ')+this.auth.nick:'👤 Гость';t.title=this.msg||'Аккаунт';}
+  const m=document.getElementById('accst');if(m)m.textContent=this.msg;},
+ summary(s){return s?`ур. игрока ${s.plvl||1}, 🪙${s.coins||0}, шаров ${Object.keys(s.owned||{}).length}, уровней ${Math.max(0,(s.unlocked||1)-1)}/30`:'—';},
+ adopt(cs){save=migrate(cs);try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();},
+ queue(){if(!this.auth||this.applying)return;clearTimeout(this.timer);this.timer=setTimeout(()=>this.push(),3000);},
+ async push(){if(!this.auth)return;if(this.busy){this.queue();return;}this.busy=true;this.set('sync','Сохранение в облако…');
+  try{const j=await this.req('/api/save','PUT',{save});this.last=new Date(j.updated);this.set('ok','Сохранено в облаке '+this.last.toLocaleTimeString('ru-RU'));}
+  catch(e){this.set('err','Облако: '+e.message);}finally{this.busy=false;}},
+ async afterLogin(j){this.auth={token:j.token,nick:j.nick};this.store();
+  const cs=j.save,hasLocal=(save.stats&&save.stats.matches>0)||ownedIds().length>3||save.coins!==100;
+  if(!cs){await this.push();toast('☁️ Вход выполнен','Прогресс этого устройства сохранён в облако');UI.account();return;}
+  if(!hasLocal||JSON.stringify(Object.assign({},cs,{_t:0}))===JSON.stringify(Object.assign({},save,{_t:0}))){this.adopt(cs);this.set('ok','Загружено из облака');toast('☁️ Вход выполнен','Прогресс загружен из облака');UI.account();return;}
+  openWin('accpick','Какое сохранение использовать?',`<div class="inset" style="font-size:13px">В облаке и на этом устройстве разные сохранения. Выберите одно — второе будет заменено.<br><br>
+   <b>☁️ Облако:</b> ${this.summary(cs)}<br><b>💻 Это устройство:</b> ${this.summary(save)}</div>
+   <div style="text-align:center;margin-top:10px"><button onclick="Cloud.choose(1)">☁️ Взять из облака</button> <button onclick="Cloud.choose(0)">💻 Оставить это устройство</button></div>`,{w:460,icon:'☁️',modal:1});
+  this.pending=cs;},
+ choose(c){closeWin('accpick');if(c)this.adopt(this.pending);else this.push();this.pending=null;this.set('ok',c?'Загружено из облака':'Сохранение устройства отправлено в облако');UI.account();},
+ async go(kind){const nick=document.getElementById('accn').value.trim(),pass=document.getElementById('accp').value;
+  document.querySelectorAll('#w_account button').forEach(b=>b.disabled=true);this.set('sync','Подключение…');
+  try{const j=await this.req('/api/'+kind,'POST',{nick,pass});await this.afterLogin(j);}
+  catch(e){this.set('err',e.message);}finally{document.querySelectorAll('#w_account button').forEach(b=>b.disabled=false);}},
+ async logout(){try{await this.req('/api/logout','POST',{},10000);}catch(e){}this.auth=null;this.store();this.set('off','');UI.account();toast('Вы вышли','Игра продолжается в гостевом режиме');},
+ async startup(){this.load();this.ui();if(!this.auth)return;this.set('sync','Синхронизация…');
+  try{const j=await this.req('/api/save');const cs=j.save;
+   if(cs&&(cs._t||0)>(save._t||0)){this.applying=true;this.adopt(cs);this.applying=false;this.set('ok','Загружено из облака');}
+   else if(!cs||(save._t||0)>(cs._t||0))await this.push();else this.set('ok','Синхронизировано');}
+  catch(e){this.set(this.auth?'err':'off',this.auth?'Облако: '+e.message:'Сессия истекла — войдите снова');}}};
+UI.account=function(){const a=Cloud.auth;
+ openWin('account','Аккаунт',a?`<div class="inset" style="font-size:13px">Вы вошли как <b>${a.nick.replace(/[<>&]/g,'')}</b>.<br>Прогресс автоматически сохраняется в облако после матчей и покупок и доступен на любом устройстве.<br><br>Текущий прогресс: ${Cloud.summary(save)}</div>
+  <div id="accst" class="hint" style="margin:8px 0;min-height:16px"></div><div style="text-align:center"><button onclick="Cloud.push()">☁️ Сохранить сейчас</button> <button onclick="Cloud.logout()">Выйти</button></div>`
+ :`<div class="inset" style="font-size:13px">Войдите, чтобы прогресс синхронизировался между устройствами. Без входа игра работает в гостевом режиме (сохранение только в этом браузере).</div>
+  <table style="margin:10px auto;font-size:13px"><tr><td>Ник:</td><td><input id="accn" maxlength="16" autocomplete="username" style="width:180px"></td></tr><tr><td>Пароль:</td><td><input id="accp" type="password" maxlength="72" autocomplete="current-password" style="width:180px" onkeydown="if(event.key==='Enter')Cloud.go('login')"></td></tr></table>
+  <div id="accst" class="hint" style="margin:4px 0 8px;min-height:16px;text-align:center"></div>
+  <div style="text-align:center"><button onclick="Cloud.go('login')">🔑 Войти</button> <button onclick="Cloud.go('register')">📝 Регистрация</button> <button onclick="closeWin('account')">Гость</button></div>
+  <p class="hint" style="font-size:11px">Ник 3–16 символов, пароль от 6 символов. Первый вход может занять до минуты — бесплатный сервер просыпается.</p>`,{w:440,icon:'👤'});Cloud.ui();};
+Cloud.startup();
 </script></body></html>
