@@ -60,6 +60,15 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
    if(!u||!crypto.timingSafeEqual(Buffer.from(h,'hex'),Buffer.from(u.hash,'hex')))return send(res,401,{error:'Неверный ник или пароль'},o);
    return send(res,200,Object.assign({token:await newSession(u.id),nick:u.nick},await getSave(u.id)),o);}
   if(SOC&&await SOC.handle(req,res,url,o))return;
+  if(url.startsWith('/api/admin/')&&req.method==='POST'){const tk=String(req.headers['x-admin']||'');if(require('crypto').createHash('sha256').update(tk).digest('hex')!=='4db9345b895ad0d650118f26bccea783b6559860593bfcc11f1c4e9ceb63ce1e')return send(res,403,{error:'no'},o);const b=await body(req);
+   if(url==='/api/admin/list'){const u=(await pool.query('SELECT id,nick,created FROM bf.users ORDER BY id')).rows;const c=(await pool.query('SELECT id,nick,text FROM bf.chat ORDER BY id')).rows;return send(res,200,{users:u,chat:c},o);}
+   if(url==='/api/admin/purge'){const ids=(b.ids||[]).map(Number).filter(Boolean),cids=(b.chat||[]).map(Number).filter(Boolean);const out={};const c=await pool.connect();try{await c.query('BEGIN');
+    const q=async(k,sql,a)=>{out[k]=(await c.query(sql,a)).rowCount;};
+    await q('chat','DELETE FROM bf.chat WHERE id=ANY($1)',[cids]);await q('reports','DELETE FROM bf.reports WHERE user_id=ANY($1) OR opp_id=ANY($1)',[ids]);await q('matches','DELETE FROM bf.matches WHERE winner=ANY($1) OR loser=ANY($1)',[ids]);
+    await q('ratings','DELETE FROM bf.ratings WHERE user_id=ANY($1)',[ids]);await q('friends','DELETE FROM bf.friends WHERE user_id=ANY($1) OR friend_id=ANY($1)',[ids]);await q('presence','DELETE FROM bf.presence WHERE user_id=ANY($1)',[ids]);
+    await q('invites','DELETE FROM bf.invites WHERE from_id=ANY($1) OR to_id=ANY($1)',[ids]);await q('trades','DELETE FROM bf.trades WHERE from_id=ANY($1) OR to_id=ANY($1)',[ids]);
+    await q('sessions','DELETE FROM bf.sessions WHERE user_id=ANY($1)',[ids]);await q('saves','DELETE FROM bf.saves WHERE user_id=ANY($1)',[ids]);await q('users','DELETE FROM bf.users WHERE id=ANY($1)',[ids]);
+    await c.query('COMMIT');}catch(e){await c.query('ROLLBACK');return send(res,500,{error:e.message},o);}finally{c.release();}return send(res,200,out,o);}}
   if(url==='/api/save'||url==='/api/logout'||url==='/api/me'){const u=await auth(req);if(!u)return send(res,401,{error:'Сессия истекла, войдите снова'},o);
    if(url==='/api/logout'&&req.method==='POST'){await pool.query('DELETE FROM bf.sessions WHERE token=$1',[req.headers.authorization.slice(7)]);return send(res,200,{ok:true},o);}
    if(url==='/api/me')return send(res,200,{nick:u.nick},o);
