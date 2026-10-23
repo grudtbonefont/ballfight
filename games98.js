@@ -65,32 +65,80 @@ const CE={V:{p:100,n:320,b:330,r:500,q:900,k:0},
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-bt,-a);if(v>a)a=v;if(a>=bt)break;}return a;},
  best(s,d,noise){const ms=this.legal(s);let best=null,bv=-1e9;ms.sort(()=>Math.random()-.5);
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-1e9,1e9)+(noise?Math.random()*noise:0)+(m.pr&&m.pr!=='q'?-500:0);if(v>bv){bv=v;best=m;}}return best;}};
-const Chess={G:{b:'♟',n:'♞',bb:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёгкий',1,60,30],['Средний',2,15,60],['Сложный',3,0,120]],
- open(){openWin('chess','Шахматы',`<div style="margin-bottom:8px"><b>Новая игра:</b> ${this.lvls.map((l,i)=>`<button onclick="Chess.start(${i})">🤖 ${l[0]}</button>`).join(' ')} <button onclick="Chess.start(-1)">👥 Вдвоём</button></div>
-  <div class="ch"><div class="bd" id="chb"></div><div class="side"><div id="chst" class="inset" style="margin-bottom:6px;min-height:40px"></div><div class="log inset" id="chlog"></div>
-  <div id="chpr" style="margin-top:6px"></div><button style="margin-top:6px" onclick="Chess.undo()">↶ Отменить ход</button></div></div>`,{w:620,icon:'♞'});
-  if(!this.s)this.start(0);else this.draw();},
- start(l){this.ai=l;this.s=CE.init();this.hist=[];this.log=[];this.sel=-1;this.last=null;this.over=false;this.pend=null;this.draw();},
- glyph(p){const t=p.toLowerCase();return `<span class="${p===t?'pb':'pw'}">${t==='b'?this.G.bb:this.G[t]}</span>`;},
+const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёгкий',1,60,30],['Средний',2,15,60],['Сложный',3,0,120]],ai:0,hw:true,flip:false,
+ open(){openWin('chess','Шахматы',`<div class="chtool"><label>Соперник: <select id="chai" onchange="Chess.cfg()">${this.lvls.map((l,i)=>`<option value="${i}">🤖 Компьютер — ${l[0]}</option>`).join('')}<option value="-1">👥 Вдвоём</option></select></label>
+  <label id="chcolw">Цвет: <select id="chcol" onchange="Chess.cfg()"><option value="w">♔ Белые</option><option value="b">♚ Чёрные</option></select></label>
+  <button onclick="Chess.start()">🆕 Новая игра</button><button onclick="Chess.undo()" title="Отменить ход">↶</button><button onclick="Chess.flip=!Chess.flip;Chess.draw()" title="Перевернуть доску">⇅</button></div>
+  <div class="ch"><div class="bwrap"><div class="cap" id="chcapT"></div><div class="bdo"><div class="bd" id="chb"></div><div class="over hide" id="chover"></div></div><div class="cap" id="chcapB"></div></div>
+  <div class="side"><div class="inset log" id="chlog"></div><div id="chpr"></div></div></div><div class="sbar"><span id="chst"></span><span id="chmv"></span></div>`,{w:640,icon:'♞'});
+  const w=document.getElementById('w_chess');if(!w.dataset.ro){w.dataset.ro=1;new ResizeObserver(()=>this.fit()).observe(w);}
+  document.getElementById('chai').value=this.ai;document.getElementById('chcol').value=this.hw?'w':'b';
+  if(!this.s)this.start();else this.draw();this.fit();},
+ cfg(){this.ai=+document.getElementById('chai').value;this.hw=document.getElementById('chcol').value==='w';this.start();},
+ fit(){const w=document.getElementById('w_chess');if(!w||w.classList.contains('hide'))return;const wb=w.querySelector('.wb');
+  const narrow=innerWidth<640;const aw=wb.clientWidth-(narrow?24:230),ah=(w.classList.contains('max')||w.classList.contains('sized'))?wb.clientHeight-120:innerHeight-230;
+  const q=Math.max(26,Math.min(72,Math.floor(Math.min(aw,ah)/8.4)));w.style.setProperty('--sq',q+'px');},
+ start(){this.s=CE.init();this.hist=[];this.log=[];this.sel=-1;this.last=null;this.over=false;this.pend=null;this.thinking=false;this.flip=this.ai>=0&&!this.hw;
+  document.getElementById('chcolw')&&(document.getElementById('chcolw').style.display=this.ai>=0?'':'none');this.draw();this.aiTurn();},
+ human(){return this.ai<0||this.s.w===this.hw;},
+ glyph(p){const t=p.toLowerCase();return `<span class="pc ${p===t?'pb':'pw'}">${this.G[t]}\uFE0E</span>`;},
  sqName:i=>'abcdefgh'[i&7]+(8-(i>>3)),
- draw(){const el=document.getElementById('chb');if(!el)return;const s=this.s;const tg=this.sel>=0?CE.legal(s).filter(m=>m.f===this.sel).map(m=>m.t):[];const ck=CE.inCheck(s,s.w)?CE.king(s.b,s.w):-1;
-  el.innerHTML=s.b.map((p,i)=>`<div class="q ${((i>>3)+(i&7))%2?'d':'l'}${i===this.sel?' s':''}${this.last&&(i===this.last.f||i===this.last.t)?' lm':''}${i===ck?' ck':''}${tg.includes(i)?(p?' tc':' t'):''}" data-i="${i}">${p?this.glyph(p):''}</div>`).join('');
-  el.onpointerdown=e=>{const q=e.target.closest('.q');if(q)this.press(+q.dataset.i,false);};
-  el.onpointerup=e=>{const q=document.elementFromPoint(e.clientX,e.clientY);const qq=q&&q.closest&&q.closest('#chb .q');if(qq&&+qq.dataset.i!==this.sel&&this.sel>=0)this.press(+qq.dataset.i,true);};
-  const ms=CE.legal(s);let st;
-  if(!ms.length){st=CE.inCheck(s,s.w)?`<b>Мат!</b> Победили ${s.w?'чёрные':'белые'}.`:'<b>Пат</b> — ничья.';this.finish(ms.length||!CE.inCheck(s,s.w)?null:!s.w);}
-  else if(s.hm>=100||s.b.filter(x=>x).length===2){st='<b>Ничья</b>.';this.finish(null);}
-  else st=`Ход: <b>${s.w?'белые ♔':'чёрные ♚'}</b>${ck>=0?' — <span style="color:red">шах!</span>':''}<br><small>${this.ai>=0?'Против компьютера ('+this.lvls[this.ai][0]+')':'Вдвоём на одном устройстве'}</small>`;
-  document.getElementById('chst').innerHTML=st;const lg=document.getElementById('chlog');lg.innerHTML=this.log.map((m,i)=>i%2?' '+m+'<br>':(i/2+1)+'. '+m).join('');lg.scrollTop=1e5;
-  document.getElementById('chpr').innerHTML=this.pend?'Превращение: '+'qrbn'.split('').map(q=>`<button style="min-width:0;font-size:20px;padding:0 6px" onclick="Chess.promo('${q}')">${this.glyph(s.w?q.toUpperCase():q)}</button>`).join(''):'';},
- finish(whiteWon){if(this.over)return;this.over=true;if(whiteWon===true&&this.ai>=0){const r=this.lvls[this.ai][3];save.coins+=r;persist();Sfx.startup();toast('♞ Победа в шахматах!',`+${r} 🪙 (${this.lvls[this.ai][0]})`);}else if(whiteWon===false&&this.ai>=0)Sfx.error();else Sfx.ding();},
- press(i,isUp){if(this.over||this.pend||(this.ai>=0&&!this.s.w)||this.thinking)return;const s=this.s,p=s.b[i];
-  if(this.sel>=0){const ms=CE.legal(s).filter(m=>m.f===this.sel&&m.t===i);if(ms.length){if(ms.length>1){this.pend=ms;this.draw();return;}this.make(ms[0]);return;}}
-  if(isUp)return;if(p&&CE.isW(p)===s.w){this.sel=i;Sfx.click();}else this.sel=-1;this.draw();},
+ caps(){const init={p:8,n:2,b:2,r:2,q:1};const c={w:'',b:''};for(const col of ['w','b']){for(const t of 'qrbnp'){const P=col==='w'?t.toUpperCase():t;const n=init[t]-this.s.b.filter(x=>x===P).length;for(let i=0;i<Math.max(0,n);i++)c[col]+=this.glyph(P);}}return c;},
+ draw(){const el=document.getElementById('chb');if(!el)return;const s=this.s;const ms=CE.legal(s);const tg=this.sel>=0?ms.filter(m=>m.f===this.sel).map(m=>m.t):[];const ck=CE.inCheck(s,s.w)?CE.king(s.b,s.w):-1;
+  const order=[...Array(64).keys()];if(this.flip)order.reverse();
+  el.innerHTML=order.map(i=>{const p=s.b[i],r=i>>3,c=i&7;const fl=this.flip?r===0:r===7,rk=this.flip?c===7:c===0;
+   return `<div class="q ${(r+c)%2?'d':'l'}${i===this.sel?' s':''}${this.last&&(i===this.last.f||i===this.last.t)?' lm':''}${i===ck?' ck':''}${tg.includes(i)?(p||(this.sel>=0&&s.b[this.sel].toLowerCase()==='p'&&(i&7)!==(this.sel&7))?' tc':' t'):''}" data-i="${i}">${p?this.glyph(p):''}${rk?`<i class="rk">${8-r}</i>`:''}${fl?`<i class="fl">${'abcdefgh'[c]}</i>`:''}</div>`;}).join('');
+  if(!el.dataset.ev){el.dataset.ev=1;el.addEventListener('pointerdown',e=>this.down(e));}
+  const cp=this.caps();const top=this.flip?'w':'b';// top player's captured pieces: those they took = opponent pieces
+  document.getElementById('chcapT').innerHTML=cp[top==='w'?'b':'w']||'&nbsp;';document.getElementById('chcapB').innerHTML=cp[top]||'&nbsp;';
+  let st,end=null;
+  if(!ms.length){end=CE.inCheck(s,s.w)?{w:!s.w,t:'Мат!'}:{w:null,t:'Пат — ничья'};}
+  else if(s.hm>=100)end={w:null,t:'Ничья (правило 50 ходов)'};else if(this.insuf())end={w:null,t:'Ничья — недостаточно фигур'};
+  if(end){st=end.t;this.finish(end);}else st=this.thinking?'🤔 Компьютер думает…':`Ход ${s.w?'белых ♔':'чёрных ♚'}${this.ai>=0?(this.human()?' (ваш ход)':''):''}${ck>=0?' — ШАХ!':''}`;
+  document.getElementById('chst').textContent=st;document.getElementById('chmv').textContent=`Ход №${Math.floor(this.log.length/2)+1} · ${this.ai>=0?'vs '+this.lvls[this.ai][0]:'Вдвоём'}`;
+  const lg=document.getElementById('chlog');let h='<table>';for(let i=0;i<this.log.length;i+=2)h+=`<tr><td>${i/2+1}.</td><td>${this.log[i]}</td><td>${this.log[i+1]||''}</td></tr>`;lg.innerHTML=(this.log.length?h+'</table>':'<i style="color:#808080">Ходов пока нет</i>');lg.scrollTop=1e5;
+  document.getElementById('chpr').innerHTML=this.pend?'<b>Превратить пешку в:</b><br>'+'qrbn'.split('').map(q=>`<button class="prb" onclick="Chess.promo('${q}')">${this.glyph(s.w?q.toUpperCase():q)}</button>`).join(''):'';},
+ insuf(){const p=this.s.b.filter(x=>x&&x.toLowerCase()!=='k');return !p.length||(p.length===1&&'nb'.includes(p[0].toLowerCase()));},
+ finish(end){if(this.over)return;this.over=true;let msg=end.t,ico='🤝';
+  if(end.w!==null){const wn=end.w?'белые':'чёрные';if(this.ai>=0){if(end.w===this.hw){const r=this.lvls[this.ai][3];save.coins+=r;persist();msg+=` Вы победили! +${r} 🪙`;ico='🏆';Sfx.startup();}else{msg+=' Компьютер победил.';ico='💀';Sfx.error();}}else{msg+=` Победили ${wn}.`;ico='🏆';Sfx.ding();}}else Sfx.ding();
+  const o=document.getElementById('chover');o.innerHTML=`<div class="dlgw"><div class="tb"><span>♞ Партия окончена</span></div><div style="padding:10px;text-align:center"><div style="font-size:34px">${ico}</div><div style="margin:6px 0 10px">${msg}</div><button onclick="Chess.start()">Новая игра</button> <button onclick="document.getElementById('chover').classList.add('hide')">Смотреть доску</button></div></div>`;
+  setTimeout(()=>o.classList.remove('hide'),400);},
+ down(e){const q=e.target.closest('.q');if(!q||this.over||this.pend||this.thinking||!this.human())return;e.preventDefault();const i=+q.dataset.i,s=this.s,p=s.b[i];
+  if(this.sel>=0&&this.tryMove(this.sel,i))return;
+  if(!(p&&CE.isW(p)===s.w)){this.sel=-1;this.draw();return;}
+  const was=this.sel===i;this.sel=i;Sfx.click();this.draw();
+  const src=document.querySelector(`#chb .q[data-i="${i}"] .pc`);const gh=src.cloneNode(true);gh.className+=' ghost';document.body.appendChild(gh);const sz=document.getElementById('chb').firstChild.offsetWidth;gh.style.fontSize=sz*.8+'px';
+  const pos=ev=>{gh.style.left=ev.clientX-sz/2+'px';gh.style.top=ev.clientY-sz/2+'px';};pos(e);let moved=false;const sx=e.clientX,sy=e.clientY;
+  const mv=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>4){moved=true;src.style.opacity=.25;}if(moved)pos(ev);};
+  const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);gh.remove();src.style.opacity='';
+   const t=document.elementsFromPoint(ev.clientX,ev.clientY).find(x=>x.classList&&x.classList.contains('q')&&x.closest('#chb'));
+   if(moved&&t&&+t.dataset.i!==i){if(!this.tryMove(i,+t.dataset.i)){this.draw();}}else if(!moved&&was){this.sel=-1;this.draw();}};
+  addEventListener('pointermove',mv);addEventListener('pointerup',up);},
+ tryMove(f,t){const ms=CE.legal(this.s).filter(m=>m.f===f&&m.t===t);if(!ms.length)return false;if(ms.length>1){this.pend=ms;this.sel=f;this.draw();return true;}this.make(ms[0]);return true;},
  promo(q){const m=this.pend.find(x=>x.pr===q);this.pend=null;this.make(m);},
- san(s,m){const p=s.b[m.f].toLowerCase();if(m.cs)return (m.t&7)===6?'O-O':'O-O-O';const cap=s.b[m.t]||m.ep;return (p==='p'?(cap?'abcdefgh'[m.f&7]:''):p.toUpperCase().replace('B','С').replace('N','К').replace('R','Л').replace('Q','Ф').replace('K','Кр'))+(cap?'x':'')+this.sqName(m.t)+(m.pr?'='+m.pr.toUpperCase():'');},
- make(m){this.hist.push({s:this.s,log:this.log.slice(),last:this.last});let n=this.san(this.s,m);this.s=CE.apply(this.s,m);if(CE.inCheck(this.s,this.s.w))n+=CE.legal(this.s).length?'+':'#';this.log.push(n);this.last=m;this.sel=-1;
-  CE.V&&(this.s.b[m.t]&&Sfx.tone(this.hist.at(-1).s.b[m.t]?300:520,0,.06,'square',.06));this.draw();
-  if(this.ai>=0&&!this.s.w&&!this.over){this.thinking=true;document.getElementById('chst').innerHTML+='<br>🤔 Компьютер думает…';
-   setTimeout(()=>{const L=this.lvls[this.ai];const bm=CE.best(this.s,L[1],L[2]);this.thinking=false;if(bm)this.make(bm);},250);}},
- undo(){if(this.thinking||!this.hist.length)return;let n=this.ai>=0&&this.s.w&&this.hist.length>=2?2:1;let h;while(n--&&this.hist.length)h=this.hist.pop();this.s=h.s;this.log=h.log;this.last=h.last;this.over=false;this.sel=-1;this.pend=null;this.draw();}};
+ san(s,m){const p=s.b[m.f].toLowerCase();if(m.cs)return (m.t&7)===6?'O-O':'O-O-O';const cap=s.b[m.t]||m.ep;const L={n:'К',b:'С',r:'Л',q:'Ф',k:'Кр'};return (p==='p'?(cap?'abcdefgh'[m.f&7]:''):L[p])+(cap?'x':'')+this.sqName(m.t)+(m.pr?'='+L[m.pr]:'');},
+ make(m){const cap=this.s.b[m.t]||m.ep;this.hist.push({s:this.s,log:this.log.slice(),last:this.last});let n=this.san(this.s,m);this.s=CE.apply(this.s,m);if(CE.inCheck(this.s,this.s.w))n+=CE.legal(this.s).length?'+':'#';this.log.push(n);this.last=m;this.sel=-1;
+  Sfx.tone(cap?300:520,0,.06,'square',.06);this.draw();this.aiTurn();},
+ aiTurn(){if(this.ai<0||this.over||this.human())return;this.thinking=true;this.draw();const tok=this.tok=(this.tok||0)+1;
+  setTimeout(()=>{if(tok!==this.tok)return;const L=this.lvls[this.ai];const bm=CE.best(this.s,L[1],L[2]);this.thinking=false;if(bm)this.make(bm);else this.draw();},350);},
+ undo(){if(!this.hist.length)return;this.tok++;this.thinking=false;let n=this.ai>=0&&this.hist.length>=2&&(this.human()||this.over)?2:1;if(this.ai>=0&&!this.human()&&!this.over)n=1;let h;while(n--&&this.hist.length)h=this.hist.pop();this.s=h.s;this.log=h.log;this.last=h.last;this.over=false;this.sel=-1;this.pend=null;
+  document.getElementById('chover').classList.add('hide');this.draw();this.aiTurn();}};
+(function(){const st=document.createElement('style');st.textContent=`
+#w_chess{--sq:52px}#w_chess .wb{display:flex;flex-direction:column}
+.chtool{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}.chtool button{min-width:0;padding:2px 8px}.chtool select{font:inherit}
+.ch{display:flex;gap:10px;flex-wrap:wrap;flex:1}.ch .bwrap{display:flex;flex-direction:column}.ch .cap{min-height:calc(var(--sq)*.45);font-size:calc(var(--sq)*.38);line-height:1}
+.ch .bdo{position:relative}.ch .bd{display:grid;grid-template-columns:repeat(8,var(--sq));border:3px solid;border-color:#808080 #fff #fff #808080;touch-action:none}
+.ch .q{width:var(--sq);height:var(--sq);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.ch .q.l{background:#f0d9b5}.ch .q.d{background:#b58863}.ch .q.lm{background:#cdd26a}.ch .q.d.lm{background:#aaa23a}.ch .q.s{background:#7fb3ff!important}.ch .q.ck{background:radial-gradient(#f00,#f55 40%,transparent 75%)}
+.ch .q.t::after{content:"";width:28%;height:28%;border-radius:50%;background:rgba(0,0,90,.35);position:absolute}.ch .q.tc::after{content:"";position:absolute;inset:3%;border:calc(var(--sq)*.07) solid rgba(0,0,90,.45);border-radius:50%}
+.pc{font-family:"DejaVu Sans","Segoe UI Symbol","Noto Sans Symbols2",serif;font-size:calc(var(--sq)*.8);line-height:1;pointer-events:none}
+.pc.pw{color:#fff;-webkit-text-stroke:1.5px #000;text-shadow:1px 1px 1px rgba(0,0,0,.5)}.pc.pb{color:#111;text-shadow:0 0 1px #fff}
+.ch .cap .pc{font-size:inherit;-webkit-text-stroke-width:1px}
+.pc.ghost{position:fixed;z-index:99999;pointer-events:none;width:auto}
+.ch .q i{position:absolute;font:bold calc(var(--sq)*.2) Tahoma;font-style:normal;pointer-events:none}.ch .q i.rk{left:2px;top:1px}.ch .q i.fl{right:2px;bottom:0}.ch .q.l i{color:#b58863}.ch .q.d i{color:#f0d9b5}
+.ch .side{flex:1;min-width:170px;display:flex;flex-direction:column;gap:6px}.ch .log{flex:1;min-height:120px;max-height:calc(var(--sq)*8);overflow:auto;font:12px "Courier New",monospace}.ch .log td{padding:0 4px}
+.prb{min-width:0!important;padding:0 4px!important;margin:2px}.prb .pc{font-size:30px}
+.ch .over{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25)}.ch .over.hide{display:none}
+.dlgw{background:#c0c0c0;border:2px solid;border-color:#dfdfdf #000 #000 #dfdfdf;min-width:220px}.dlgw .tb{cursor:default}
+.sbar{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12px}.sbar span{border:1px solid;border-color:#808080 #fff #fff #808080;padding:1px 6px}.sbar span:first-child{flex:1}
+@media(max-width:640px){#w_chess .ch .side{min-width:100%}}`;document.head.appendChild(st);})();
