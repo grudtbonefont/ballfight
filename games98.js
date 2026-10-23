@@ -1,6 +1,6 @@
 'use strict';
 // ===================== САПЁР =====================
-const Mines={lv:{b:[9,9,10,'Новичок',15],i:[16,16,40,'Любитель',40],e:[30,16,99,'Профессионал',100]},cur:'b',
+const Mines={lv:{b:[9,9,10,'Новичок',5],i:[16,16,40,'Любитель',10],e:[30,16,99,'Профессионал',20]},cur:'b',
  open(l){if(l)this.cur=l;const [W,H,M,n]=this.lv[this.cur];Object.assign(this,{W,H,M,grid:[],st:'ready',t:0,flags:0,opened:0});clearInterval(this.ti);
   for(let i=0;i<W*H;i++)this.grid.push({m:0,o:0,f:0,n:0});
   openWin('mines','Сапёр',`<div style="font-size:12px;margin:-4px 0 6px">${Object.entries(this.lv).map(([k,v])=>`<a href="#" onclick="Mines.open('${k}');return false" style="margin-right:10px;color:#000;${k===this.cur?'font-weight:bold':''}">${v[3]}</a>`).join('')}</div>
@@ -21,7 +21,7 @@ const Mines={lv:{b:[9,9,10,'Новичок',15],i:[16,16,40,'Любитель',4
   if(this.opened===this.W*this.H-this.M)this.end(true);},
  chord(i){const c=this.grid[i];if(!c.n||this.nb(i).filter(j=>this.grid[j].f).length!==c.n)return;for(const j of this.nb(i))if(this.st==='play')this.reveal(j);},
  end(win){this.st='over';clearInterval(this.ti);document.getElementById('mss').textContent=win?'😎':'😵';this.grid.forEach(c=>{if(c.m&&!c.f&&!win)c.o=1;if(c.m&&win)c.f=1;});
-  if(win){const r=this.lv[this.cur][4];save.coins+=r;persist();Sfx.startup();toast('💣 Сапёр пройден!',`${this.lv[this.cur][3]} за ${this.t} с — +${r} 🪙`);}else Sfx.error();this.draw();},
+  if(win){Sfx.startup();Reward.give('mines',this.lv[this.cur][4],'💣 Сапёр пройден! '+this.lv[this.cur][3]+' за '+this.t+' с');}else Sfx.error();this.draw();},
  draw(){const g=document.getElementById('msg');if(!g)return;const col=['','#00f','#080','#f00','#008','#800','#088','#000','#888'];
   g.querySelectorAll('.c').forEach((el,i)=>{const c=this.grid[i];el.className='c'+(c.o?' o':'')+(c.boom?' boom':'');el.style.color=col[c.n]||'';
    el.textContent=c.o?(c.m?'💣':(c.n||'')):(c.f?'🚩':'');if(this.st==='over'&&c.f&&!c.m){el.textContent='❌';}});
@@ -65,7 +65,7 @@ const CE={V:{p:100,n:320,b:330,r:500,q:900,k:0},
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-bt,-a);if(v>a)a=v;if(a>=bt)break;}return a;},
  best(s,d,noise){const ms=this.legal(s);let best=null,bv=-1e9;ms.sort(()=>Math.random()-.5);
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-1e9,1e9)+(noise?Math.random()*noise:0)+(m.pr&&m.pr!=='q'?-500:0);if(v>bv){bv=v;best=m;}}return best;}};
-const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёгкий',1,60,30],['Средний',2,15,60],['Сложный',3,0,120]],ai:0,hw:true,flip:false,
+const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёгкий',1,60,10],['Средний',2,15,20],['Сложный',3,0,40]],ai:0,hw:true,flip:false,
  open(){openWin('chess','Шахматы',`<div class="chtool"><label>Соперник: <select id="chai" onchange="Chess.cfg()">${this.lvls.map((l,i)=>`<option value="${i}">🤖 Компьютер — ${l[0]}</option>`).join('')}<option value="-1">👥 Вдвоём</option></select></label>
   <label id="chcolw">Цвет: <select id="chcol" onchange="Chess.cfg()"><option value="w">♔ Белые</option><option value="b">♚ Чёрные</option></select></label>
   <button onclick="Chess.start()">🆕 Новая игра</button><button onclick="Chess.undo()" title="Отменить ход">↶</button><button onclick="Chess.flip=!Chess.flip;Chess.draw()" title="Перевернуть доску">⇅</button></div>
@@ -100,7 +100,7 @@ const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёг�
   document.getElementById('chpr').innerHTML=this.pend?'<b>Превратить пешку в:</b><br>'+'qrbn'.split('').map(q=>`<button class="prb" onclick="Chess.promo('${q}')">${this.glyph(s.w?q.toUpperCase():q)}</button>`).join(''):'';},
  insuf(){const p=this.s.b.filter(x=>x&&x.toLowerCase()!=='k');return !p.length||(p.length===1&&'nb'.includes(p[0].toLowerCase()));},
  finish(end){if(this.over)return;this.over=true;let msg=end.t,ico='🤝';
-  if(end.w!==null){const wn=end.w?'белые':'чёрные';if(this.ai>=0){if(end.w===this.hw){const r=this.lvls[this.ai][3];save.coins+=r;persist();msg+=` Вы победили! +${r} 🪙`;ico='🏆';Sfx.startup();}else{msg+=' Компьютер победил.';ico='💀';Sfx.error();}}else{msg+=` Победили ${wn}.`;ico='🏆';Sfx.ding();}}else Sfx.ding();
+  if(end.w!==null){const wn=end.w?'белые':'чёрные';if(this.ai>=0){if(end.w===this.hw){const r=Reward.give('chess',this.lvls[this.ai][3],'♞ Победа в шахматах');msg+=r?` Вы победили! +${r} 🪙`:' Вы победили! (лимит наград на сегодня)';ico='🏆';Sfx.startup();}else{msg+=' Компьютер победил.';ico='💀';Sfx.error();}}else{msg+=` Победили ${wn}.`;ico='🏆';Sfx.ding();}}else Sfx.ding();
   const o=document.getElementById('chover');o.innerHTML=`<div class="dlgw"><div class="tb"><span>♞ Партия окончена</span></div><div style="padding:10px;text-align:center"><div style="font-size:34px">${ico}</div><div style="margin:6px 0 10px">${msg}</div><button onclick="Chess.start()">Новая игра</button> <button onclick="document.getElementById('chover').classList.add('hide')">Смотреть доску</button></div></div>`;
   setTimeout(()=>o.classList.remove('hide'),400);},
  down(e){const q=e.target.closest('.q');if(!q||this.over||this.pend||this.thinking||!this.human())return;e.preventDefault();const i=+q.dataset.i,s=this.s,p=s.b[i];

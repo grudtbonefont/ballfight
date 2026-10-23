@@ -1,6 +1,7 @@
 'use strict';
 // ===================== WIN98 РАБОЧИЙ СТОЛ =====================
 (function(){const st=document.createElement('style');st.textContent=`
+.im svg{width:34px;height:34px;display:block;margin:2px auto}#startmenu .it svg{width:20px;height:20px}
 .tbb{min-width:0!important;padding:0!important}
 .grip{position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 45%,#808080 45% 52%,#fff 52% 60%,transparent 60% 70%,#808080 70% 77%,#fff 77% 85%,transparent 85%)}
 .win.mini{display:none!important}
@@ -55,7 +56,7 @@ function resizify(w){const g=w.querySelector('.grip');w.querySelector('.tb').add
 // ---- значки ----
 const GX=96,GY=88;
 const APPS=MENU.map(m=>({k:m[1],ico:m[0],run:m[2]})).concat([
- {k:'Сапёр',ico:'💣',run:'Mines.open()'},{k:'Шахматы',ico:'♞',run:'Chess.open()'},{k:'Блокнот',ico:'📝',run:'Desk.notes()'},{k:'Свойства экрана',ico:'🖥️',run:'Desk.props()'},{k:'Корзина',ico:'🗑️',run:'Desk.bin()',fixed:1}]);
+ {k:'Сапёр',ico:'💣',run:'Mines.open()'},{k:'Шахматы',ico:'♞',run:'Chess.open()'},{k:'Блокнот',ico:'📝',run:'Desk.notes()'},{k:'Свойства экрана',ico:'🖥️',run:'Desk.props()'},...(window.EXTRA||[]),{k:'Корзина',ico:'🗑️',run:'Desk.bin()',fixed:1}]);
 const Desk={pos:{},binned:[],sel:new Set(),
  load(){try{const d=JSON.parse(localStorage.getItem('bf_icons'))||{};this.pos=d.pos||{};this.binned=d.bin||[];}catch(e){}},
  store(){try{localStorage.setItem('bf_icons',JSON.stringify({pos:this.pos,bin:this.binned}));}catch(e){}},
@@ -149,7 +150,7 @@ addEventListener('pointerdown',e=>{if(!e.target.closest('#ctx'))hideCtx();},true
  const sub=(ico,t,inner)=>`<div class="it"><span style="font-size:20px">${ico}</span>${t}<span class="arr">▸</span><div class="sub">${inner}</div></div>`;
  const m=k=>{const a=APPS.find(x=>x.k===k);return it(a.ico,a.k,a.run);};
  document.getElementById('smitems').innerHTML=
-  sub('📁','Программы',['Бой с ботом','Вдвоём','Онлайн-бой','Выживание','Турнир'].map(m).join('')+'<hr>'+sub('🎲','Игры',m('Сапёр')+m('Шахматы'))+m('Блокнот'))+
+  sub('📁','Программы',['Бой с ботом','Вдвоём','Онлайн-бой','Выживание','Турнир'].map(m).join('')+'<hr>'+sub('🎲','Игры',m('Сапёр')+m('Шахматы')+(window.EXTRA||[]).filter(a=>a.cat==='game').map(a=>m(a.k)).join(''))+sub('🗂️','Стандартные',m('Блокнот')+(window.EXTRA||[]).filter(a=>a.cat==='std').map(a=>m(a.k)).join('')))+
   sub('🎒','Игрок',['Ящики','Магазин','Инвентарь','Достижения','Статистика','Награды','Аккаунт'].map(m).join(''))+
   sub('⚙️','Настройки',it('🖥️','Свойства экрана','Desk.props()')+'<div class="it" id="smmus" onclick="event.stopPropagation();toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div>'+it('🗂️','Упорядочить значки','Desk.arrange()'))+
   m('Корзина')+m('Справка')+'<hr>'+it('⏻','Выключить компьютер...','UI.shutdown()');
