@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v3-balance">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v3-music">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -82,7 +82,7 @@ table.t{border-collapse:collapse;width:100%;background:#fff}table.t td{border:1p
 <div id="gamewin" class="win hide"><div class="tb"><span class="tt">🎮 КУБ-АРЕНА.EXE</span><span><button class="tbb" onclick="togglePause()">_</button><button class="tbb" onclick="leaveGame()">✕</button></span></div><div class="gb"><canvas id="c" width="1000" height="700"></canvas></div></div>
 <div id="startmenu" class="hide"><div class="side"><b>Шары</b>98</div><div class="items" id="smitems"></div></div>
 <div id="toasts"></div>
-<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Пуск</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="clock"></span></div></div>
+<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Пуск</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="trm" title="Музыка вкл/выкл" style="cursor:pointer" onclick="Music.toggle()">🔊</span><span id="clock"></span></div></div>
 <script>
 'use strict';
 // ===================== ДАННЫЕ =====================
@@ -446,7 +446,7 @@ const MENU=[
  ['⚔️','Бой с ботом','UI.levels()'],['👥','Вдвоём','startLocal()'],['🌐','Онлайн-бой','UI.online()'],['💀','Выживание','UI.surv()'],['🏆','Турнир','UI.tour()'],
  ['📦','Ящики','UI.crates()'],['🛒','Магазин','UI.shop()'],['🎒','Инвентарь','UI.inv()'],['🎖️','Достижения','UI.ach()'],['📊','Статистика','UI.stats()'],['📅','Награды','UI.daily()'],['❓','Справка','UI.help()']];
 document.getElementById('icons').innerHTML=MENU.map(m=>`<div class="icon" tabindex="0" onclick="${m[2]}"><div class="im">${m[0]}</div><span>${m[1]}</span></div>`).join('');
-document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Завершение работы...</div>';
+document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" id="smmus" onclick="toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Завершение работы...</div>';
 function toggleStart(e){if(e)e.stopPropagation();document.getElementById('startmenu').classList.toggle('hide');}
 addEventListener('click',e=>{const sm=document.getElementById('startmenu');if(!sm.contains(e.target)&&e.target.id!=='startbtn')sm.classList.add('hide');});
 function ballIco(b,sz){return `<div class="ballico" style="${sz?`width:${sz}px;height:${sz}px;`:''}background:radial-gradient(circle at 35% 35%,${shade(b.color,.6)},${b.color} 55%,${shade(b.color,-.55)})">${b.sym}</div>`;}
@@ -644,4 +644,13 @@ if(save.daily.last!==today())setTimeout(()=>UI.daily(),400);
 requestAnimationFrame(frame);
 window.__test={startBot,startLocal,startSurvival,startTour,pickChoose,openCrate,finishCrate,upgrade,UI,save:()=>save,get G(){return G},
  sim(n){for(let i=0;i<n&&G&&G.phase!=='over';i++){const me=G.balls[0],e=G.balls[1];const dx=e.x-me.x,dy=e.y-me.y,l=Math.hypot(dx,dy)||1;step(1/60,[{x:dx/l,y:dy/l,a:Math.random()<.05},botInput(1/60,G.opts.d==null?.5:G.opts.d)]);}}};
+
+// ===================== МУЗЫКА =====================
+const Music={a:null,on:localStorage.getItem('ballfight_music')!=='0',
+ init(){if(this.a)return;this.a=new Audio('music.mp3');this.a.loop=true;this.a.volume=.4;},
+ play(){if(!this.on)return;this.init();const p=this.a.play();if(p&&p.catch)p.catch(()=>{});},
+ toggle(){this.on=!this.on;try{localStorage.setItem('ballfight_music',this.on?'1':'0');}catch(e){}if(this.on)this.play();else if(this.a)this.a.pause();this.ui();},
+ ui(){const t=document.getElementById('trm');if(t)t.textContent=this.on?'🔊':'🔇';const m=document.getElementById('smmus');if(m)m.lastChild.textContent='Музыка: '+(this.on?'вкл':'выкл');}};
+['pointerdown','keydown'].forEach(ev=>addEventListener(ev,function f(){Music.play();removeEventListener('pointerdown',f);removeEventListener('keydown',f);},{once:true}));
+Music.ui();
 </script></body></html>
