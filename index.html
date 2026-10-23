@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v15b-helper">
+<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v16-events">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -120,6 +120,7 @@ B('shackles','Кандалы','#37474f','mythic','Капканы','3 капка�
 B('hole','Сингулярность','#4a2a9a','mythic','Чёрная дыра','Дыра у врага затягивает и ранит 3с',9,104,1,1.15,'◉'),
 ];
 const BY={};BALLS.forEach(b=>BY[b.id]=b);
+const EVBALLS=[['pumpkin','Тыквоголовый','#ff7518','bomb','Тыквенная бомба','halloween'],['ghost','Призрак','#b9c6ff','tele','Сквозь стены','halloween'],['bat','Нетопырь','#6a2c8a','vamp','Укус','halloween'],['snowman','Снеговик','#dff3ff','ice','Метель','newyear'],['cracker','Хлопушка','#ff3b6b','bomb','Конфетти-бум','newyear']].map(([id,n,c,al,ab,ev])=>{const s=BY[al];const b=B(id,n,c,'epic',ab,s.desc+' (ивентовый шар)',s.cd,s.hp,s.spd,s.mass,s.sym);b.al=al;b.ev=ev;BY[id]=b;return b;});
 const ARENAS=[
  {id:'classic',n:'Классический куб',f:['#2a2f5e','#3f4a98'],w:'#5b6ee1'},
  {id:'lava',n:'Лавовый куб',f:['#3a1a1a','#6a2a20'],w:'#e0603a'},
@@ -188,7 +189,7 @@ function useAbility(i){const b=G.balls[i],e=G.balls[1-i],d=BY[b.id];if(b.cd>0||b
  const dx=e.x-b.x,dy=e.y-b.y,dl=Math.hypot(dx,dy)||1,nx=dx/dl,ny=dy/dl,ang=Math.atan2(dy,dx);
  const shoot=(k,a,sp,o)=>G.proj.push(Object.assign({k,x:b.x+Math.cos(a)*(b.r+8),y:b.y+Math.sin(a)*(b.r+8),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:7,o:i,t:2,dmg:5,c:d.color},o||{}));
  if(i===G.me&&G.kind!=='online')save.stats.abil++;
- switch(b.id){
+ switch(d.al||b.id){
   case 'dash':{let sp=Math.hypot(b.vx,b.vy);let ux=sp>40?b.vx/sp:nx,uy=sp>40?b.vy/sp:ny;b.vx=ux*950;b.vy=uy*950;b.fx.strike=.5;break;}
   case 'shield':b.fx.shield=2.5;break;
   case 'fire':b.fx.fire=3;break;
@@ -318,7 +319,7 @@ function botInput(dt,d,side,S){side=side==null?1:side;S=S||Bot;const me=G.balls[
   const AR=ARENAS[G.arena].id;if(AR==='lava'&&d>.4)LAVA.forEach(L=>{if(Math.hypot(me.x-L.x,me.y-L.y)<L.R+50){tx=me.x+(me.x-L.x)*3;ty=me.y+(me.y-L.y)*3;}});
   const n=lerp(.9,.1,d);let ax=tx-me.x+rnd(-1,1)*n*200,ay=ty-me.y+rnd(-1,1)*n*200;const l=Math.hypot(ax,ay)||1;S.dir={x:ax/l,y:ay/l};
   let want=false;const p=lerp(.25,.9,d);
-  switch(me.id){case 'dash':want=dl<350&&((me.vx*dx+me.vy*dy)/dl>100);break;case 'shield':want=dl<160&&eS>250;break;
+  switch((BY[me.id]&&BY[me.id].al)||me.id){case 'dash':want=dl<350&&((me.vx*dx+me.vy*dy)/dl>100);break;case 'shield':want=dl<160&&eS>250;break;
    case 'heal':want=me.hp<me.maxHp*.6;break;case 'tele':want=dl>300||me.hp<me.maxHp*.4&&dl<120;break;
    case 'ice':case 'wave':case 'spikes':case 'bomb':case 'glass':case 'elec':case 'vamp':case 'blades':case 'giant':case 'fire':want=dl<230;break;
    default:want=RANGED.includes(me.id)?dl<600:dl<300;}
@@ -470,7 +471,7 @@ const UI={
   openWin('shop','Магазин',`<fieldset><legend>Ежедневные предложения (обновятся завтра)</legend><div class="grid">${offers.map(b=>{const p=Math.round(RAR[b.rar].m*300);const own=!!save.owned[b.id];
    return `<div class="card">${card(b,`<button ${save.coins<p?'disabled':''} onclick="buyBall('${b.id}',${p})">${own?'+3 карточки':'Купить'} 🪙${p}</button>`)}</div>`}).join('')}</div></fieldset>
   <fieldset><legend>Обмен</legend><button ${save.gems<10?'disabled':''} onclick="exch()">💎10 → 🪙500</button> <button onclick="UI.crates()">📦 К ящикам</button></fieldset>`,{w:640,icon:'🛒'});},
- inv(){const own=ownedIds().length;openWin('inv','Инвентарь — '+own+'/'+BALLS.length+' шаров',`<div class="grid">${[...BALLS].sort((a,b)=>RORD.indexOf(b.rar)-RORD.indexOf(a.rar)).map(b=>{const o=save.owned[b.id];
+ inv(){const own=ownedIds().length;openWin('inv','Инвентарь — '+own+'/'+BALLS.length+' шаров',`<div class="grid">${[...BALLS,...EVBALLS.filter(b=>save.owned[b.id])].sort((a,b)=>RORD.indexOf(b.rar)-RORD.indexOf(a.rar)).map(b=>{const o=save.owned[b.id];
   if(!o)return `<div class="card lock"><div class="rb" style="background:${RAR[b.rar].c}"></div><div class="ballico" style="background:#555">?</div><b>???</b><div class="rar" style="color:${RAR[b.rar].c}">${RAR[b.rar].n}</div><small>Не найден</small></div>`;
   const c=upCost(b.id);const can=o.lvl<10&&save.coins>=c.c&&o.cards>=c.cards;
   return `<div class="card">${card(b,`<div class="prog" style="margin:4px 0"><i style="width:${Math.min(100,o.cards/c.cards*100)}%"></i></div><div class="stat">🃏 ${o.cards}/${o.lvl<10?c.cards:'—'}</div>${o.lvl<10?`<button ${can?'':'disabled'} onclick="upgrade('${b.id}')">Улучшить 🪙${c.c}</button>`:'<b>МАКС. УРОВЕНЬ</b>'}`)}</div>`}).join('')}</div>`,{w:800,icon:'🎒'});},
@@ -706,5 +707,5 @@ Cloud.startup();
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="logos98.js"></script><script src="social98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
+<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
 </body></html>
