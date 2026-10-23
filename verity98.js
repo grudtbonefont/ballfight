@@ -11,7 +11,7 @@ const css=document.createElement('style');css.textContent=`
 #vstatic{position:fixed;inset:0;z-index:99990;pointer-events:none;mix-blend-mode:screen}
 .vflick{animation:vfl .12s steps(2) 6}@keyframes vfl{50%{filter:brightness(.2) contrast(2)}}
 #icons.vshake .icon{animation:vjit .2s steps(2) infinite}
-#vscare .ey{fill:#f00!important}#vscare{position:fixed;inset:0;z-index:100000;background:#000;display:flex;align-items:center;justify-content:center}#vscare .vimg{width:85vh;height:85vh;animation:vzoom .9s ease-in forwards}
+#vscare .ey{fill:#f00!important}#vscare{position:fixed;inset:0;z-index:100000;background:#000;display:flex;align-items:center;justify-content:center}#vscare .vsimg{height:92vh;opacity:0;filter:brightness(.35);transform-origin:50% 35%}#vscare.vs-dark{animation:crt .12s steps(2) infinite}#vscare.vs-dark .vsimg{animation:vsin 1.5s ease-in forwards,vssw 1.5s ease-in-out infinite alternate}#vscare.vs-rush .vsimg{opacity:1;filter:brightness(1.2) contrast(1.4);animation:vsrush .6s cubic-bezier(.7,0,.9,.4) forwards}#vscare.vs-rush{animation:vshk .05s linear infinite}#vscare .vsst{position:absolute;inset:0;pointer-events:none;opacity:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.18) 0 1px,transparent 1px 3px)}#vscare.vs-rush .vsst{opacity:1;animation:crt .05s steps(2) infinite;mix-blend-mode:screen}#vscare.vs-end .vsimg,#vscare.vs-end .vsst{display:none}#vscare .vsend{position:absolute;text-align:center;color:#c00;font:bold 28px 'Courier New',monospace;letter-spacing:4px}#vscare .vsend .vimg{width:220px;height:220px}@keyframes vsin{0%{opacity:0}30%{opacity:.08}60%{opacity:.04}100%{opacity:.45}}@keyframes vssw{from{transform:rotate(-1.5deg) translateX(-6px)}to{transform:rotate(1.5deg) translateX(6px)}}@keyframes vsrush{0%{transform:scale(1)}100%{transform:scale(3.4) translateY(4%)}}@keyframes vshk{0%{transform:translate(0,0)}25%{transform:translate(-14px,8px)}50%{transform:translate(12px,-10px)}75%{transform:translate(-8px,-6px)}}@keyframes crt{0%{background:#000}50%{background:#070707}}
 @keyframes vzoom{from{transform:scale(.3)}to{transform:scale(1.25)}}
 .vlog{height:260px;overflow:auto;background:#000;color:#cfe;font:13px 'Courier New',monospace;padding:6px;border:2px solid;border-color:#808080 #fff #fff #808080}
 .vlog .u{color:#ffff7f}.vlog .v{color:#9fe}#w_verity.ang .vlog .v{color:#f55;text-shadow:0 0 4px #f00}
@@ -50,10 +50,15 @@ V.busy=0;V.user=async function(t){if(this.busy)return;t=t.slice(0,300);this.hist
   if(!res.ok)throw 0;const j=await res.json();if(!j.reply)throw 0;r=j.reply;this.mood=this.mood+(+j.moodDelta||0);this.src='ai';fc=FACES.includes(j.face)?j.face:null;}catch(e){r=reply(t);this.src='off';await new Promise(z=>setTimeout(z,300));}
  ty.remove();this.busy=0;this.say(r,fc);if(this.mood<=-35&&Math.random()<.5)this.glitch();if(this.mood<=-100)this.scare();};
 V.glitch=function(){const w=$('w_verity');if(w){w.classList.add('vglitch');setTimeout(()=>w.classList.remove('vglitch'),300);}tone(60,0,.25,'sawtooth',.05);};
-V.scare=function(){if($('vscare'))return;const d=document.createElement('div');d.id='vscare';d.innerHTML=face(400,'scream');let fk=0;const fl=setInterval(()=>{const im=d.querySelector('img');if(im)im.src='verity/'+(fk++%2?'scream':'blank')+'.png';},90);setTimeout(()=>clearInterval(fl),880);document.body.appendChild(d);
- noise(.9);tone(70,0,.9,'sawtooth',.12);tone(1300,0,.5,'square',.04);setTimeout(()=>d.remove(),900);
+V.scare=function(){if($('vscare'))return;const d=document.createElement('div');d.id='vscare';d.className='vs-dark';
+ d.innerHTML='<img class="vsimg" src="verity/scare.jpg" alt=""><div class="vsst"></div><div class="vsend"></div>';document.body.appendChild(d);
+ const snd=()=>window.SYS&&SYS.snd;
+ if(snd()){tone(55,0,1.5,'sine',.05);}
+ setTimeout(()=>{d.className='vs-rush';if(snd()){noise(.6);tone(1900,0,.6,'sawtooth',.09);tone(2600,0,.55,'square',.05);tone(140,0,.6,'sawtooth',.12);}},1500);
+ setTimeout(()=>{d.className='vs-end';d.querySelector('.vsend').innerHTML=face(220,'creepy')+'<div class="vsln">НЕ БРОСАЙ МЕНЯ</div>';},2100);
+ setTimeout(()=>d.remove(),3300);
  const ic=$('icons');if(ic){ic.style.visibility='hidden';setTimeout(()=>{ic.style.visibility='';V.say('Я вернул твои значки. В этот раз.');},10000);}
- LS.setItem('bf_vmood','-60');setTimeout(()=>V.ui(),950);};
+ LS.setItem('bf_vmood','-60');setTimeout(()=>V.ui(),3350);};
 // ---------- engine ----------
 let last='';const pick=a=>{let r,i=0;do{r=a[Math.random()*a.length|0];}while(r===last&&a.length>1&&i++<9);last=r;return r;};
 const tier=()=>{const m=V.mood;return m<=-35?'a':m>=35?'k':'n';};
