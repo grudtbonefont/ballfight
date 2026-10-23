@@ -22,7 +22,7 @@ const FACES=['smile','wink','flat','grin','grin2','blank','creepy','creepy2','fr
 FACES.forEach(n=>{const i=new Image();i.src='verity/'+n+'.png';});
 function face(px,n){return `<img class="vimg" src="verity/${n||'smile'}.png" width="${px}" height="${px}" alt="Verity" draggable="false">`;}
 function moodFace(){const m=V.mood;return m<=-70?(Math.random()<.5?'creepy':'creepy2'):m<=-35?['angry','frown','annoyed'][Math.random()*3|0]:m<-10?'worried':m<35?'flat':m<70?'smile':'bigsmile';}
-V.expr=function(n){V.cur=n;document.querySelectorAll('#verity .vimg,#w_verity .vfc .vimg').forEach(i=>i.src='verity/'+n+'.png');};
+V.expr=function(n){V.cur=n;document.querySelectorAll('#verity .vimg,#w_verity .vimg').forEach(i=>i.src='verity/'+n+'.png');};
 V.talk=function(fin){clearInterval(V.ti);const a=V.mood<=-35?['creepy','creepy2']:V.mood>=35?['happy','bigsmile']:['grin','smile'];let k=0;V.ti=setInterval(()=>{V.expr(a[k++%2]);if(k>6){clearInterval(V.ti);V.expr(fin||moodFace());}},150);};
 V.face=face;
 function tone(f,t,d,ty,v){try{Sfx.tone(f,t,d,ty,v);}catch(e){}}
@@ -35,6 +35,7 @@ V.ui=function(){const m=this.mood,a=m<=-35;if(!V.ti)V.expr(moodFace());const e=$
 V.show=function(){if($('verity'))return;const d=document.createElement('div');d.id='verity';d.title='Verity';d.innerHTML=face(56);d.onclick=()=>V.open();document.body.appendChild(d);const c=$('clip');if(c)c.style.display='none';this.ui();};
 V.summon=function(){LS.setItem('bf_verity','1');const c=$('clip');const tgt=c||document.body;V.mood=V.mood;tgt.classList.add('vglitch');staticFx(1400);tone(80,0,1.2,'sawtooth',.08);tone(57,.3,1,'square',.05);
  setTimeout(()=>{tgt.classList.remove('vglitch');if(c)c.style.display='none';this.show();const e=$('verity');e.classList.add('vglitch');setTimeout(()=>{e.classList.remove('vglitch');V.open();V.expr('big');V.say(V.mood<=-35?'Ты снова позвал меня. Зря.':'Привееет! Я Verity, твой личный друг-помощник. Спрашивай что угодно, я знаю всё.');},600);},1400);};
+V.bye=function(){const L=['Ты тоже меня бросаешь?..','Я запомню это. Я всё запоминаю.','Уходишь к нему? Ладно... пока.'];try{V.expr('creepy');V.say(L[Math.random()*3|0],'creepy');const w=$('verity');w&&w.classList.add('vglitch');clearInterval(V.ti);V.expr('creepy');}catch(e){}setTimeout(()=>{V.expr('creepy2');V.banish();},1800);};
 V.banish=function(){LS.setItem('bf_verity','0');staticFx(700);const e=$('verity');if(e)e.remove();closeWin('verity');const c=$('clip');if(c)c.style.display='';$('icons')&&$('icons').classList.remove('vshake');setTimeout(()=>{try{Clip.say('Ой! Что это было? Мне снился какой-то тёмный блочный мир... Я вернулся!');}catch(e){}},800);};
 V.open=function(){openWin('verity','Verity.exe',`<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><div class="vfc" style="background:#000;padding:4px;display:flex">${face(40)}</div><div style="flex:1;font-size:12px">Настроение: <b class="vml"></b><div class="vmeter"><i></i></div><div style="display:flex;justify-content:space-between;font-size:10px;color:#555"><span>злость</span><span>доброта</span></div></div></div>
  <div class="vlog" id="vlog"></div><div style="display:flex;gap:4px;margin-top:6px"><input id="vin" maxlength="300" placeholder="Спроси что-нибудь..." style="flex:1" autocomplete="off"><button id="vsend">Сказать</button></div>`,{w:440,icon:'👤'});
@@ -94,12 +95,12 @@ function reply(t){const s=t.toLowerCase().replace(/ё/g,'е');const mm=math(s);i
  V.mood=V.mood+(V.mood<0?1:0);return pick(FB[tier()]);}
 V.reply=reply;window.Verity=V;
 // ---------- hooks ----------
-const _run=Cmd.run.bind(Cmd);Cmd.run=function(line){const m=(line||'').trim().toLowerCase().match(/^replace\s+(\S+)/);
+const _run=Cmd.run.bind(Cmd);Cmd.run=function(line){if(/^\s*help\s*$/i.test(line||'')){_run(line);this.out('  ░░ скрытое ░░\n  REPLACE VERITY   ...он ждёт\n  REPLACE CLIPPY   вернуть Скрепыша (или REPLACE СКРЕПЫШ / SKREPYSH)');return;}const m=(line||'').trim().toLowerCase().match(/^replace\s+(\S+)/);
  if(m){if(m[1]==='verity'||m[1]==='верити'){if(V.on){this.out('Он уже здесь.');return;}this.out('Замена файла CLIPPY.EXE на VERITY.EXE...\n▓▓▓▓▓▒▒▒░░ ОШИБКА ЧТЕНИЯ СЕКТОРА 0x0BAD\n...готово. Он пришёл.');V.summon();return;}
-  if(m[1]==='clippy'||m[1]==='скрепыш'||m[1]==='clip'){if(!V.on){this.out('Скрепыш и так на месте.');return;}this.out('Замена файла VERITY.EXE на CLIPPY.EXE... готово.');V.banish();return;}
+  if(['clippy','скрепыш','skrepysh','clip','скрепка'].includes(m[1])){if(!V.on){this.out('Скрепыш и так на месте.');return;}this.out('Замена файла VERITY.EXE на CLIPPY.EXE... готово.');V.bye();return;}
   this.out('REPLACE: файл не найден — '+m[1]);return;}
  return _run(line);};
-if(UI.help){const h=UI.help.bind(UI);UI.help=function(){h();const w=$('w_help');if(w){const p=document.createElement('div');p.className='hint';p.style.cssText='font-size:10px;color:#a0a0a0;margin-top:6px;text-align:right';p.textContent='...если Скрепыш когда-нибудь станет слишком весёлым — попробуйте REPLACE. Только не говорите ему, что это я подсказал.';w.querySelector('.wb').appendChild(p);}};}
+if(UI.help){const h=UI.help.bind(UI);UI.help=function(){h();const w=$('w_help');if(w){const p=document.createElement('div');p.className='hint';p.style.cssText='font-size:10px;color:#a0a0a0;margin-top:6px;text-align:right';p.textContent='...если Скрепыш когда-нибудь станет слишком весёлым — попробуйте REPLACE VERITY (вернуть: REPLACE CLIPPY или REPLACE СКРЕПЫШ). Только не говорите ему, что это я подсказал.';w.querySelector('.wb').appendChild(p);}};}
 const _n=Desk.notes.bind(Desk);Desk.notes=function(){_n();const ta=document.querySelector('#w_notes textarea');if(ta&&!ta.dataset.v){ta.dataset.v=1;ta.value+='\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n----\nP.S. В тумане за краем арены кто-то стоит.\nОн отзывается на своё имя. Командная строка → replace v_r_ty\nЕсли разозлите — извинитесь. Если подружитесь — он щедрый.';}};
 if(V.on)setTimeout(()=>V.show(),1500);
 })();
