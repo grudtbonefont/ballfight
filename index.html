@@ -663,7 +663,7 @@ function extrasPre(dt,fight){const M=G.mset;
   G.lt.forEach(t=>{t.t-=dt;t.w-=dt;});G.lt=G.lt.filter(t=>t.t>0);}
  G.obs.forEach(o=>{if(o.k==='mwall'){const s=Math.sin(G.time*o.sp+o.ph);o.x=o.cx+s*o.ax;o.y=o.cy+s*o.ay;}if(o.k==='barrel'&&o.dead){o.rt-=dt;if(o.rt<=0)o.dead=false;}});
  if(G.opts.pk&&fight){G.pkT-=dt;if(G.pkT<=0){G.pkT=rnd(5,8);if(G.pk.length<2){const types=G.opts.pkTypes||['shield','speed','dmg','heal'];
-   for(let t=0;t<30;t++){const x=rnd(120,680),y=rnd(120,680);if(G.balls.every(b=>b.dead||Math.hypot(b.x-x,b.y-y)>140)&&G.obs.every(o=>Math.hypot(o.x-x,o.y-y)>80)&&x>G.lo+50&&x<W-G.lo-50&&y>G.lo+50&&y<H-G.lo-50){G.pk.push({k:rpick(types),x,y,t:12});break;}}}}
+   for(let t=0;t<30;t++){const x=rnd(120,680),y=rnd(120,680);if(G.balls.every(b=>b.dead||Math.hypot(b.x-x,b.y-y)>140)&&G.obs.every(o=>Math.hypot(o.x-x,o.y-y)>80)&&x>G.lo+50&&x<W-G.lo-50&&y>G.lo+50&&y<H-G.lo-50){G.pk.push({k:(window.EVENTS&&EVENTS.candyPk&&EVENTS.candyPk())?'candy':rpick(types),x,y,t:12});break;}}}}
   G.pk.forEach(p=>p.t-=dt);G.pk=G.pk.filter(p=>p.t>0);}
  if(G.bi>=0&&fight)bossAI(dt);}
 function explodeBarrel(o){o.dead=true;o.rt=12;emit({k:'ko',x:o.x,y:o.y,c:'#ff6d00',small:1});
@@ -683,7 +683,7 @@ function extrasPost(dt,fight){
    else if(o.k==='mwall'){const cx=clamp(b.x,o.x-o.w/2,o.x+o.w/2),cy=clamp(b.y,o.y-o.h/2,o.y+o.h/2);let ex=b.x-cx,ey=b.y-cy,el=Math.hypot(ex,ey);
     if(el<b.r){if(el<.01){ex=b.x<o.x?-1:1;ey=0;el=1;}const nx=ex/el,ny=ey/el;b.x=cx+nx*b.r;b.y=cy+ny*b.r;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.85*vn*nx;b.vy-=1.85*vn*ny;}b.vx+=nx*120;b.vy+=ny*120;}}
    else if(o.k==='barrel'&&!o.dead&&d<o.r+b.r){if(Math.hypot(b.vx,b.vy)>260&&fight)explodeBarrel(o);else{b.x=o.x+dx/d*(o.r+b.r);b.y=o.y+dy/d*(o.r+b.r);}}});
-  if(G.pk)for(let k=G.pk.length-1;k>=0;k--){const p=G.pk[k];if(Math.hypot(b.x-p.x,b.y-p.y)<b.r+16&&fight){applyPk(b,i,p);G.pk.splice(k,1);}}
+  if(G.pk)for(let k=G.pk.length-1;k>=0;k--){const p=G.pk[k];if(Math.hypot(b.x-p.x,b.y-p.y)<b.r+16&&fight){if(p.k==='candy'){if(i===G.me&&window.EVENTS&&EVENTS.candyGet)EVENTS.candyGet(p);}else applyPk(b,i,p);G.pk.splice(k,1);}}
  });
  if(G.multi)modeUpdate(dt,fight);}
 // ----- боссы с фазами -----
