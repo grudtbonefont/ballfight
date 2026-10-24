@@ -47,10 +47,6 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
  const url=req.url.split('?')[0];
  try{
   if(url==='/api/epoch')return send(res,200,{epoch:EPOCH},o);
-  if(url.startsWith('/api/admin/')){const k=crypto.createHash('sha256').update(String(req.headers['x-admin']||'')).digest('hex');if(k!=='c83f7d4bc48c7726bd511eab0f2faf99e1548fa9634d33b6a3b43d4ffd2e1748')return send(res,404,{error:'not found'},o);
-   const T=['saves','ratings','reports','matches','trades'];if(url==='/api/admin/dump'){const d={epoch:EPOCH};for(const t of T)d[t]=(await pool.query('SELECT * FROM bf.'+t)).rows;return send(res,200,d,o);}
-   if(url==='/api/admin/wipe'&&req.method==='POST'){const c=await pool.connect();try{await c.query('BEGIN');const n={};for(const t of T)n[t]=(await c.query('DELETE FROM bf.'+t)).rowCount;const ne=EPOCH+1;await c.query("INSERT INTO bf.meta VALUES('epoch',$1) ON CONFLICT(k) DO UPDATE SET v=EXCLUDED.v",[String(ne)]);await c.query('COMMIT');EPOCH=ne;return send(res,200,{deleted:n,epoch:EPOCH},o);}catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}}
-   return send(res,404,{error:'not found'},o);}
   if(url==='/'||url==='/api/health')return send(res,200,{ok:true,service:'ballfight-api'},o);
   if(limited('all:'+ip(req),300,60000))return send(res,429,{error:'Слишком много запросов'},o);
   if(req.method==='POST'&&url==='/api/verity'){if(limited('v1:'+ip(req),15,60000)||limited('vd:'+ip(req),200,86400000))return send(res,429,{error:'Verity устал. Подожди немного.'},o);
