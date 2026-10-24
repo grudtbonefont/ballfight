@@ -429,7 +429,7 @@ function drawHUD(st,me){ctx.textAlign='left';
  ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(st.mset?modLine(st):ARENAS[st.arena].n,500,120);
  const box=(t,sz)=>{ctx.font=`bold ${sz}px Tahoma`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma';ctx.fillText('Сообщение',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma`;ctx.fillText(t,500,362);};
  if(st.phase==='count')box(st.banner+' — '+Math.ceil(st.timer),26);
- else if(st.banner)box(st.banner,24);
+ else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;box(st.banner,24);ctx.restore();}
  if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);box('Пауза: Esc — продолжить, Q — выход',20);}}
 // ===================== ОКНА =====================
 let zTop=10;
@@ -657,7 +657,7 @@ function genObs(n){const L=[];const free=(x,y,R)=>Math.hypot(x-200,y-400)>R+90&&
   put('barrel',20,{rt:0});if(Math.random()<.6)put('barrel',20,{rt:0});}
  return L;}
 function extrasPre(dt,fight){const M=G.mset;
- if(fight&&G.mode!=='koth'&&G.mode!=='foot'){G.rft+=dt;if(G.rft>60){if(!G.sdOn){G.sdOn=1;G.banner='ВНЕЗАПНАЯ СМЕРТЬ!';emit({k:'ko',x:400,y:400,c:'#ff5252'});}G.lo=Math.min(250,G.lo+dt*9);}}
+ if(fight&&G.mode!=='koth'&&G.mode!=='foot'){G.rft+=dt;if(G.rft>60){if(!G.sdOn){G.sdOn=1;G.sdT=0;G.banner='ВНЕЗАПНАЯ СМЕРТЬ!';}G.sdT+=dt;if(G.banner==='ВНЕЗАПНАЯ СМЕРТЬ!'){G.bA=Math.max(0,Math.min(1,(2.6-G.sdT)/0.6));if(G.sdT>=2.6){G.banner='';G.bA=1;}}if(G.sdT===dt){emit({k:'ko',x:400,y:400,c:'#ff5252'});}G.lo=Math.min(250,G.lo+dt*9);}}
  if(M.shrink&&fight)G.lo=Math.min(220,G.lo+dt*4);
  if(M.lava&&fight){G.ltT-=dt;if(G.ltT<=0){G.ltT=5;const n=3+(Math.random()*2|0);for(let k=0;k<n;k++)G.lt.push({x:(Math.random()*5|0)*160,y:(Math.random()*5|0)*160,t:4.3,w:1.3});}
   G.lt.forEach(t=>{t.t-=dt;t.w-=dt;});G.lt=G.lt.filter(t=>t.t>0);}
@@ -795,7 +795,7 @@ function drawHUDMulti(st,me){ctx.textAlign='left';const meb=st.balls[me]||st.bal
  else{s1='Ваши победы: '+st.score[meb.tm];s2='Раунд '+st.round+' · до '+st.need+' · лидер '+Math.max(...st.score);}
  ctx.font='bold 20px "Courier New",monospace';ctx.fillText(s1,500,36);ctx.font='11px Tahoma';ctx.fillText(s2,500,58);
  ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillText(modLine(st),500,88);
- if(st.phase==='count')hudBox(st.banner+' — '+Math.ceil(st.timer),26);else if(st.banner)hudBox(st.banner,24);
+ if(st.phase==='count')hudBox(st.banner+' — '+Math.ceil(st.timer),26);else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;hudBox(st.banner,24);ctx.restore();}
  if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);hudBox('Пауза: Esc — продолжить, Q — выход',20);}}
 // ----- запуск режимов -----
 function modeD(){return clamp(.12+(save.unlocked-1)/(NLV-1)*.7,.12,.82);}
@@ -874,7 +874,7 @@ const Net={peer:null,conn:null,isHost:false,remoteIn:{x:0,y:0,a:false},myPick:nu
  tryStart(){if(this.isHost&&this.myPick&&this.theirPick){const ids=[this.myPick.id,this.theirPick.id],lvls=[this.myPick.lvl,this.theirPick.lvl],arena=Math.random()*ARENAS.length|0;
   this.send({t:'start',ids,lvls,arena});closePick();newMatch('online',ids,{names:['Хост','Гость'],arena,me:0,mods0:Object.assign(lvlMods(lvls[0]),{lvl:lvls[0]}),mods1:Object.assign(lvlMods(lvls[1]),{lvl:lvls[1]})});}},
  tick(dt){if(this.isHost){this.sendT-=dt;if(this.sendT<=0){this.sendT=1/30;
-   const s={balls:G.balls,clones:G.clones,fires:G.fires,proj:G.proj,zones:G.zones,beams:G.beams,score:G.score,round:G.round,phase:G.phase,timer:G.timer,banner:G.banner,wind:G.wind,time:G.time,dmg:G.dmg};this.send({t:'s',s,ev:G.events});G.events=[];}}
+   const s={balls:G.balls,clones:G.clones,fires:G.fires,proj:G.proj,zones:G.zones,beams:G.beams,score:G.score,round:G.round,phase:G.phase,timer:G.timer,banner:G.banner,bA:G.bA??1,wind:G.wind,time:G.time,dmg:G.dmg};this.send({t:'s',s,ev:G.events});G.events=[];}}
   else{const i=mergeIn(readInput(0),readInput(1));const k=JSON.stringify(i);this.sendT-=dt;if(k!==this.lastIn||this.sendT<=0){this.sendT=.1;this.lastIn=k;this.send({t:'in',i});}}},
  over(w){if(this.isHost)this.send({t:'over',w,score:G.score});G.phase='over';const win=w===G.me;save.stats.online++;if(win){save.coins+=30;save.stats.onlineWins++;}recordMatch(win,win?60:20);
   UI.msg(win?'🏆 ПОБЕДА В ОНЛАЙНЕ!':'💀 Поражение',`Счёт ${G.score[0]}:${G.score[1]}`+(win?'<br>Награда 🪙30':''),[['Реванш','Net.askRematch()'],['Выйти','Net.close();UI.home()']],win?'🏆':'💀');},

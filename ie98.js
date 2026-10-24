@@ -15,7 +15,7 @@ const P={
  'http://www.ballfight-fan.narod.ru/':()=>`<div style="background:#000 url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><text x=%225%22 y=%2225%22 fill=%22%23333%22 font-size=%2220%22>★</text></svg>');color:#0f0;font-family:'Comic Sans MS',cursive;padding:10px;min-height:100%">
   <marquee style="color:#ff0;font-size:20px">*** ДОБРО ПОЖАЛОВАТЬ НА МОЮ СТРАНИЧКУ ПРО БИТВУ ШАРОВ!!! ***</marquee>
   <h2 style="color:#f0f;text-align:center;text-shadow:2px 2px #00f">~*~ Шары рулят ~*~</h2>${uc}
-  <p>Привет! Меня зовут Вася, мне 13 лет и я ОБОЖАЮ Битву Шаров 98. Здесь мои советы:</p><ul><li>Метеор — лучший для новичков (рывок!!)</li><li>Бастион держит центр</li><li>Сингулярность — это ИМБА</li><li>Каждый 5-й уровень — БОСС, будьте готовы</li></ul>
+  <p>Привет! Меня зовут Декарт, мне 13 лет и я ОБОЖАЮ Битву Шаров 98. Здесь мои советы:</p><ul><li>Метеор — лучший для новичков (рывок!!)</li><li>Бастион держит центр</li><li>Сингулярность — это ИМБА</li><li>Каждый 5-й уровень — БОСС, будьте готовы</li></ul>
   <p style="text-align:center"><a href="http://www.ballfight-fan.narod.ru/guest.html" style="color:#0ff">📖 Распишитесь в гостевой!</a> | <a href="http://forum.shary98.ru/" style="color:#0ff">💬 Форум</a></p>
   <p style="text-align:center;font-size:11px">Вы посетитель №<br>${cnt()}</p><p style="color:#000;font-size:10px;text-align:center">секретный тайник: http://www.tainik98.ru/9898</p>
   <p style="text-align:center;font-size:10px;color:#888">Сайт лучше смотреть в Internet Explorer 4.0 · Сделано в Блокноте</p></div>`,
