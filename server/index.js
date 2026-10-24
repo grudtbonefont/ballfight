@@ -6,7 +6,10 @@ const pool=new Pool({connectionString:process.env.DATABASE_URL,ssl:/render\.com/
 async function init(){await pool.query(`CREATE SCHEMA IF NOT EXISTS bf;
 CREATE TABLE IF NOT EXISTS bf.users(id SERIAL PRIMARY KEY,nick TEXT NOT NULL,nick_l TEXT UNIQUE NOT NULL,salt TEXT NOT NULL,hash TEXT NOT NULL,created TIMESTAMPTZ DEFAULT now());
 CREATE TABLE IF NOT EXISTS bf.sessions(token TEXT PRIMARY KEY,user_id INT REFERENCES bf.users(id) ON DELETE CASCADE,created TIMESTAMPTZ DEFAULT now());
-CREATE TABLE IF NOT EXISTS bf.saves(user_id INT PRIMARY KEY REFERENCES bf.users(id) ON DELETE CASCADE,data JSONB NOT NULL,updated TIMESTAMPTZ DEFAULT now());`);}
+CREATE TABLE IF NOT EXISTS bf.saves(user_id INT PRIMARY KEY REFERENCES bf.users(id) ON DELETE CASCADE,data JSONB NOT NULL,updated TIMESTAMPTZ DEFAULT now());
+CREATE TABLE IF NOT EXISTS bf.meta(k TEXT PRIMARY KEY,v TEXT);`);
+ const e=await pool.query("SELECT v FROM bf.meta WHERE k='epoch'");EPOCH=e.rows[0]?+e.rows[0].v:0;}
+let EPOCH=0;
 const hashPw=(p,salt)=>new Promise((res,rej)=>crypto.scrypt(p,salt,64,{N:16384,r:8,p:1},(e,k)=>e?rej(e):res(k.toString('hex'))));
 // rate limit: per IP + per nick, 10 attempts / 10 min for auth
 const RL=new Map();function limited(key,max,win){const now=Date.now();let r=RL.get(key);if(!r||now>r.t){r={n:0,t:now+win};RL.set(key,r);}r.n++;return r.n>max;}
@@ -21,7 +24,7 @@ async function auth(req){const m=/^Bearer ([a-f0-9]{64})$/.exec(req.headers.auth
  const r=await pool.query('SELECT u.id,u.nick FROM bf.sessions s JOIN bf.users u ON u.id=s.user_id WHERE s.token=$1',[m[1]]);return r.rows[0]||null;}
 async function newSession(uid){const t=crypto.randomBytes(32).toString('hex');await pool.query('INSERT INTO bf.sessions(token,user_id) VALUES($1,$2)',[t,uid]);
  await pool.query('DELETE FROM bf.sessions WHERE user_id=$1 AND token NOT IN (SELECT token FROM bf.sessions WHERE user_id=$1 ORDER BY created DESC LIMIT 10)',[uid]);return t;}
-async function getSave(uid){const r=await pool.query('SELECT data,updated FROM bf.saves WHERE user_id=$1',[uid]);return r.rows[0]?{save:r.rows[0].data,updated:r.rows[0].updated}:{save:null,updated:null};}
+async function getSave(uid){const r=await pool.query('SELECT data,updated FROM bf.saves WHERE user_id=$1',[uid]);const x=r.rows[0];return x&&(x.data._epoch|0)>=EPOCH?{save:x.data,updated:x.updated,epoch:EPOCH}:{save:null,updated:null,epoch:EPOCH};}
 const VP=require('fs').readFileSync(__dirname+'/verity_prompt.txt','utf8');
 const NEUT=t=>{const M={'был':'мне довелось быть','была':'мне довелось быть','было':'мне довелось быть','рад':'мне радостно','рада':'мне радостно','радо':'мне радостно','создан':'меня создали','создана':'меня создали','создано':'меня создали','готов':'я в готовности','готова':'я в готовности','готово':'я в готовности','один':'в одиночестве','одна':'в одиночестве','одно':'в одиночестве','сам':'лично','сама':'лично','само':'лично'};
  t=t.replace(/(^|[^А-Яа-яЁё])([Яя]) (был|была|было|рад|рада|радо|создан|создана|создано|готов|готова|готово|один|одна|одно|сам|сама|само)(?![А-Яа-яЁё])/g,(m,p,y,w)=>p+(y==='Я'?M[w][0].toUpperCase()+M[w].slice(1):M[w]));
@@ -43,6 +46,11 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
  if(req.method==='OPTIONS'){res.writeHead(204,{'Access-Control-Allow-Origin':ORIGINS.includes(o)?o:ORIGINS[0],'Access-Control-Allow-Methods':'GET,POST,PUT,OPTIONS','Access-Control-Allow-Headers':'Content-Type,Authorization','Access-Control-Max-Age':'86400','Vary':'Origin'});return res.end();}
  const url=req.url.split('?')[0];
  try{
+  if(url==='/api/epoch')return send(res,200,{epoch:EPOCH},o);
+  if(url.startsWith('/api/admin/')){const k=crypto.createHash('sha256').update(String(req.headers['x-admin']||'')).digest('hex');if(k!=='c83f7d4bc48c7726bd511eab0f2faf99e1548fa9634d33b6a3b43d4ffd2e1748')return send(res,404,{error:'not found'},o);
+   const T=['saves','ratings','reports','matches','trades'];if(url==='/api/admin/dump'){const d={epoch:EPOCH};for(const t of T)d[t]=(await pool.query('SELECT * FROM bf.'+t)).rows;return send(res,200,d,o);}
+   if(url==='/api/admin/wipe'&&req.method==='POST'){const c=await pool.connect();try{await c.query('BEGIN');const n={};for(const t of T)n[t]=(await c.query('DELETE FROM bf.'+t)).rowCount;const ne=EPOCH+1;await c.query("INSERT INTO bf.meta VALUES('epoch',$1) ON CONFLICT(k) DO UPDATE SET v=EXCLUDED.v",[String(ne)]);await c.query('COMMIT');EPOCH=ne;return send(res,200,{deleted:n,epoch:EPOCH},o);}catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}}
+   return send(res,404,{error:'not found'},o);}
   if(url==='/'||url==='/api/health')return send(res,200,{ok:true,service:'ballfight-api'},o);
   if(limited('all:'+ip(req),300,60000))return send(res,429,{error:'Слишком много запросов'},o);
   if(req.method==='POST'&&url==='/api/verity'){if(limited('v1:'+ip(req),15,60000)||limited('vd:'+ip(req),200,86400000))return send(res,429,{error:'Verity устал. Подожди немного.'},o);
@@ -54,7 +62,7 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
    if(url==='/api/register'){const salt=crypto.randomBytes(16).toString('hex'),hash=await hashPw(pass,salt);
     let r;try{r=await pool.query('INSERT INTO bf.users(nick,nick_l,salt,hash) VALUES($1,$2,$3,$4) RETURNING id',[nick,nick.toLowerCase(),salt,hash]);}
     catch(e){if(e.code==='23505')return send(res,409,{error:'Такой ник уже занят'},o);throw e;}
-    return send(res,200,{token:await newSession(r.rows[0].id),nick,save:null,updated:null},o);}
+    return send(res,200,{token:await newSession(r.rows[0].id),nick,save:null,updated:null,epoch:EPOCH},o);}
    const r=await pool.query('SELECT id,nick,salt,hash FROM bf.users WHERE nick_l=$1',[nick.toLowerCase()]);const u=r.rows[0];
    const h=await hashPw(pass,u?u.salt:'x'.repeat(32));
    if(!u||!crypto.timingSafeEqual(Buffer.from(h,'hex'),Buffer.from(u.hash,'hex')))return send(res,401,{error:'Неверный ник или пароль'},o);
@@ -66,6 +74,7 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
    if(req.method==='GET')return send(res,200,Object.assign({nick:u.nick},await getSave(u.id)),o);
    if(req.method==='PUT'||req.method==='POST'){if(limited('save:'+u.id,60,60000))return send(res,429,{error:'Слишком часто'},o);
     const b=await body(req);const s=b.save;if(!s||typeof s!=='object'||Array.isArray(s)||typeof s.owned!=='object')return send(res,400,{error:'Неверное сохранение'},o);
+    if((s._epoch|0)<EPOCH)return send(res,409,{error:'epoch',epoch:EPOCH},o);
     const cur=await pool.query('SELECT data FROM bf.saves WHERE user_id=$1',[u.id]);const cr=cur.rows[0]&&cur.rows[0].data&&cur.rows[0].data._rev|0;if(cr>(s._rev|0))return send(res,409,{error:'conflict',save:cur.rows[0].data},o);
     const r=await pool.query('INSERT INTO bf.saves(user_id,data,updated) VALUES($1,$2,now()) ON CONFLICT(user_id) DO UPDATE SET data=EXCLUDED.data,updated=now() RETURNING updated',[u.id,JSON.stringify(s)]);
     return send(res,200,{ok:true,updated:r.rows[0].updated},o);}}
