@@ -120,7 +120,7 @@ B('shackles','Кандалы','#37474f','mythic','Капканы','3 капка�
 B('hole','Сингулярность','#4a2a9a','mythic','Чёрная дыра','Дыра у врага затягивает и ранит 3с',9,104,1,1.15,'◉'),
 ];
 const BY={};BALLS.forEach(b=>BY[b.id]=b);
-const EVBALLS=[['pumpkin','Тыквоголовый','#ff7518','bomb','Тыквенная бомба','halloween'],['ghost','Призрак','#b9c6ff','tele','Сквозь стены','halloween'],['bat','Нетопырь','#6a2c8a','vamp','Укус','halloween'],['snowman','Снеговик','#dff3ff','ice','Метель','newyear'],['cracker','Хлопушка','#ff3b6b','bomb','Конфетти-бум','newyear']].map(([id,n,c,al,ab,ev])=>{const s=BY[al];const b=B(id,n,c,'epic',ab,s.desc+' (ивентовый шар)',s.cd,s.hp,s.spd,s.mass,s.sym);b.al=al;b.ev=ev;BY[id]=b;return b;});
+const EVBALLS=[['pumpkin','Тыквоголовый','#ff7518','bomb','Тыквенная бомба','halloween'],['ghost','Призрак','#b9c6ff','tele','Сквозь стены','halloween'],['bat','Нетопырь','#6a2c8a','vamp','Укус','halloween'],['snowman','Снеговик','#dff3ff','ice','Метель','newyear'],['cracker','Хлопушка','#ff3b6b','bomb','Конфетти-бум','newyear'],['comet','Комета','#00e5ff','laser','Звёздный луч','bp']].map(([id,n,c,al,ab,ev])=>{const s=BY[al];const b=B(id,n,c,'epic',ab,s.desc+' (ивентовый шар)',s.cd,s.hp,s.spd,s.mass,s.sym);b.al=al;b.ev=ev;BY[id]=b;return b;});
 const ARENAS=[
  {id:'classic',n:'Классический куб',f:['#2a2f5e','#3f4a98'],w:'#5b6ee1'},
  {id:'lava',n:'Лавовый куб',f:['#3a1a1a','#6a2a20'],w:'#e0603a'},
@@ -155,6 +155,17 @@ function migrate(s){const d=defSave();
 function persist(){save._t=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();try{Cloud.queue();}catch(e){}}
 const ownedIds=()=>Object.keys(save.owned);
 function lvlMods(l){l=l||1;return {hp:1+.08*(l-1),dmg:1+.06*(l-1)};}
+// ===== МАСТЕРСТВО ШАРОВ, УЛУЧШЕНИЯ, МУТАЦИИ (малые капнутые бонусы) =====
+const MUT={gold:{n:'Золотой',c:'#ffd23f',dmg:1.04,hp:.975,d:'+4% урона, −2,5% HP'},shadow:{n:'Теневой',c:'#3b2463',spd:1.04,hp:.99,d:'+4% скорости, −1% HP'},rainbow:{n:'Радужный',c:'#ff40c0',cd:.93,dmg:.97,d:'−7% перезарядки, −3% урона'}};
+const UPG={dmg:{n:'Урон',per:.02,u:'%'},hp:{n:'Здоровье',per:.03,u:'%'},spd:{n:'Скорость',per:.015,u:'%'},cd:{n:'Перезарядка',per:-.035,u:'%'}};
+const UPG_RANK=3,MASTER_MAX=10,VAR_LVL=8,PVP_K=.25;
+const VARS={guard:{n:'Бастион',d:'1,5 с после способности −15% входящего урона; −4% урона',dmg:.96},leech:{n:'Подпитка',d:'Способность лечит 0,8% HP; перезарядка +12%',cd:1.12},echo:{n:'Эхо',d:'Каждая 4-я способность перезаряжается вдвое быстрее; −4% HP',hp:.96}};
+function bxOf(id){save.bx=save.bx||{};return save.bx[id]||(save.bx[id]={xp:0,lv:1,up:{},v:'',m:'',ms:[]});}
+function upgMods(id,pvp){const r={hp:1,dmg:1,spd:1,cdMul:1,mut:'',var:'',ml:1};const p=save.bx&&save.bx[id];if(!p)return r;const k=pvp?PVP_K:1,u=p.up||{};
+ r.dmg*=1+UPG.dmg.per*Math.min(UPG_RANK,u.dmg|0)*k;r.hp*=1+UPG.hp.per*Math.min(UPG_RANK,u.hp|0)*k;r.spd*=1+UPG.spd.per*Math.min(UPG_RANK,u.spd|0)*k;r.cdMul*=1+UPG.cd.per*Math.min(UPG_RANK,u.cd|0)*k;
+ const m=MUT[p.m];if(m&&(p.ms||[]).includes(p.m)){r.mut=p.m;r.dmg*=m.dmg||1;r.hp*=m.hp||1;r.spd*=m.spd||1;r.cdMul*=m.cd||1;}
+ if(!pvp&&VARS[p.v]&&(p.lv|0)>=VAR_LVL){const V=VARS[p.v];r.var=p.v;r.dmg*=V.dmg||1;r.hp*=V.hp||1;r.cdMul*=V.cd||1;}r.ml=Math.min(MASTER_MAX,p.lv|0||1);return r;}
+function applyUp(m,u){m=Object.assign({},m);m.hp=(m.hp||1)*u.hp;m.dmg=(m.dmg||1)*u.dmg;m.spd=(m.spd||1)*u.spd;m.cdMul=(m.cdMul||1)*u.cdMul;m.mut=u.mut;m.var=u.var;m.ml=u.ml;return m;}
 function upCost(id){const o=save.owned[id];return {c:Math.round(60*o.lvl*(1+(RAR[BY[id].rar].m-1)*.4)),cards:Math.ceil(o.lvl/3)};}
 // ===================== ВВОД =====================
 const keys={};
@@ -176,7 +187,7 @@ let G=null,mode='menu',paused=false;
 function makeBall(id,side,mods){const d=BY[id];mods=mods||{};const hp=Math.round(d.hp*HPK*(mods.hp||1));const r=34*(mods.size||1);
  return {id,x:side?W*0.75:W*0.25,y:H/2,vx:0,vy:0,r,br:r,m:d.mass,mass:d.mass,hp,maxHp:hp,cd:1.5,spd:d.spd*(mods.spd||1),
   fx:{immune:0,strike:0,shield:0,fire:0,giant:0,spikes:0,frozen:0,magnet:0,poison:0,vamp:0,elec:0,blades:0,spd2:0,dmg2:0,port:0,spk:0,pad:0},hitT:0,dmgMul:mods.dmg||1,burst:0,burstT:0,bladeCd:0,lvl:mods.lvl||1,
-  tm:side,dead:false,pers:null,dmBase:mods.dmg||1,spBase:d.spd*(mods.spd||1),cdMul:mods.cdMul||1,life:mods.life||0,thorns:mods.thorns||0,regen:mods.regen||0};}
+  tm:side,dead:false,pers:null,mut:mods.mut||'',vr:mods.var||'',ml:mods.ml||1,vN:0,vU:0,dmBase:mods.dmg||1,spBase:d.spd*(mods.spd||1),cdMul:mods.cdMul||1,life:mods.life||0,thorns:mods.thorns||0,regen:mods.regen||0};}
 function newMatch(kind,ids,opts){opts=opts||{};
  G={kind,ids,opts,need:opts.need||2,score:[0,0],round:1,phase:'count',timer:3,balls:[],clones:[],fires:[],proj:[],zones:[],beams:[],events:[],banner:'',winner:-1,
   names:opts.names||['Игрок 1','Игрок 2'],time:0,arena:opts.arena||0,wind:1,windT:5,dmg:[0,0],me:opts.me==null?0:opts.me,mset:{},ts:1,ts0:1,lo:0,obs:[],pk:[],lt:[],bi:-1,ex:false};
@@ -191,7 +202,7 @@ function resetRound(){const o=G.opts;
  G.clones=[];G.fires=[];G.proj=[];G.zones=[];G.beams=[];G.phase='count';G.timer=3;G.banner=G.mode==='koth'?'Царь горы':G.mode==='foot'?'Шаробол':'Раунд '+G.round;particles.length=0;
  if(G.round===1&&G.opts.mods&&G.opts.mods.length)G.banner+=' · '+G.opts.mods.map(m=>MODS[m]).join(' + ');}
 function emit(ev){G.events.push(ev);spawnEvent(ev);}
-function useAbility(i){const b=G.balls[i],ei=foeIdx(i),e=G.balls[ei],d=BY[b.id];if(b.cd>0||b.fx.frozen>0||!e)return;b.cd=d.cd*(b.cdMul||1);
+function useAbility(i){const b=G.balls[i],ei=foeIdx(i),e=G.balls[ei],d=BY[b.id];if(b.cd>0||b.fx.frozen>0||!e)return;b.cd=d.cd*(b.cdMul||1);if(b.vr){b.vN=(b.vN|0)+1;if(b.vr==='echo'&&b.vN%4===0)b.cd*=.5;else if(b.vr==='leech')b.hp=Math.min(b.maxHp,b.hp+b.maxHp*.008);else if(b.vr==='guard')b.vU=G.time+1.5;}
  const dx=e.x-b.x,dy=e.y-b.y,dl=Math.hypot(dx,dy)||1,nx=dx/dl,ny=dy/dl,ang=Math.atan2(dy,dx);
  const shoot=(k,a,sp,o)=>G.proj.push(Object.assign({k,x:b.x+Math.cos(a)*(b.r+8),y:b.y+Math.sin(a)*(b.r+8),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:7,o:i,t:2,dmg:5,c:d.color},o||{}));
  if(i===G.me&&G.kind!=='online')save.stats.abil++;
@@ -225,7 +236,7 @@ function useAbility(i){const b=G.balls[i],ei=foeIdx(i),e=G.balls[ei],d=BY[b.id];
  }
  emit({k:'ab',x:b.x,y:b.y,c:d.color,id:b.id});
 }
-function damage(i,amt,x,y,col){const b=G.balls[i];if(!col)amt*=ADK;if(b.fx.shield>0||G.phase!=='fight'||amt<=0)return 0;b.hp=Math.max(0,b.hp-amt);b.hitT=.2;G.dmg[dside(i)]+=amt;
+function damage(i,amt,x,y,col){const b=G.balls[i];if(!col)amt*=ADK;if(b.fx.shield>0||G.phase!=='fight'||amt<=0)return 0;if(b.vr==='guard'&&b.vU>G.time)amt*=.85;b.hp=Math.max(0,b.hp-amt);b.hitT=.2;G.dmg[dside(i)]+=amt;
  emit({k:'hit',x,y,c:BY[b.id].color,n:Math.round(amt)});return amt;}
 function tick(i,amt,attr){const b=G.balls[i];amt*=ADK;if(b.fx.shield>0||G.phase!=='fight')return;b.hp=Math.max(0,b.hp-amt);b.hitT=Math.max(b.hitT,.05);if(attr)G.dmg[dside(i)]+=amt;}
 function stun(e,t){if(e.fx.shield>0||e.fx.immune>0)return false;e.fx.frozen=Math.max(e.fx.frozen,t);e.fx.immune=t+1.2;return true;}
@@ -396,7 +407,7 @@ function render(st,me){const A=ARENAS[st.arena]||ARENAS[0];ctx.save();ctx.clearR
  drawFront(A);if(st.mset&&st.mset.fog)drawFog(st,me);ctx.restore();if(st.multi)drawHUDMulti(st,me);else drawHUD(st,me);}
 function drawBall(b,i,me,st){const d=BY[b.id];let col=b.fx.frozen>0?'#cdefff':d.color;if(b.hitT>0.1)col='#ffffff';
  if(b.fx.blades>0)for(let k=0;k<3;k++){const a=st.time*5+k*2.094;const p=P(b.x+Math.cos(a)*(b.r+26),b.y+Math.sin(a)*(b.r+26));ctx.save();ctx.translate(p.x,p.y-b.r*p.k);ctx.rotate(a*3);ctx.fillStyle='#eceff1';ctx.strokeStyle='#455a64';ctx.beginPath();ctx.moveTo(-12,0);ctx.lineTo(0,-4);ctx.lineTo(12,0);ctx.lineTo(0,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
- const s=drawSphere(b.x,b.y,b.r,col);if(window.SKIN)SKIN.paint(ctx,b,i,s);
+ const s=drawSphere(b.x,b.y,b.r,col);if(window.SKIN)SKIN.paint(ctx,b,i,s);if(b.mut&&MUT[b.mut])drawMut(b,s);
  if(!(window.LOGO&&LOGO.draw(ctx,d.id,s.x,s.y,s.R))){ctx.fillStyle='rgba(255,255,255,.85)';ctx.font=`bold ${Math.round(s.R*.9)}px Tahoma`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(d.sym,s.x,s.y+1);ctx.textBaseline='alphabetic';}
  if(b.fx.spikes>0){ctx.strokeStyle='#3e2723';ctx.lineWidth=3;for(let a=0;a<12;a++){const an=a/12*6.28+G_t;ctx.beginPath();ctx.moveTo(s.x+Math.cos(an)*s.R,s.y+Math.sin(an)*s.R);ctx.lineTo(s.x+Math.cos(an)*s.R*1.35,s.y+Math.sin(an)*s.R*1.35);ctx.stroke();}}
  if(b.fx.shield>0){ctx.strokeStyle='rgba(120,220,255,.9)';ctx.lineWidth=4;ctx.fillStyle='rgba(120,220,255,.18)';ctx.beginPath();ctx.arc(s.x,s.y,s.R*1.3,0,7);ctx.fill();ctx.stroke();}
@@ -411,6 +422,14 @@ function drawBall(b,i,me,st){const d=BY[b.id];let col=b.fx.frozen>0?'#cdefff':d.
  ctx.fillStyle='#fff';ctx.font='bold 12px Tahoma';ctx.textAlign='center';ctx.fillText(ballLabel(b,i,me,st),s.x,s.y-s.R-22);
  if(b.pers&&PERS[b.pers]){const q=P(b.x,b.y);const t=PERS[b.pers].n;ctx.font='bold 11px Tahoma';const tw=ctx.measureText(t).width+8;ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(q.x-tw/2,q.y+b.r*q.k*.4+2,tw,14);ctx.fillStyle=PERS[b.pers].c;ctx.fillText(t,q.x,q.y+b.r*q.k*.4+13);}}
 let G_t=0;
+// мутации: тонировка под логотипом + аура снаружи шара (логотип всегда рисуется поверх)
+function drawMut(b,s){const m=MUT[b.mut],t=G_t;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,s.R,0,7);ctx.clip();
+ if(b.mut==='rainbow'){const g=ctx.createLinearGradient(s.x-s.R,s.y-s.R,s.x+s.R,s.y+s.R);for(let k=0;k<6;k++)g.addColorStop(k/5,`hsla(${(k*60+t*120)%360},90%,60%,.28)`);ctx.fillStyle=g;}
+ else ctx.fillStyle=b.mut==='gold'?'rgba(255,200,40,.32)':'rgba(30,10,60,.38)';ctx.fillRect(s.x-s.R,s.y-s.R,s.R*2,s.R*2);
+ if(b.mut==='gold'){const x=s.x-s.R+((t*90)%(s.R*3));ctx.fillStyle='rgba(255,255,220,.35)';ctx.beginPath();ctx.moveTo(x,s.y-s.R);ctx.lineTo(x+10,s.y-s.R);ctx.lineTo(x-s.R+10,s.y+s.R);ctx.lineTo(x-s.R,s.y+s.R);ctx.fill();}ctx.restore();
+ ctx.lineWidth=3;ctx.strokeStyle=b.mut==='rainbow'?`hsl(${(t*200)%360},90%,60%)`:b.mut==='gold'?'#ffd23f':'rgba(120,60,200,.8)';ctx.beginPath();ctx.arc(s.x,s.y,s.R+3,0,7);ctx.stroke();
+ for(let k=0;k<4;k++){const a=t*(b.mut==='shadow'?-1.5:2)+k*1.571,rr=s.R*1.25;const x=s.x+Math.cos(a)*rr,y=s.y+Math.sin(a)*rr*.8;
+  ctx.fillStyle=b.mut==='rainbow'?`hsl(${(k*90+t*200)%360},90%,60%)`:b.mut==='gold'?'#fff3a0':'rgba(60,20,110,.7)';ctx.beginPath();ctx.arc(x,y,b.mut==='shadow'?6:3,0,7);ctx.fill();}ctx.lineWidth=1;}
 function bevel(x,y,w,h,inset){ctx.fillStyle='#c0c0c0';ctx.fillRect(x,y,w,h);ctx.fillStyle=inset?'#808080':'#fff';ctx.fillRect(x,y,w,2);ctx.fillRect(x,y,2,h);ctx.fillStyle=inset?'#fff':'#000';ctx.fillRect(x,y+h-2,w,2);ctx.fillRect(x+w-2,y,2,h);}
 function prog(x,y,w,h,f,col){ctx.fillStyle='#808080';ctx.fillRect(x,y,w,h);ctx.fillStyle='#fff';ctx.fillRect(x+1,y+1,w-1,h-1);ctx.fillStyle=col;const n=Math.floor((w-4)*clamp(f,0,1)/10);for(let k=0;k<n;k++)ctx.fillRect(x+2+k*10,y+2,8,h-4);}
 function drawHUD(st,me){ctx.textAlign='left';
@@ -493,7 +512,7 @@ const UI={
   <div id="oncode" class="code"></div><div id="onstatus" class="inset" style="min-height:40px">Готов к подключению. Используется P2P (WebRTC, PeerJS).</div>
   <div class="btns"><button onclick="Net.close();closeWin('online')">Закрыть</button></div>`,{w:420,icon:'🌐'});},
  surv(){openWin('surv','Режим выживания',`<div class="dlg"><div class="ico">💀</div><div>Бесконечные волны ботов, каждая сильнее предыдущей. Один раунд на волну, HP переносится (между волнами +30%).<br><br>Награда: 🪙 за каждую волну, рекорд: <b>${save.stats.survBest}</b></div></div><div class="btns"><button onclick="closeWin('surv');startSurvival()">Начать</button></div>`,{w:440,icon:'💀'});},
- tour(){openWin('tour','Турнир',`<div class="dlg"><div class="ico">🏆</div><div>Сетка из 3 матчей: четвертьфинал, полуфинал, финал (до 2 побед).<br>Взнос: 🪙100. Приз: 🪙700 + 💎15 + Редкий ящик.<br>Выиграно турниров: <b>${save.stats.tourWins}</b></div></div><div class="btns"><button ${save.coins<100?'disabled':''} onclick="closeWin('tour');startTour()">Заплатить 🪙100 и начать</button></div>`,{w:440,icon:'🏆'});},
+ tour(){openWin('tour','Турнир',`<div class="dlg"><div class="ico">🏆</div><div>Сетка на 8 участников: четвертьфинал, полуфинал, финал (до 2 побед).<br>Взнос: 🪙100. Призы: 1 место 🪙700 + 💎15 + Редкий ящик · 2 место 🪙300 + 💎5 · 3–4 🪙120 · 5–8 🪙30.<br>Выиграно турниров: <b>${save.stats.tourWins}</b></div></div><div class="btns"><button ${save.coins<100?'disabled':''} onclick="closeWin('tour');startTour()">Офлайн (боты) — 🪙100</button> <button onclick="closeWin('tour');OTour.open()">🌐 Онлайн-турнир…</button></div>`,{w:480,icon:'🏆'});},
  help(){openWin('help','Справка',`<div class="inset" style="font-size:13px"><b>Управление</b><br>Игрок 1: WASD — движение, Пробел — способность<br>Игрок 2: стрелки — движение, Enter — способность<br>Против бота/онлайн работают обе раскладки.<br>Esc — пауза, Q (в паузе) — выход.<br>Выбор шара: A/D (←/→), Пробел (Enter), R / Правый Shift — переброс.<br><br>
   <b>Как играть</b><br>Перед каждым матчем вам выпадает 3 случайных шара из коллекции — выберите один (1 переброс). Урон от столкновения зависит от скорости удара и массы. У каждого шара уникальная способность с перезарядкой.<br><br>
   <b>Прогресс</b><br>Монеты и XP за бои → ящики (редкость: Обычный, Редкий, Эпический, Легендарный, Мифический) → дубликаты дают карточки для улучшения (до ур.10: +8% HP, +6% урона за уровень).<br><br><b>Арены</b><br>${ARENAS.map(a=>a.n).join(', ')}.</div>`,{w:480,icon:'❓'});},
@@ -557,7 +576,7 @@ function onKey(code){
    if(code===ks[2])pickChoose(pi,pickState.cur[pi]);if(code===ks[3])pickReroll(pi);});}
  if(mode==='game'&&G){if(code==='Escape'){if(G.kind==='online')leaveGame();else paused=!paused;}if(paused&&code==='KeyQ'){paused=false;forfeit();}}}
 const myPanel=(label)=>{const pool=ownedIds();const lv={};pool.forEach(i=>lv[i]=save.owned[i].lvl);return {label,pool,opts:pickN(pool,3),lvls:lv,keys:'A/D — выбор · Пробел — ок · R — переброс',keyset:KS1};};
-const myMods=id=>{const l=save.owned[id]?save.owned[id].lvl:1;return Object.assign(lvlMods(l),{lvl:l});};
+const myMods=id=>{const l=save.owned[id]?save.owned[id].lvl:1;return Object.assign(applyUp(lvlMods(l),upgMods(id)),{lvl:l});};
 // ===================== РЕЖИМЫ =====================
 function levelInfo(l){const boss=l%5===0;return {d:(l-1)/(NLV-1),boss,arena:l<5?0:boss?(l/5)%ARENAS.length:(l-1)%ARENAS.length,bossId:BOSSES[l/5-1],bossName:BOSSNAMES[l/5-1]};}
 const BOSSK={hp:1.15,dmg:.72,size:1.45};
@@ -581,10 +600,26 @@ function nextWave(){Surv.wave++;const d=Math.min(1,(Surv.wave-1)/20);const boss=
  const w=Surv.wave,pers=!boss&&w>=3?rollPers(w>=10):null;
  newMatch('surv',[Surv.ball,boss?BOSSES[(Surv.wave/5-1)%BOSSES.length]:pickN(pers?persPool(botPool(d),pers):botPool(d),1)[0]],{d,sk:botSkill(d),need:1,arena:Math.random()*ARENAS.length|0,hp0Frac:Surv.hp,names:['Вы',(boss?'☠ Босс':'Волна')+' '+Surv.wave],
   mods0:survMods(),mods1:survFoe(botMods(d*.7,boss),w),pers1:pers,phases:boss,pk:w>=4,obs:boss?0:w>=12?2:w>=7?1:0,mods:!boss&&w>=10&&w%2===0?rollMods(1,false):[]});}
-const Tour={stage:0,names:[]};const STAGES=['Четвертьфинал','Полуфинал','Финал'];
-function startTour(){if(save.coins<100)return;save.coins-=100;persist();Tour.stage=0;Tour.names=shuffle(BOTNAMES.slice()).slice(0,3);tourMatch();}
-function tourMatch(){const d=[.3,.55,.8][Tour.stage];showPick([myPanel('Вы')],c=>{closePick();Bot.t=0;
- newMatch('tour',[c[0],pickN(botPool(d),1)[0]],{d,sk:botSkill(d),arena:Math.random()*ARENAS.length|0,names:['Вы',Tour.names[Tour.stage]],mods0:myMods(c[0]),mods1:botMods(d,false)});},`Турнир: ${STAGES[Tour.stage]} против ${Tour.names[Tour.stage]}`);}
+const Tour={stage:0,names:[],P:[],R:[],on:null};const STAGES=['Четвертьфинал','Полуфинал','Финал'];
+const TPRIZE=[{c:700,g:15,crate:'rare',n:'1 место'},{c:300,g:5,n:'2 место'},{c:120,g:0,n:'3–4 место'},{c:30,g:0,n:'5–8 место'}];
+function tourBots(n){const nm=shuffle(BOTNAMES.slice());return Array.from({length:n},(_,i)=>{const d=.2+Math.random()*.6;return {nm:nm[i%nm.length],d,ball:pickN(botPool(d),1)[0],bot:1};});}
+function tourInit(P){Tour.P=P;const o=shuffle(P.map((_,i)=>i));Tour.R=[o,[],[],[]];Tour.stage=0;}
+function tourPair(r){const a=Tour.R[r],out=[];for(let k=0;k<a.length;k+=2)out.push([a[k],a[k+1]]);return out;}
+function tourSimOthers(r){tourPair(r).forEach(([x,y],k)=>{if(Tour.R[r+1][k]!=null)return;const A=Tour.P[x],B=Tour.P[y];if(A.me||B.me)return;const p=Math.max(.2,Math.min(.8,.5+(A.d-B.d)*.9));Tour.R[r+1][k]=Math.random()<p?x:y;});}
+function tourMe(){return Tour.P.findIndex(p=>p.me);}
+function tourPlace(i){for(let r=3;r>=0;r--)if(Tour.R[r].includes(i))return r===3?0:r===2?1:r===1?2:3;return 3;}
+function tourHtml(){const col=r=>Tour.R[r].map(i=>i==null?'<div class="tb">—</div>':`<div class="tb" style="${Tour.P[i].me?'background:#ffffc0;font-weight:bold':''}${r<3&&Tour.R[r+1].length&&Tour.R[r+1].includes(i)?';color:#060':''}">${ballIco(BY[Tour.P[i].ball]||BY.dash,16)} ${Tour.P[i].nm}</div>`).join('');
+ const full=r=>{const a=Tour.R[r].slice();while(a.length<[8,4,2,1][r])a.push(null);return a;};const bak=Tour.R;Tour.R=[0,1,2,3].map(full);const h=`<div style="display:flex;gap:6px;align-items:stretch;font-size:11px">${[0,1,2,3].map(r=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:space-around"><div style="text-align:center;font-weight:bold">${['1/4','1/2','Финал','Чемпион'][r]}</div>${col(r)}</div>`).join('')}</div>`;Tour.R=bak;return h;}
+function tourShow(msg,btns){openWin('tourbr','Турнирная сетка — 8 участников',`<style>.tb{border:1px solid #808080;background:#fff;padding:2px 3px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset -1px -1px #c0c0c0}</style>${tourHtml()}<div style="margin-top:8px;font-size:12px">${msg||''}</div><div class="btns" style="margin-top:6px">${(btns||[]).map(([t,f])=>`<button onclick="${f}">${t}</button>`).join(' ')}</div>`,{w:560,icon:'🏆'});}
+function startTour(){if(save.coins<100)return;save.coins-=100;persist();const me={nm:'Вы',me:1,ball:save.sel||ownedIds()[0],d:.5};tourInit([me].concat(tourBots(7)));Tour.on=null;Tour.names=[];
+ tourShow('Взнос 🪙100 оплачен. Ваш соперник в четвертьфинале: <b>'+tourOpp().nm+'</b>.',[['В бой ▶',"closeWin('tourbr');tourMatch()"]]);}
+function tourOpp(){const me=tourMe(),r=Tour.stage;const pr=tourPair(r).find(p=>p.includes(me));return Tour.P[pr[0]===me?pr[1]:pr[0]];}
+function tourMatch(){const d=[.3,.55,.8][Tour.stage],o=tourOpp();showPick([myPanel('Вы')],c=>{closePick();Bot.t=0;const bd=Math.max(d,o.d*.9);
+ newMatch('tour',[c[0],o.ball||pickN(botPool(bd),1)[0]],{d:bd,sk:botSkill(bd),arena:Math.random()*ARENAS.length|0,names:['Вы',o.nm],mods0:myMods(c[0]),mods1:botMods(bd,false)});},`Турнир: ${STAGES[Tour.stage]} против ${o.nm}`);}
+function tourAdvance(won){const r=Tour.stage,me=tourMe();const k=tourPair(r).findIndex(p=>p.includes(me));const pr=tourPair(r)[k];Tour.R[r+1][k]=won?me:(pr[0]===me?pr[1]:pr[0]);tourSimOthers(r);
+ if(!won)for(let q=r+1;q<3;q++)tourSimOthers(q);}
+function tourGiveUp(){for(let q=Tour.stage;q<3;q++){if(q>Tour.stage||!Tour.R[q+1].length)tourSimOthers(q);}const me=tourMe();const k=tourPair(Tour.stage).findIndex(p=>p.includes(me));const pr=tourPair(Tour.stage)[k];Tour.R[Tour.stage+1][k]=pr[0]===me?pr[1]:pr[0];for(let q=Tour.stage+1;q<3;q++)tourSimOthers(q);const p=tourPrize(tourPlace(me));persist();toast('Турнир','Вы сдались. Приз: 🪙'+p.c);}
+function tourPrize(pl){const p=TPRIZE[pl];save.coins+=p.c;save.gems+=p.g;save.stats.tourBest=Math.min(save.stats.tourBest??9,pl);return p;}
 function onMatchOver(){const w=G.winner,me=G.me,won=w===me,sc=`Счёт ${G.score[0]}:${G.score[1]} · Урон: ${Math.round(G.dmg[me])}`;
  if(G.kind==='bot'){const l=G.opts.level,I=levelInfo(l);
   if(won){const first=l===save.unlocked,r=Math.round((30+l*4)*(I.boss?2.5:1)*(first?1:.4)),g=I.boss&&first?4:0;save.coins+=r;save.gems+=g;if(I.boss)save.stats.bosses++;if(l===save.unlocked&&l<=NLV)save.unlocked++;recordMatch(true,40+l*2);
@@ -595,10 +630,10 @@ function onMatchOver(){const w=G.winner,me=G.me,won=w===me,sc=`Счёт ${G.scor
   if(won){const r=10+Surv.wave*5;Surv.earned+=r;save.coins+=r;save.stats.survBest=Math.max(save.stats.survBest,Surv.wave);Surv.hp=Math.min(1,b.hp/b.maxHp+.3);recordMatch(true,20+Surv.wave*3);const of=survOffer();
    UI.msg('Волна '+Surv.wave+' пройдена!',`+🪙${r} (всего 🪙${Surv.earned})<br>HP на следующую волну: ${Math.round(Surv.hp*100)}%<br><br><b>Выберите улучшение:</b><br>`+of.map(u=>'<b>'+u.n+'</b> — '+u.d+((Surv.up[u.id]||0)?' (есть '+Surv.up[u.id]+')':'')).join('<br>'),of.map(u=>[u.n,`survTake('${u.id}')`]).concat([['Забрать и выйти','UI.home()']]),'💀');}
   else{recordMatch(false,10);UI.msg('Забег окончен',`Вы пали на волне ${Surv.wave}.<br>Заработано: 🪙${Surv.earned}<br>Рекорд: ${save.stats.survBest} волн`,[['Ещё забег','startSurvival()'],['Меню','UI.home()']],'💀');}}
- else if(G.kind==='tour'){
-  if(won&&Tour.stage<2){recordMatch(true,40);Tour.stage++;UI.msg(STAGES[Tour.stage-1]+' пройден!',`${sc}<br>Далее: ${STAGES[Tour.stage]} против ${Tour.names[Tour.stage]}`,[['Продолжить ▶','tourMatch()'],['Сдаться','UI.home()']],'🏆');}
-  else if(won){save.coins+=700;save.gems+=15;save.stats.tourWins++;recordMatch(true,150);UI.msg('🏆 ЧЕМПИОН ТУРНИРА!',`${sc}<br>Приз: 🪙700 + 💎15 + Редкий ящик`,[['Открыть ящик','openCrate(\'rare\',true);UI.home()'],['Меню','UI.home();openCrate(\'rare\',true)']],'🏆');}
-  else{const r=30*Tour.stage;save.coins+=r;recordMatch(false,20);UI.msg('Выбыли из турнира',`${STAGES[Tour.stage]}: поражение. ${sc}${r?'<br>Утешительный приз: 🪙'+r:''}`,[['Меню','UI.home()']],'💀');}}
+ else if(G.kind==='tour'){if(window.OTour&&Tour.online){OTour.result(won,sc);}else{tourAdvance(won);
+  if(won&&Tour.stage<2){recordMatch(true,40);Tour.stage++;tourShow(`<b>${STAGES[Tour.stage-1]} пройден!</b> ${sc}<br>Далее: ${STAGES[Tour.stage]} против <b>${tourOpp().nm}</b>`,[['Продолжить ▶',"closeWin('tourbr');tourMatch()"],['Сдаться',"closeWin('tourbr');tourGiveUp()"]]);UI.home();}
+  else if(won){tourPrize(0);save.stats.tourWins++;recordMatch(true,150);tourShow(`<b>🏆 ЧЕМПИОН ТУРНИРА!</b> ${sc}<br>Приз: 🪙700 + 💎15 + Редкий ящик`,[['Открыть ящик',"closeWin('tourbr');openCrate('rare',true)"]]);UI.home();}
+  else{const pl=tourPlace(tourMe());const p=tourPrize(pl);recordMatch(false,20);tourShow(`Выбыли: ${STAGES[Tour.stage]}. ${sc}<br>Итог: <b>${p.n}</b>. Приз: 🪙${p.c}${p.g?' 💎'+p.g:''}<br>Победитель турнира: <b>${Tour.P[Tour.R[3][0]].nm}</b>`,[['OK',"closeWin('tourbr')"]]);UI.home();}}}
  else if(G.kind==='raid'){const l=G.opts.level;if(won){const g=save.raid.last!==today()?1:0;if(g){save.raid.last=today();save.gems+=1;}const r=40+l*2;save.coins+=r;save.stats.bosses++;recordMatch(true,40+l);
    UI.msg('☠ РЕЙД УСПЕШЕН!',`${G.names[1]} повержен!<br>Награда: 🪙${r}${g?' 💎1':''}`,[['Ещё рейд','UI.modes()'],['Меню','UI.home()']],'🏆');}
   else{save.coins+=5;recordMatch(false,10);UI.msg('💀 Рейд провален',`${G.names[1]} оказался сильнее.<br>Утешительный приз: 🪙5`,[['Повторить',`startRaid(${l})`],['Меню','UI.home()']],'💀');}}
@@ -781,7 +816,7 @@ function extraEnts(st,ents){
  (st.pk||[]).forEach(p=>ents.push({y:p.y,f:()=>{const T=PKT[p.k];const s=drawSphere(p.x,p.y,15,T.c,p.t<2&&Math.sin(G_t*20)>0?.4:1,14+Math.sin(G_t*4)*5);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,s.R+2,0,7);ctx.stroke();ctx.lineWidth=1;ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(T.s,s.x,s.y+1);ctx.textBaseline='alphabetic';}}));
  if(st.puck){const p=st.puck;ents.push({y:p.y,f:()=>{const s=drawSphere(p.x,p.y,p.r,'#fafafa');ctx.fillStyle='#212121';for(let k=0;k<5;k++){const a=k/5*6.283+p.x*.02;ctx.beginPath();ctx.arc(s.x+Math.cos(a)*s.R*.55,s.y+Math.sin(a)*s.R*.55,s.R*.2,0,7);ctx.fill();}}});}}
 function drawFog(st,me){const b=st.balls[me<0?0:me];if(!b)return;const p=P(b.x,b.y);const g=ctx.createRadialGradient(p.x,p.y-30,70,p.x,p.y-30,250);g.addColorStop(0,'rgba(25,25,35,0)');g.addColorStop(1,'rgba(25,25,35,.94)');ctx.fillStyle=g;ctx.fillRect(-20,-20,1040,740);}
-function ballLabel(b,i,me,st){if(me===i)return 'ВЫ';if(st.multi)return b.nm||'Бот';if(st.bi===i)return 'БОСС · Фаза '+(st.bph||1);return i?'P2':'P1';}
+function ballLabel(b,i,me,st){const ml=b.ml>1?' ★'+b.ml:'';if(me===i)return 'ВЫ'+(window.PROG&&PROG.tline?PROG.tline():'')+ml;if(st.kind==='online'&&st.names)return (st.names[i]||'Соперник')+ml;if(st.multi)return b.nm||'Бот';if(st.bi===i)return 'БОСС · Фаза '+(st.bph||1);return i?'P2':'P1';}
 function hudBox(t,sz){ctx.textAlign='center';ctx.font=`bold ${sz}px Tahoma`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma';ctx.fillText('Сообщение',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma`;ctx.fillText(t,500,362);}
 function modLine(st){return [ARENAS[st.arena].n].concat(Object.keys(st.mset||{}).map(m=>MODS[m])).join(' · ');}
 function drawHUDMulti(st,me){ctx.textAlign='left';const meb=st.balls[me]||st.balls[0],d=BY[meb.id];
@@ -846,11 +881,11 @@ const Net={peer:null,conn:null,isHost:false,remoteIn:{x:0,y:0,a:false},myPick:nu
  status(t){const e=document.getElementById('onstatus');if(e)e.textContent=t;},
  load(cb){if(window.Peer)return cb();this.status('Загрузка сетевого модуля...');const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
   s.onload=cb;s.onerror=()=>this.status('Не удалось загрузить PeerJS. Проверьте интернет.');document.head.appendChild(s);},
- host(){this.close();this.load(()=>{const code=Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
-  this.isHost=true;this.ended=false;this.peer=new Peer('ballfight-cube-'+code);document.getElementById('onmain').classList.add('hide');
-  this.peer.on('open',()=>{document.getElementById('oncode').textContent=code;this.status('Комната создана! Сообщите код другу и ждите подключения...');});
+ host(fixed){this.close();this.load(()=>{const code=fixed||Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+  this.isHost=true;this.ended=false;this.peer=new Peer('ballfight-cube-'+code);document.getElementById('onmain')?.classList.add('hide');
+  this.peer.on('open',()=>{const oc=document.getElementById('oncode');if(oc)oc.textContent=code;this.status('Комната создана! Сообщите код другу и ждите подключения...');});
   this.peer.on('connection',c=>{if(this.conn){c.close();return;}this.setup(c);});
-  this.peer.on('error',e=>{if(e.type==='unavailable-id')this.host();else this.status('Ошибка сети: '+e.type);});});},
+  this.peer.on('error',e=>{if(e.type==='unavailable-id'&&!fixed)this.host();else this.status('Ошибка сети: '+e.type);});});},
  join(code){code=(code||'').trim().toUpperCase();if(code.length<4){this.status('Введите код комнаты');return;}this.close();this.load(()=>{this.isHost=false;this.ended=false;this.peer=new Peer();
   this.status('Подключение к комнате '+code+'...');
   this.peer.on('open',()=>{const c=this.peer.connect('ballfight-cube-'+code,{reliable:true});this.setup(c);});
@@ -968,5 +1003,5 @@ Cloud.startup();
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
+<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="prog98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script>
 </body></html>
