@@ -132,7 +132,7 @@ UI.workshop=function(id){ensure();const ids=ownedIds();if(!ids.length)return;cur
  if(!localStorage.getItem('bf_ws_tour'))wsTour(w,0);};
 // ---------- боевой пропуск ----------
 const RW=[null,{c:100},{cards:5},{c:150},{g:3},{crate:'common'},{c:150},{cards:5},{g:5},{c:200},{pat:'zebra'},{c:200},{cards:8},{g:5},{c:250},{mut:1},{c:250},{cards:8},{g:8},{c:300},{pat:'stars'},{c:300},{crate:'rare'},{g:8},{c:350},{mut:1},{pat:'check'},{c:400},{g:10},{pat:'flame'},{ball:'comet'}];
-const rwTxt=r=>r.c?r.c+' монет':r.g?r.g+' 💎':r.cards?r.cards+' карт':r.crate?'Ящик ('+CRATES[r.crate].name+')':r.pat?'Узор «'+PSK[r.pat]+'»':r.mut?'Мутаген':r.ball?'Шар «'+BY[r.ball].name+'»':'';
+const rwTxt=r=>r.c?r.c+' монет':r.g?r.g+' 💎':r.cards?r.cards+' карт':r.crate?CRATES[r.crate].n:r.pat?'Узор «'+PSK[r.pat]+'»':r.mut?'Мутаген':r.ball?'Шар «'+BY[r.ball].name+'»':'';
 function giveRw(r){if(r.c)save.coins+=r.c;if(r.g)save.gems+=r.g;if(r.cards){const ids=ownedIds(),id=save.sel&&save.owned[save.sel]?save.sel:ids[Math.random()*ids.length|0];save.owned[id].cards=(save.owned[id].cards|0)+r.cards;toast('Пропуск','+'+r.cards+' карт: '+BY[id].name);}
  if(r.crate)openCrate(r.crate,true);if(r.pat)save.pskins[r.pat]=1;if(r.mut)randMut();
  if(r.ball){if(save.owned[r.ball]){save.coins+=500;save.gems+=10;toast('Пропуск','Шар уже есть: +500 монет, +10 💎');}else{save.owned[r.ball]={lvl:1,cards:0};toast('🌟 Эксклюзив сезона',BY[r.ball].name+' теперь ваш!');}}}

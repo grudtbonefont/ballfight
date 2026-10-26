@@ -35,9 +35,11 @@ const D={'Капсулы 98':'Косметика: следы за шаром, а
 'Хэллоуин':'Ивент: собирайте конфеты, выполняйте задания, открывайте ивентовый ящик','Новый год':'Ивент: собирайте снежинки и открывайте ивентовый ящик','Справка':'Управление и правила игры','Мини-игры':'Сапёр, Шахматы, Косынка, Пинбол, Змейка, Блоки…','Программы':'Блокнот, Paint, Калькулятор, Командная строка и др.','Мой компьютер':'Диски, файлы и сведения о системе','Корзина':'Удалённые значки — можно восстановить','Повтор матча':'Просмотр записи последнего боя','Скрепыш':'Помощник: подсказки и советы'};
 const EVN=window.EVENTS&&EVENTS.active?EVENTS.active.name:null;
 const has=k=>APPS.some(a=>a.k===k);
-const GRP=[['Игра',['Бой с ботом','Режимы','Онлайн-бой','Вдвоём','Выживание','Турнир','Управление']],
- ['Прогресс',['Мастерская','Боевой пропуск','Достижения','Награды','Статистика','Ящики','Магазин','Инвентарь','Скины','Капсулы 98','Коллекция',EVN]],
- ['Социальное',['Аккаунт','Кланы','Онлайн-турнир','Рейтинг','Обмен','Аська','Internet Explorer']]];
+const GRP=[['Играть',['Бой с ботом','Режимы','Вдвоём','Выживание','Турнир','Онлайн-бой']],
+ ['Прогресс',['Боевой пропуск','Награды','Достижения','Капсулы 98','Коллекция','Статистика',EVN]],
+ ['Мои шары',['Мастерская','Магазин','Ящики','Инвентарь','Скины']],
+ ['Сообщество',['Онлайн-бой','Рейтинг','Кланы','Онлайн-турнир','Обмен','Аккаунт','Аська','Internet Explorer']],
+ ['Настройки',['Управление','Свойства экрана','Справка']]];
 const GAMES=APPS.filter(a=>a.cat==='game'||a.k==='Сапёр'||a.k==='Шахматы').map(a=>a.k);
 const PROGS=['Блокнот','Paint','Калькулятор','Проигрыватель','Командная строка','Мой компьютер','Свойства экрана','Повтор матча','Скрепыш'].filter(has);
 
@@ -46,21 +48,21 @@ const today_=()=>{try{return today();}catch(e){return new Date().toDateString();
 const B={daily:()=>save.daily&&save.daily.last!==today_()?1:0,
  bp:()=>{try{const t=Math.min(30,Math.floor((save.bp?save.bp.xp:0)/500));let n=0;for(let i=1;i<=t;i++)if(!(save.bp.cl||{})[i])n++;return n;}catch(e){return 0;}},
  ev:()=>{try{const E=EVENTS.active;const s=save.ev&&save.ev[E.id];return s&&s.c>=E.price?1:0;}catch(e){return 0;}}};
-const badgeOf=k=>k==='Капсулы 98'?B.cap():k==='Награды'?B.daily():k==='Боевой пропуск'?B.bp():k===EVN?B.ev():0;
+const badgeOf=k=>k==='Прогресс'?totalB():k==='Капсулы 98'?B.cap():k==='Награды'?B.daily():k==='Боевой пропуск'?B.bp():k===EVN?B.ev():0;
 B.cap=()=>{try{return QOL.caps();}catch(e){return 0;}};const totalB=()=>B.daily()+B.bp()+B.ev()+B.cap();
 const bdg=n=>n?`<span class="bdg" title="Готово к получению">${n>9?'9+':n}</span>`:'';
 const LOCK={'Рейд на босса':6};
 
 // ---------- Центр игры ----------
-let tab=localStorage.getItem('bf_hubtab')||'Игра';
+let tab=localStorage.getItem('bf_hubtab')||'Играть';if(!['Играть','Прогресс','Мои шары','Сообщество','Настройки','Программы'].includes(tab))tab='Играть';
 const card=k=>{if(!k||!has(k))return '';const lock=k==='Онлайн-турнир'||k==='Кланы'?0:0;return `<button class="hubbtn" data-run="${k}" data-hint="${(D[k]||k).replace(/"/g,'')}">${ico(k,24)}<span><b>${k}</b><small>${D[k]||''}</small></span>${bdg(badgeOf(k))}</button>`;};
 const UIHub={open(t){if(t)tab=t;localStorage.setItem('bf_hubtab',tab);const tabs=[...GRP.map(g=>g[0]),'Программы'];
  const g=GRP.find(x=>x[0]===tab);let body='';
- if(tab==='Игра'){const lv=(save.unlocked|0);body=`<button class="hubplay" data-run="Бой с ботом" data-hint="Продолжить кампанию с текущего уровня">${ico('Бой с ботом',32)} ИГРАТЬ<span style="font-size:12px;font-weight:normal">&nbsp;(уровень ${Math.min(60,lv+1)} из 60)</span></button>
+ if(tab==='Играть'){const lv=(save.unlocked|0);body=`<button class="hubplay" data-run="Бой с ботом" data-hint="Продолжить кампанию с текущего уровня">${ico('Бой с ботом',32)} ИГРАТЬ<span style="font-size:12px;font-weight:normal">&nbsp;(уровень ${Math.min(60,lv+1)} из 60)</span></button>
   <div class="hubgrid">${g[1].slice(1).map(card).join('')}</div>
   <div class="grp98" style="margin-top:10px">Режимы и что открывается</div><div style="font-size:11px">Каждый 5-й уровень кампании — <b>БОСС</b>. ${lv>=6?'Рейд на босса открыт в «Режимах».':'<span class="lockt">Рейд на босса — откроется на ур. 6 кампании.</span>'} Испытание дня обновляется каждые сутки.</div>`;}
  else if(tab==='Программы')body=`<div class="grp98">Мини-игры</div><div class="hubgrid">${GAMES.map(k=>card(k)).join('')}</div><div class="grp98" style="margin-top:10px">Стандартные</div><div class="hubgrid">${PROGS.map(card).join('')}</div>`;
- else body=`<div class="hubgrid">${g[1].map(card).join('')}</div>${tab==='Социальное'&&!(window.Cloud&&Cloud.auth)?'<div class="help98" style="margin-top:8px">'+PX.emo('ℹ️',16)+'<span>Для кланов, онлайн-турниров, рейтинга и обмена войдите в <b>Аккаунт</b> — прогресс сохранится в облаке.</span></div>':''}`;
+ else body=`<div class="hubgrid">${g[1].map(card).join('')}</div>${tab==='Сообщество'&&!(window.Cloud&&Cloud.auth)?'<div class="help98" style="margin-top:8px">'+PX.emo('ℹ️',16)+'<span>Для кланов, онлайн-турниров, рейтинга и обмена войдите в <b>Аккаунт</b> — прогресс сохранится в облаке.</span></div>':''}`;
  const tb=tabs.map(t=>{const n=t==='Прогресс'?totalB():0;return `<div class="tab${t===tab?' on':''}" data-tab="${t}" style="position:relative">${t}${n?' ('+n+')':''}</div>`;}).join('');
  const cur=`${PX.ico?PX.emo('🪙',14):''} ${save.coins} монет · ${PX.emo('💎',14)} ${save.gems} крист.${EVN?' · '+evCur():''}`;
  openWin('hub','Центр игры',`<div class="tabs98">${tb}</div><div class="tabpane">${body}</div><div class="stbar98"><div id="hubst">Наведите на кнопку — здесь появится описание.</div><div>${cur}</div></div>`,{w:600,icon:'🎮'});
@@ -78,21 +80,23 @@ window.Folder98={games:()=>folder('Мини-игры',GAMES),progs:()=>folder('�
 // ---------- рабочий стол: меньше значков, по группам ----------
 APPS.unshift({k:'Центр игры',ico:PX.ico('Центр игры'),run:'UIHub.open()'});
 const binI=APPS.findIndex(a=>a.fixed);APPS.splice(binI,0,{k:'Мини-игры',ico:PX.ico('Мини-игры'),run:'Folder98.games()'},{k:'Программы',ico:PX.ico('Программы'),run:'Folder98.progs()'});
-const DESK=['Центр игры','Бой с ботом','Режимы','Онлайн-бой','Мастерская','Боевой пропуск','Магазин','Инвентарь','Достижения','Награды',EVN,'Кланы','Аська','Internet Explorer','Аккаунт','Справка','Мой компьютер','Мини-игры','Программы','Корзина'].filter(k=>k&&has(k));
+const SECI={'Играть':'Бой с ботом','Прогресс':'Боевой пропуск','Мои шары':'Мастерская','Сообщество':'Онлайн-бой','Настройки':'Свойства экрана'};
+Object.keys(SECI).forEach(k=>{APPS.splice(1,0,{k,ico:PX.ico(SECI[k]),run:`Nav.open('${k}')`});D[k]=D[k]||{'Играть':'Кампания, режимы, выживание, турнир — в одном окне','Прогресс':'Пропуск, награды, достижения, капсулы, коллекция, статистика','Мои шары':'Мастерская, магазин, ящики, инвентарь, скины','Сообщество':'Онлайн-бой, рейтинг, кланы, турниры, обмен, аккаунт','Настройки':'Управление, экран, справка'}[k];});
+const DESK=['Центр игры','Играть','Прогресс','Мои шары','Сообщество','Настройки',EVN,'Аська','Internet Explorer','Мой компьютер','Мини-игры','Программы','Справка','Корзина'].filter(Boolean);
 APPS.forEach(a=>{if(!DESK.includes(a.k))a.nodesk=1;});
 APPS.sort((a,b)=>{const x=DESK.indexOf(a.k),y=DESK.indexOf(b.k);return (x<0?999:x)-(y<0?999:y);});
 const _rd=Desk.render.bind(Desk);Desk.render=function(){_rd();document.querySelectorAll('#icons .icon').forEach(i=>{const k=i.dataset.k;i.dataset.tip=k+(D[k]?' — '+D[k]:'')+'. Двойной щелчок — открыть.';i.removeAttribute('title');const n=badgeOf(k);if(n)i.insertAdjacentHTML('beforeend',bdg(n));});};
-if(localStorage.getItem('bf_ui2')!=='1'){localStorage.setItem('bf_ui2','1');Desk.arrange();}else Desk.render();
+if(localStorage.getItem('bf_ui3')!=='1'){localStorage.setItem('bf_ui3','1');Desk.arrange();}else Desk.render();
 
 // ---------- меню Пуск по группам ----------
 const it=(k,label)=>has(k)?`<div class="it" onclick="event.stopPropagation();toggleStart();Sfx.click();Desk.run('${k}')" data-tip="${D[k]||''}"><span style="display:inline-flex;width:24px;justify-content:center">${ico(k,20)}</span>${label||k}${bdg(badgeOf(k))}</div>`:'';
 const fn=(ic,t,run,id)=>`<div class="it"${id?' id="'+id+'"':''} onclick="event.stopPropagation();toggleStart();Sfx.click();${run}"><span style="display:inline-flex;width:24px;justify-content:center">${PX.emo(ic,20)}</span>${t}</div>`;
 const sub=(ic,t,inner,n)=>`<div class="it"><span style="display:inline-flex;width:24px;justify-content:center">${PX.emo(ic,20)}</span>${t}${bdg(n||0)}<span class="arr">▸</span><div class="sub">${inner}</div></div>`;
 function buildMenu(){const mus=$('smmus');const mt=mus?mus.textContent:'Музыка: вкл';
- $('smitems').innerHTML=`<div class="it" style="font-weight:bold" onclick="event.stopPropagation();toggleStart();Sfx.click();UIHub.open('Игра')"><span style="display:inline-flex;width:24px;justify-content:center">${ico('Центр игры',20)}</span>Центр игры</div><hr>`+
-  sub('🎮','Игра',GRP[0][1].map(k=>it(k)).join(''))+sub('⭐','Прогресс',GRP[1][1].map(k=>it(k)).join(''),totalB())+sub('👥','Социальное',GRP[2][1].map(k=>it(k)).join(''))+
+ $('smitems').innerHTML=`<div class="it" style="font-weight:bold" onclick="event.stopPropagation();toggleStart();Sfx.click();UIHub.open('Играть')"><span style="display:inline-flex;width:24px;justify-content:center">${ico('Центр игры',20)}</span>Центр игры</div><hr>`+
+  GRP.slice(0,4).map((g,i)=>sub(['🎮','⭐','🎒','👥'][i],g[0],`<div class="it" style="font-weight:bold" onclick="event.stopPropagation();toggleStart();Sfx.click();Nav.open('${g[0]}')"><span style="display:inline-flex;width:24px;justify-content:center">${PX.emo('📂',20)}</span>Открыть «${g[0]}»</div><hr>`+g[1].filter(k=>k&&!(i===3&&k==='Онлайн-бой'&&0)).map(k=>it(k)).join(''),i===1?totalB():0)).join('')+
   sub('📁','Программы',sub('🎲','Мини-игры',GAMES.map(k=>it(k)).join(''))+sub('🗂️','Стандартные',PROGS.map(k=>it(k)).join('')))+
-  sub('⚙️','Настройки',fn('🖥️','Свойства экрана','Desk.props()')+`<div class="it" id="smmus" onclick="event.stopPropagation();toggleStart();Music.toggle()"><span style="display:inline-flex;width:24px;justify-content:center">${PX.emo('🎵',20)}</span>${mt}</div>`+fn('🗂️','Упорядочить значки','Desk.arrange()'))+
+  sub('⚙️','Настройки',it('Управление')+fn('🖥️','Свойства экрана','Desk.props()')+`<div class="it" id="smmus" onclick="event.stopPropagation();toggleStart();Music.toggle()"><span style="display:inline-flex;width:24px;justify-content:center">${PX.emo('🎵',20)}</span>${mt}</div>`+fn('🗂️','Упорядочить значки','Desk.arrange()'))+
   it('Справка')+it('Корзина')+'<hr>'+fn('⏻','Выключить компьютер...','UI.shutdown()');try{Music.ui();}catch(e){}}
 buildMenu();const _ts=window.toggleStart;if(_ts)window.toggleStart=toggleStart=function(e){const sm=$('startmenu');if(sm&&sm.classList.contains('hide'))buildMenu();return _ts.apply(this,arguments);};
 
@@ -115,5 +119,5 @@ const seen=(()=>{try{return JSON.parse(localStorage.getItem('bf_help_seen'))||{}
 const _ow=window.openWin;window.openWin=openWin=function(id,title,html,o){const w=_ow.apply(this,arguments);try{if(w&&innerWidth<600&&!(o&&o.modal)){w.style.left=Math.max(0,(innerWidth-w.offsetWidth)/2)+'px';}const h=HELP[title];if(h&&w){const tb=w.querySelector('.tb>span:last-child');if(tb&&!tb.querySelector('.hq')){const b=document.createElement('button');b.className='tbb hq';b.textContent='?';b.dataset.tip='Справка по этому окну';b.onclick=e=>{e.stopPropagation();UI.msg(title+' — справка',h,[['OK','']],'❓');};tb.prepend(b);}
  if(!seen[title]){const wb=w.querySelector('.wb');wb.insertAdjacentHTML('afterbegin',`<div class="help98">${PX.emo('ℹ️',16)}<span><b>Подсказка</b>${h}</span><button>Понятно</button></div>`);wb.querySelector('.help98 button').onclick=e=>{seen[title]=1;localStorage.setItem('bf_help_seen',JSON.stringify(seen));e.target.closest('.help98').remove();};}}}catch(e){}return w;};
 // ---------- первое знакомство ----------
-setTimeout(()=>{if(!localStorage.getItem('bf_hub_seen')){localStorage.setItem('bf_hub_seen','1');UIHub.open('Игра');}},2600);
+setTimeout(()=>{if(!localStorage.getItem('bf_hub_seen')){localStorage.setItem('bf_hub_seen','1');UIHub.open('Играть');}},2600);
 })();
