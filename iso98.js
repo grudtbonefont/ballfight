@@ -87,7 +87,7 @@ function render(ops,s,st){const F=[];for(let y=0;y<N;y++){F[y]=[];for(let x=0;x<
  const sz=s>=32?48:s;
  return `<svg class="px iso isty-${st}" viewBox="0 0 ${N} ${N}" width="${sz}" height="${sz}" shape-rendering="crispEdges" style="image-rendering:pixelated">${P.join('')}</svg>`;}
 window.ISO={A,render,has:n=>!!A[n]};
-const _d=ISTY.draw;ISTY.draw=function(g,s,PAL,n){if(ISTY.cur.startsWith('3d')&&s>=24&&n&&A[n])return render(A[n],s,ISTY.cur);return _d(g,s,PAL);};
-const css=document.createElement('style');css.textContent='body[data-icons^="3d"] .icon .im{height:48px!important}body[data-icons^="3d"] .im svg.iso,.fold98 svg.iso,svg.iso{width:48px!important;height:48px!important;image-rendering:pixelated}#istyp svg.iso{width:48px!important;height:48px!important}';document.head.appendChild(css);
+const _d=ISTY.draw;ISTY.draw=function(g,s,PAL,n){if((ISTY.cur==='iso'||ISTY.cur.startsWith('3d'))&&s>=24&&n&&A[n])return render(A[n],s,ISTY.cur==='iso'?'3d':ISTY.cur);return _d(g,s,PAL);};
+const css=document.createElement('style');css.textContent='body[data-icons^="3d"] .icon .im,body[data-icons=iso] .icon .im{height:48px!important}body[data-icons^="3d"] .im svg.iso,.fold98 svg.iso,svg.iso{width:48px!important;height:48px!important;image-rendering:pixelated}#istyp svg.iso{width:48px!important;height:48px!important}';document.head.appendChild(css);
 ISTY.apply();
 })();

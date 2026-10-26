@@ -1,7 +1,7 @@
 // ---- Desktop icon styles: `icons <style>` in MS-DOS, also in Свойства экрана ----
 (function(){
 const LS=localStorage,K='bf_icostyle';
-const ST={'3d':'3D — объёмные пиксельные (по умолчанию)','3d-цвет':'3D Цвет — яркие насыщенные','3d-золото':'3D Золото — литое золото','3d-неон':'3D Неон — светящийся объём во тьме',win98:'Windows 98 — классика',win95:'Windows 95 — плоские, старая палитра',winxp:'Windows XP — крупные, глянцевые',mono:'Mono — 1-бит, как старый Mac',dos:'DOS — зелёный ASCII на чёрном',neon:'Neon — светящийся контур',verity:'Verity — ☺ (нужно встретить Verity)'};
+const ST={'3d':'3D — рендер в стиле 90-х, пиксельный (по умолчанию)','3d-цвет':'3D Цвет — яркий глянцевый пластик','3d-золото':'3D Золото — металлическое золото','3d-неон':'3D Неон — светящиеся объёмы',iso:'ISO — изометрические пиксельные блоки',win98:'Windows 98 — классика',win95:'Windows 95 — плоские, старая палитра',winxp:'Windows XP — крупные, глянцевые',mono:'Mono — 1-бит, как старый Mac',dos:'DOS — зелёный ASCII на чёрном',neon:'Neon — светящийся контур',verity:'Verity — ☺ (нужно встретить Verity)'};
 const AL={'3d-color':'3d-цвет','3d-gold':'3d-золото','3d-neon':'3d-неон',color:'3d-цвет',gold:'3d-золото'};
 const met=()=>LS.getItem('bf_vmet')==='1'||LS.getItem('bf_verity')==='1';
 const mood=()=>window.Verity?Verity.mood:+(LS.getItem('bf_vmood')||0);
@@ -35,7 +35,7 @@ function d3(M,s,st){const N=32,A=[];for(let y=0;y<N;y++){A[y]=[];for(let x=0;x<N
   put(x,y,t);}
  return `<svg class="px p3d isty-${st}" viewBox="0 0 32 32" width="${s}" height="${s}" shape-rendering="crispEdges" style="image-rendering:pixelated">${neon?'<rect width="32" height="32" fill="#0a0018" opacity=".0"/>':''}${P.join('')}</svg>`;}
 let uid=0;
-function draw(g,s,PAL){let st=ISTY.cur;const M=grid(g,PAL);if(st.startsWith('3d')){if(s>=24)return d3(M,s,st);st='win98';}const id='is'+(uid++);let r='',defs='',pre='',extra='',sr='crispEdges';
+function draw(g,s,PAL){let st=ISTY.cur;const M=grid(g,PAL);if(st.startsWith('3d')||st==='iso'){if(s>=24)return d3(M,s,st);st='win98';}const id='is'+(uid++);let r='',defs='',pre='',extra='',sr='crispEdges';
  const each=f=>{for(let y=0;y<16;y++)for(let x=0;x<16;x++)if(M[y][x])f(x,y,M[y][x]);};
  const edge=(x,y)=>[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>!(M[y+b]&&M[y+b][x+a]));
  if(st==='win95')each((x,y,c)=>{r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${W95[c]||c}"/>`;});
