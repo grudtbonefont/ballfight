@@ -56,27 +56,80 @@ const pts=p=>Math.max(0,p.lv-1-spent(p));
 function giveMut(id,m){const p=bxOf(id);if(p.ms.includes(m))return false;p.ms.push(m);if(!p.m)p.m=m;save.stats.mutN++;save.stats.mutK[m]=1;toast('🧬 Мутация: '+MUT[m].n,BY[id].name+' — '+MUT[m].d);return true;}
 function randMut(){const ids=ownedIds().filter(i=>bxOf(i).ms.length<3);if(!ids.length){save.coins+=300;toast('🧬 Мутаген','Все мутации собраны: +300 монет');return;}
  const id=ids[Math.random()*ids.length|0],ms=Object.keys(MUT).filter(m=>!bxOf(id).ms.includes(m));giveMut(id,ms[Math.random()*ms.length|0]);}
-let curB='';
+let curB='',wsTab='up';
+const WS_ICO={dmg:'swords',hp:'medal',spd:'bolt',cd:'clock',guard:'clan',leech:'gift',echo:'music',gold:'coin',shadow:'skull',rainbow:'gem'};
+const wsIco=(n,s)=>{try{if(window.ISO&&ISO.has(n))return ISO.render(ISO.A[n],s||32,'3d').replace(/width="\d+" height="\d+"/,`width="${s||32}" height="${s||32}"`);}catch(e){}return '';};
+const UPG_TXT={dmg:'Сколько урона наносит шар при ударе',hp:'Запас здоровья — дольше живёт в бою',spd:'Как быстро шар двигается по арене',cd:'Как часто можно применять способность (меньше — лучше)'};
+const VAR_PM={guard:[['1,5 с после способности получаешь на 15% меньше урона'],['Урон −4%']],leech:[['Каждое применение способности лечит 0,8% HP'],['Перезарядка дольше на 12%']],echo:[['Каждая 4-я способность перезаряжается вдвое быстрее'],['Здоровье −4%']]};
+const MUT_PM={gold:[['Урон +4%'],['Здоровье −2,5%']],shadow:[['Скорость +4%'],['Здоровье −1%']],rainbow:[['Перезарядка −7%'],['Урон −3%']]};
+const pc=x=>{const v=Math.round(x*1000)/10;return (v>0?'+':v<0?'−':'')+String(Math.abs(v)).replace('.',',')+'%';};
+(function(){const c=document.createElement('style');c.textContent=`
+.ws98{font:12px Tahoma,Verdana,sans-serif;text-align:left}.ws98 .card .tx,.ws98 .vc{text-align:left}.ws98 .dlg,.ws98 .dlg .dt,.ws98 .dlg .db{display:block;text-align:left}.ws98 .wsintro{background:#ffffe1;border:1px solid #000;padding:6px 8px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.ws98 .wsintro span{flex:1}.ws98 .wsmain{display:flex;gap:8px}.ws98 .wslist{width:170px;flex:none;background:#fff;border:2px inset #fff;max-height:470px;overflow:auto}
+.ws98 .wsb{display:flex;gap:6px;align-items:center;padding:4px;cursor:pointer;border-bottom:1px dotted #aaa;position:relative}.ws98 .wsb.on{background:#000080;color:#fff}
+.ws98 .wsb .ballico{width:30px!important;height:30px!important;font-size:14px;flex:none}.ws98 .wsb .nm{flex:1;min-width:0}.ws98 .wsb .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws98 .mini{height:5px;background:#fff;border:1px inset #888;margin-top:2px}.ws98 .mini i{display:block;height:100%;background:#000080}.ws98 .wsb.on .mini i{background:#ffd23f}
+.ws98 .pt{position:absolute;right:3px;top:3px;background:#e00;color:#fff;font-weight:bold;font-size:10px;border-radius:8px;padding:0 5px;border:1px solid #fff}
+.ws98 .wsr{flex:1;min-width:0}.ws98 .wshead{display:flex;gap:10px;align-items:center;margin-bottom:6px}.ws98 .wshead .ballico{width:72px!important;height:72px!important;font-size:34px;flex:none}
+.ws98 .wshead .info{flex:1}.ws98 .big{font-size:15px;font-weight:bold}.ws98 .pbar{margin:3px 0}
+.ws98 .tabs{display:flex;gap:2px;margin-top:4px}.ws98 .tabs button{flex:1;min-height:28px;font-weight:bold;border-bottom:none}.ws98 .tabs button.on{background:#dcdcdc;position:relative;top:1px}
+.ws98 .pane{border:2px outset #fff;padding:6px;background:#d4d0c8;min-height:260px}
+.ws98 .card{display:flex;gap:8px;align-items:center;background:#c0c0c0;border:2px outset #fff;padding:6px;margin-bottom:6px}.ws98 .card .ic{flex:none;width:40px;text-align:center}
+.ws98 .card .tx{flex:1;min-width:0}.ws98 .card .ba{color:#004000;font-weight:bold}.ws98 .card .why{color:#800000;font-size:11px}
+.ws98 .ubtn{min-width:104px;min-height:40px;font-weight:bold;font-size:13px}.ws98 .rk{letter-spacing:1px;color:#000080}
+.ws98 .vg{display:flex;gap:6px;flex-wrap:wrap}.ws98 .vc{flex:1 1 140px;background:#c0c0c0;border:2px outset #fff;padding:6px;cursor:pointer;text-align:left;font:12px Tahoma,sans-serif}
+.ws98 .vc.on{outline:2px solid #000080;background:#e8e8ff}.ws98 .vc[disabled]{opacity:.75;cursor:default;color:#333}.ws98 .p{color:#006000}.ws98 .m{color:#a00000}
+.ws98 .note{font-size:11px;color:#333;margin-top:4px}.ws98 .foot{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-top:6px;flex-wrap:wrap}
+.ws98 .cfm,.ws98 .tour{position:absolute;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:20}
+.ws98 .dlg{background:#c0c0c0;border:2px outset #fff;width:min(340px,92%);box-shadow:2px 2px 0 #000}.ws98 .dlg .dt{background:linear-gradient(90deg,#000080,#1084d0);color:#fff;font-weight:bold;padding:3px 6px}
+.ws98 .dlg .db{padding:10px}.ws98 .dlg .bb{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}.ws98 .dlg button{min-width:80px;min-height:30px}
+.ws98 .hl{outline:3px dashed #e00;outline-offset:2px;position:relative;z-index:6;background:#ffffe1}
+@media (max-width:640px){.ws98 .wsmain{flex-direction:column}.ws98 .wslist{width:auto;display:flex;max-height:none;overflow-x:auto}.ws98 .wsb{flex:none;width:130px;border-bottom:none;border-right:1px dotted #aaa}
+.ws98 .card{flex-wrap:wrap}.ws98 .card .ubtn{width:100%;min-height:46px}.ws98 .tabs button{min-height:40px;font-size:13px}.ws98 .vc{flex-basis:100%;min-height:44px}.ws98 button{min-height:36px}}`;document.head.appendChild(c);})();
+function wsConfirm(w,title,html,ok){const box=w.querySelector('.ws98');const d=document.createElement('div');d.className='cfm';d.innerHTML=`<div class="dlg"><div class="dt">${title}</div><div class="db">${html}<div class="bb"><button class="y">Да</button><button class="n">Отмена</button></div></div></div>`;box.appendChild(d);
+ d.querySelector('.n').onclick=()=>d.remove();d.querySelector('.y').onclick=()=>{d.remove();ok();};}
+const TOUR=[['.wslist','<b>Шаг 1 из 3.</b> Слева — твои мячи. Играй любым из них: победа даёт +30 опыта, поражение +12. Красный кружок — есть свободные очки.'],
+ ['.wshead','<b>Шаг 2 из 3.</b> Полоска — опыт до следующего уровня. Каждый новый уровень мастерства (максимум 10) даёт 1 очко улучшения.'],
+ ['.pane','<b>Шаг 3 из 3.</b> Трать 1 очко + монеты на улучшение. С 8-го уровня можно выбрать вариант способности, а мутации выпадают редко сами.']];
+function wsTour(w,i){const box=w.querySelector('.ws98');box.querySelectorAll('.hl').forEach(e=>e.classList.remove('hl'));box.querySelectorAll('.tour').forEach(e=>e.remove());if(i>=TOUR.length){localStorage.setItem('bf_ws_tour','1');return;}
+ const t=box.querySelector(TOUR[i][0]);if(t)t.classList.add('hl');const d=document.createElement('div');d.className='tour';d.style.background='transparent';d.style.pointerEvents='none';
+ d.innerHTML=`<div class="dlg" style="pointer-events:auto;align-self:flex-end;margin-bottom:10px"><div class="dt">❓ Как это работает</div><div class="db">${TOUR[i][1]}<div class="bb"><button id="ws_tour_skip">Пропустить</button><button id="ws_tour_next">${i<2?'Далее ›':'Понятно'}</button></div></div></div>`;box.appendChild(d);
+ d.querySelector('#ws_tour_next').onclick=()=>wsTour(w,i+1);d.querySelector('#ws_tour_skip').onclick=()=>wsTour(w,99);}
 UI.workshop=function(id){ensure();const ids=ownedIds();if(!ids.length)return;curB=id&&save.owned[id]?id:(curB&&save.owned[curB]?curB:(save.sel&&save.owned[save.sel]?save.sel:ids[0]));
- const p=bxOf(curB),d=BY[curB],u=upgMods(curB),pv=upgMods(curB,true);const f=x=>(x>=1?'+':'')+Math.round((x-1)*1000)/10+'%';
- const list=ids.map(i=>{const q=bxOf(i);return `<option value="${i}" ${i===curB?'selected':''}>${esc(BY[i].name)} — ★${q.lv}${q.m?' · '+MUT[q.m].n:''}</option>`;}).join('');
- const rows=Object.keys(UPG).map(k=>{const r=p.up[k]|0;const c=COST[r];return `<tr><td><b>${UPG[k].n}</b><br><span class="stat">${UPG[k].per>0?"+":""}${Math.round(UPG[k].per*1000)/10}% за ранг</span></td><td>${'■'.repeat(r)}${'□'.repeat(UPG_RANK-r)}</td><td>${r>=UPG_RANK?'МАКС':`<button data-up="${k}" ${pts(p)<1||save.coins<c?'disabled':''}>Улучшить (${c} мон.)</button>`}</td></tr>`;}).join('');
- const vars=Object.keys(VARS).map(v=>`<label><input type="radio" name="pg_v" value="${v}" ${p.v===v?'checked':''} ${p.lv<VAR_LVL?'disabled':''}> <b>${VARS[v].n}</b> — ${VARS[v].d}</label><br>`).join('');
- const muts=Object.keys(MUT).map(m=>`<label><input type="radio" name="pg_m" value="${m}" ${p.m===m?'checked':''} ${p.ms.includes(m)?'':'disabled'}> <b style="color:${MUT[m].c}">${MUT[m].n}</b> — ${MUT[m].d}${p.ms.includes(m)?'':' (нет)'}</label><br>`).join('');
- openWin('workshop','Мастерская',`<div class="grp">Шар: <select id="pg_b">${list}</select> &nbsp; Монеты: <b>${save.coins}</b></div>
- <div class="grp"><b>${esc(d.name)}</b> — мастерство ★${p.lv}/${MASTER_MAX} ${p.lv<MASTER_MAX?`(${p.xp}/${need(p.lv)} XP)`:''}<div class="pbar"><i style="width:${p.lv>=MASTER_MAX?100:Math.round(p.xp/need(p.lv)*100)}%"></i></div>
- Очки улучшений: <b>${pts(p)}</b> (1 очко за уровень мастерства, всего ${MASTER_MAX-1} на ${Object.keys(UPG).length*UPG_RANK} рангов). XP: победа +${XPW}, поражение +${XPL}.</div>
- <table class="t">${rows}</table>
- <div class="grp"><b>Итог офлайн:</b> урон ${f(u.dmg)}, HP ${f(u.hp)}, скорость ${f(u.spd)}, перезарядка ${f(u.cdMul)}<br><b>В PvP (×${PVP_K}, без варианта):</b> урон ${f(pv.dmg)}, HP ${f(pv.hp)}, скорость ${f(pv.spd)}, перезарядка ${f(pv.cdMul)}
- <br><button id="pg_rs" ${spent(p)?'':'disabled'}>Сбросить очки (200 мон., монеты не возвращаются)</button></div>
- <fieldset><legend>Вариант способности «${esc(d.ab)}» (с ★${VAR_LVL})</legend><label><input type="radio" name="pg_v" value="" ${p.v?'':'checked'}> Обычный</label><br>${vars}</fieldset>
- <fieldset><legend>Мутация (редкая добыча: 1,5% за победу, мутагены в пропуске)</legend><label><input type="radio" name="pg_m" value="" ${p.m?'':'checked'}> Без мутации</label><br>${muts}</fieldset>`,{w:560,icon:'🔨'});
- const w=$('w_workshop');if(!w)return;
- $('pg_b').onchange=e=>UI.workshop(e.target.value);
- w.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const k=b.dataset.up,r=p.up[k]|0,c=COST[r];if(r>=UPG_RANK||pts(p)<1||save.coins<c)return;save.coins-=c;p.up[k]=r+1;save.stats.bup++;persist();checkAch();UI.workshop(curB);});
- $('pg_rs').onclick=()=>{if(save.coins<200)return toast('Мастерская','Нужно 200 монет');save.coins-=200;p.up={};persist();UI.workshop(curB);};
- w.querySelectorAll('[name=pg_v]').forEach(r=>r.onchange=()=>{if(r.value&&p.lv<VAR_LVL)return;p.v=r.value;if(r.value)save.stats.varSet++;persist();checkAch();});
- w.querySelectorAll('[name=pg_m]').forEach(r=>r.onchange=()=>{if(r.value&&!p.ms.includes(r.value))return;p.m=r.value;persist();});};
+ const p=bxOf(curB),d=BY[curB],mx=p.lv>=MASTER_MAX,pp=pts(p);
+ const list=ids.map(i=>{const q=bxOf(i),n=pts(q),m=q.lv>=MASTER_MAX;return `<div class="wsb ${i===curB?'on':''}" data-b="${i}">${ballIco(BY[i],30)}<div class="nm"><b>${esc(BY[i].name)}</b>ур. ${q.lv}${m?' (макс.)':''}<div class="mini"><i style="width:${m?100:Math.round(q.xp/need(q.lv)*100)}%"></i></div></div>${n?`<span class="pt" title="Свободные очки">${n}</span>`:''}</div>`;}).join('');
+ const upCards=Object.keys(UPG).map(k=>{const U=UPG[k],r=p.up[k]|0,c=COST[r],ok=r<UPG_RANK;
+  const why=!ok?'':pp<1?(mx?'Все очки потрачены':`Нужно очко — получи ур. ${p.lv+1}`):save.coins<c?`Не хватает монет (ещё ${c-save.coins})`:'';
+  return `<div class="card"><div class="ic">${wsIco(WS_ICO[k],40)}</div><div class="tx"><b>${U.n}</b> <span class="rk">${'■'.repeat(r)}${'□'.repeat(UPG_RANK-r)}</span> <span class="stat">ранг ${r}/${UPG_RANK}</span><br>${UPG_TXT[k]}.<br>
+  ${ok?`<span class="ba">${pc(U.per*r)} → ${pc(U.per*(r+1))}</span>`:`<span class="ba">${pc(U.per*r)} — максимум</span>`}${why?`<div class="why">⛔ ${why}</div>`:''}</div>
+  ${ok?`<button class="ubtn" data-up="${k}" ${why?'disabled':''}>Улучшить<br><small>1 очко + ${c} 🪙</small></button>`:'<b>МАКС</b>'}</div>`;}).join('');
+ const lock=p.lv<VAR_LVL;
+ const vc=(v,n,pm,dis)=>`<button class="vc ${p.v===v?'on':''}" data-v="${v}" ${dis?'disabled':''}>${v?wsIco(WS_ICO[v],28):''} <b>${n}</b> ${p.v===v?'✔ выбран':''}<br>${pm[0].map(x=>`<div class="p">＋ ${x}</div>`).join('')}${pm[1].map(x=>`<div class="m">－ ${x}</div>`).join('')}</button>`;
+ const varPane=`<p>Вариант меняет, как работает способность «<b>${esc(d.ab)}</b>». У каждого есть плюс и минус. ${lock?`<b class="m">🔒 Откроется на ${VAR_LVL}-м уровне мастерства (сейчас ${p.lv}).</b>`:''}</p>
+  <div class="vg">${vc('','Обычный',[['Способность работает как обычно'],[]],lock)}${Object.keys(VARS).map(v=>vc(v,VARS[v].n,VAR_PM[v],lock)).join('')}</div>
+  <div class="note">🤖 Варианты действуют <b>только в боях с ботами</b>. В онлайн-боях всегда «Обычный».</div>`;
+ const mutPane=`<p><b>Мутация</b> — редкий особый вид мяча: меняет цвет и даёт небольшой бонус со штрафом. Её нельзя купить: шанс <b>1,5% после каждой победы</b>, а ещё мутаген бывает в Боевом пропуске. Полученные мутации можно надевать и снимать бесплатно.</p>
+  <div class="vg"><button class="vc ${p.m?'':'on'}" data-m=""><b>Без мутации</b> ${p.m?'':'✔'}<br>Обычный вид мяча</button>${Object.keys(MUT).map(m=>{const has=p.ms.includes(m);return `<button class="vc ${p.m===m?'on':''}" data-m="${m}" ${has?'':'disabled'}>${wsIco(WS_ICO[m],28)} <b style="color:${MUT[m].c};text-shadow:1px 1px #000">${MUT[m].n}</b> ${p.m===m?'✔':''}${has?'':' 🔒 ещё не выпала'}<br>${MUT_PM[m][0].map(x=>`<div class="p">＋ ${x}</div>`).join('')}${MUT_PM[m][1].map(x=>`<div class="m">－ ${x}</div>`).join('')}</button>`;}).join('')}</div>`;
+ const upPane=`<div class="stat" style="margin-bottom:4px">Каждое улучшение стоит <b>1 очко</b> и монеты (150 → 300 → 500). Всего очков за все уровни: ${MASTER_MAX-1}, а рангов ${Object.keys(UPG).length*UPG_RANK} — выбирай, что важнее.</div>${upCards}
+  <div class="note">🌐 В онлайн-боях улучшения работают на <b>25%</b> силы (чтобы было честно). Это значок ★ у мяча.</div>
+  <div class="foot"><span class="stat">Передумал? Сброс вернёт очки, но не монеты.</span><button id="ws_rs" ${spent(p)?'':'disabled'}>↺ Сбросить очки (200 🪙)</button></div>`;
+ const html=`<div class="ws98" style="position:relative"><div class="wsintro">${wsIco('anvil',32)}<span>Здесь ты усиливаешь свои мячи. Играй мячом — он копит опыт и растёт в уровне, за каждый уровень даётся очко, а очки вместе с монетами тратятся на улучшения.</span><button id="ws_help" title="Как это работает" style="min-width:30px;font-weight:bold">?</button></div>
+ <div class="wsmain"><div class="wslist">${list}</div><div class="wsr">
+ <div class="wshead">${ballIco(d,72)}<div class="info"><div class="big">${esc(d.name)} — уровень ${p.lv}/${MASTER_MAX}</div>
+ <div class="pbar"><i style="width:${mx?100:Math.round(p.xp/need(p.lv)*100)}%"></i></div>${mx?'Максимальный уровень!':`${p.xp} / ${need(p.lv)} опыта до уровня ${p.lv+1}`} <span class="stat">(победа +${XPW}, поражение +${XPL})</span><br>
+ Свободных очков: <b style="font-size:14px;color:${pp?'#c00':'#000'}">${pp}</b> · Монеты: <b>${save.coins} 🪙</b></div></div>
+ <div class="tabs"><button data-tab="up" class="${wsTab==='up'?'on':''}">⚒ Улучшения</button><button data-tab="var" class="${wsTab==='var'?'on':''}">✨ Способность</button><button data-tab="mut" class="${wsTab==='mut'?'on':''}">🧬 Мутации</button></div>
+ <div class="pane">${wsTab==='var'?varPane:wsTab==='mut'?mutPane:upPane}</div></div></div></div>`;
+ openWin('workshop','Мастерская',html,{w:720,icon:'🔨'});
+ const w=$('w_workshop');if(!w)return;w.querySelectorAll('.help98').forEach(e=>e.remove());
+ w.querySelectorAll('[data-b]').forEach(e=>e.onclick=()=>UI.workshop(e.dataset.b));
+ w.querySelectorAll('[data-tab]').forEach(e=>e.onclick=()=>{wsTab=e.dataset.tab;UI.workshop(curB);});
+ w.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{const k=b.dataset.up,r=p.up[k]|0,c=COST[r];if(r>=UPG_RANK||pts(p)<1||save.coins<c)return;save.coins-=c;p.up[k]=r+1;save.stats.bup++;persist();checkAch();try{updTray();}catch(e){}UI.workshop(curB);});
+ const rs=$('ws_rs');if(rs)rs.onclick=()=>wsConfirm(w,'Сбросить улучшения?',`Все очки мяча «${esc(d.name)}» вернутся, ранги обнулятся.<br><b>Цена: 200 🪙.</b> Потраченные монеты не возвращаются.`,()=>{if(save.coins<200)return toast('Мастерская','Нужно 200 монет');save.coins-=200;p.up={};persist();try{updTray();}catch(e){}UI.workshop(curB);});
+ w.querySelectorAll('[data-v]').forEach(r=>r.onclick=()=>{const v=r.dataset.v;if(v&&p.lv<VAR_LVL)return;p.v=v;if(v)save.stats.varSet++;persist();checkAch();UI.workshop(curB);});
+ w.querySelectorAll('[data-m]').forEach(r=>r.onclick=()=>{const m=r.dataset.m;if(m&&!p.ms.includes(m))return;p.m=m;persist();UI.workshop(curB);});
+ $('ws_help').onclick=()=>wsTour(w,0);
+ if(!localStorage.getItem('bf_ws_tour'))wsTour(w,0);};
 // ---------- боевой пропуск ----------
 const RW=[null,{c:100},{cards:5},{c:150},{g:3},{crate:'common'},{c:150},{cards:5},{g:5},{c:200},{pat:'zebra'},{c:200},{cards:8},{g:5},{c:250},{mut:1},{c:250},{cards:8},{g:8},{c:300},{pat:'stars'},{c:300},{crate:'rare'},{g:8},{c:350},{mut:1},{pat:'check'},{c:400},{g:10},{pat:'flame'},{ball:'comet'}];
 const rwTxt=r=>r.c?r.c+' монет':r.g?r.g+' 💎':r.cards?r.cards+' карт':r.crate?'Ящик ('+CRATES[r.crate].name+')':r.pat?'Узор «'+PSK[r.pat]+'»':r.mut?'Мутаген':r.ball?'Шар «'+BY[r.ball].name+'»':'';
