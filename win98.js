@@ -18,7 +18,7 @@
 #boot .lg{font:bold 54px "Times New Roman",serif;font-style:italic;background:linear-gradient(90deg,#f33,#fc0,#3c3,#39f);-webkit-background-clip:text;background-clip:text;color:transparent}
 #boot .bar{margin-top:40px;width:260px;height:14px;border:1px solid #666;overflow:hidden}#boot .bar i{display:block;height:100%;width:60px;background:linear-gradient(90deg,transparent,#36f,#9cf,#36f,transparent);animation:bb 1.1s linear infinite}
 @keyframes bb{from{transform:translateX(-60px)}to{transform:translateX(260px)}}
-#offscr{background:#000;color:#f80;font:bold 30px Tahoma;text-align:center}
+#offscr{background:#000;color:#f80;font:bold 30px Tahoma,Verdana,sans-serif;text-align:center}
 #ssaver{position:fixed;inset:0;z-index:99000;background:#000;cursor:none}
 #tip{position:fixed;background:#ffffe1;border:1px solid #000;padding:2px 5px;font-size:12px;z-index:99500;pointer-events:none;max-width:280px;box-shadow:2px 2px 0 rgba(0,0,0,.3)}
 body.wp-clouds{background:linear-gradient(#3a7bd5 0%,#7fb4ee 60%,#cfe4fb 100%)}
@@ -30,7 +30,7 @@ body.wp-dark canvas,body.wp-dark .ballico{filter:invert(1) hue-rotate(180deg)}
 .ms .lcd{background:#000;color:#f00;font:bold 22px "Courier New",monospace;padding:0 3px;min-width:48px;text-align:right}
 .ms .sm{min-width:0;width:32px;height:32px;padding:0;font-size:18px}
 .ms .gr{display:grid;border:3px solid;border-color:#808080 #fff #fff #808080}
-.ms .c{width:22px;height:22px;font:bold 14px Tahoma;display:flex;align-items:center;justify-content:center;border:3px solid;border-color:#fff #808080 #808080 #fff;background:#c0c0c0;cursor:default}
+.ms .c{width:22px;height:22px;font:bold 14px Tahoma,Verdana,sans-serif;display:flex;align-items:center;justify-content:center;border:3px solid;border-color:#fff #808080 #808080 #fff;background:#c0c0c0;cursor:default}
 .ms .c.o{border:1px solid #808080;border-width:0 1px 1px 0}.ms .c.boom{background:#f00}
 `;document.head.appendChild(st);})();
 const SYS=Object.assign({wp:'teal',snd:true,ss:true},(()=>{try{return JSON.parse(localStorage.getItem('bf_sys'))||{};}catch(e){return {};}})());
@@ -103,7 +103,7 @@ v2 — 26 шаров, ящики, улучшения, 30 уровней,
 
 Совет: нажмите Delete, чтобы отправить
 выделенные значки в Корзину.</textarea>`,{w:480,icon:'📝'});},
- props(){const wp=[['teal','🟦 Классика (бирюза)'],['clouds','☁️ Облака'],['dark','🌙 Тёмная тема']];
+ props(){const wp=[['teal','Классика (бирюза)'],['clouds','Облака'],['dark','Тёмная тема']];
   openWin('props','Свойства: Экран',`<div style="display:flex;gap:12px;flex-wrap:wrap"><div style="width:150px;height:110px;border:10px solid #555;border-bottom-width:20px;border-radius:6px" id="wpprev"></div>
   <fieldset style="flex:1;min-width:180px"><legend>Обои и тема</legend>${wp.map(([k,n])=>`<label style="display:block;padding:2px"><input type="radio" name="wp" value="${k}" ${SYS.wp===k?'checked':''} onchange="SYS.wp='${k}';applyWp();sysSave();Desk.prev()"> ${n}</label>`).join('')}</fieldset></div>
   <fieldset><legend>Прочее</legend><label style="display:block"><input type="checkbox" ${SYS.snd?'checked':''} onchange="SYS.snd=this.checked;sysSave()"> Системные звуки</label>
@@ -178,7 +178,7 @@ const Saver={idle:Date.now(),on:false,raf:0,
   const step=()=>{if(!this.on)return;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,0,c.width,c.height);
    for(const b of bs){b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>c.width-b.r)b.vx*=-1;if(b.y<b.r||b.y>c.height-b.r)b.vy*=-1;const gr=g.createRadialGradient(b.x-b.r*.3,b.y-b.r*.3,2,b.x,b.y,b.r);gr.addColorStop(0,'#fff');gr.addColorStop(.3,b.c);gr.addColorStop(1,'#000');g.fillStyle=gr;g.beginPath();g.arc(b.x,b.y,b.r,0,7);g.fill();
     if(b.s){g.fillStyle='#fff';g.font=b.r+'px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(b.s,b.x,b.y);}}
-   g.fillStyle='rgba(255,255,255,.5)';g.font='bold 22px Tahoma';g.textAlign='center';g.fillText('Битва Шаров 98',c.width/2,c.height-30);this.raf=requestAnimationFrame(step);};step();},
+   g.fillStyle='rgba(255,255,255,.5)';g.font='bold 22px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('Битва Шаров 98',c.width/2,c.height-30);this.raf=requestAnimationFrame(step);};step();},
  stop(){this.idle=Date.now();if(!this.on||Date.now()-this.t0<800)return;this.on=false;cancelAnimationFrame(this.raf);const c=document.getElementById('ssaver');if(c)c.remove();}};
 ['pointermove','pointerdown','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev,()=>Saver.stop(),true));
 setInterval(()=>{if(SYS.ss&&!Saver.on&&Date.now()-Saver.idle>60000&&document.getElementById('gamewin').classList.contains('hide')&&!document.getElementById('boot'))Saver.start();},2000);

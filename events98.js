@@ -51,7 +51,7 @@ const css=document.createElement('style');css.textContent=`
 @keyframes evsnow{to{transform:translateY(105vh) rotate(360deg)}}
 #evdecor .gar{position:absolute;top:0;left:0;right:0;height:18px;background:radial-gradient(circle,#f33 4px,transparent 5px) 0 6px/40px 18px,radial-gradient(circle,#ff0 4px,transparent 5px) 20px 6px/40px 18px;animation:evblink 1s steps(2) infinite}
 @keyframes evblink{50%{filter:hue-rotate(120deg)}}
-.evwin .evh{background:linear-gradient(90deg,${E.bg},${E.col});color:#fff;padding:8px;font:bold 15px Tahoma;text-shadow:1px 1px #000}
+.evwin .evh{background:linear-gradient(90deg,${E.bg},${E.col});color:#fff;padding:8px;font:bold 15px Tahoma,Verdana,sans-serif;text-shadow:1px 1px #000}
 .evwin .evq{display:flex;align-items:center;gap:6px;padding:3px;border-bottom:1px solid #ddd;font-size:12px}
 .evwin .evbar{flex:1;height:10px;border:1px inset #fff;background:#fff}.evwin .evbar i{display:block;height:100%;background:${E.col}}
 #evspin{display:flex;gap:6px;overflow:hidden;width:330px;margin:6px auto;padding:6px;background:#000;border:2px inset #fff}`;

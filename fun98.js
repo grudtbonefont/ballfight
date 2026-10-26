@@ -16,7 +16,7 @@ const st=document.createElement('style');st.textContent=`
 .cmd input{background:transparent;border:0;outline:0;color:inherit;font:inherit;width:60%;padding:0;margin:0;box-shadow:none}
 #bsod{position:fixed;inset:0;z-index:999999;background:#0000aa;color:#fff;font:18px/1.5 'Lucida Console','Courier New',monospace;display:flex;align-items:center;justify-content:center;cursor:none}
 #bsod .t{background:#aaa;color:#0000aa;padding:0 8px;font-weight:bold}
-.icq .log{height:220px;overflow:auto;background:#fff;border:2px inset;padding:4px;font:12px Tahoma;user-select:text}.icq .log b{color:#c00}.icq .log b.me{color:#00a}
+.icq .log{height:220px;overflow:auto;background:#fff;border:2px inset;padding:4px;font:12px Tahoma,Verdana,sans-serif;user-select:text}.icq .log b{color:#c00}.icq .log b.me{color:#00a}
 .icq .row{display:flex;gap:4px;margin-top:4px}.icq input{flex:1}
 #mrain{position:fixed;inset:0;z-index:99970;pointer-events:none}
 `;document.head.appendChild(st);
@@ -63,10 +63,10 @@ const Rep={cur:null,last:null,acc:0,
   bs.forEach(({b,i})=>{const d=BY[r.ids[i]]||{color:'#888',sym:'?'};const p=P(b[0],b[1]),R=b[2]*p.k;g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(p.x,p.y,R,R*.4,0,0,7);g.fill();
    const y=p.y-R;const gr=g.createRadialGradient(p.x-R*.35,y-R*.35,R*.1,p.x,y,R);gr.addColorStop(0,'#fff');gr.addColorStop(.3,b[5]?'#fff':d.color);gr.addColorStop(1,'#000');g.fillStyle=gr;g.beginPath();g.arc(p.x,y,R,0,7);g.fill();
    if(b[6]){g.strokeStyle='rgba(120,220,255,.9)';g.lineWidth=4;g.beginPath();g.arc(p.x,y,R*1.3,0,7);g.stroke();}
-   if(!(window.LOGO&&LOGO.draw(g,d.id,p.x,y,R))){g.fillStyle='rgba(255,255,255,.85)';g.font=`bold ${Math.round(R*.9)}px Tahoma`;g.textAlign='center';g.textBaseline='middle';g.fillText(d.sym,p.x,y);g.textBaseline='alphabetic';}
+   if(!(window.LOGO&&LOGO.draw(g,d.id,p.x,y,R))){g.fillStyle='rgba(255,255,255,.85)';g.font=`bold ${Math.round(R*.9)}px Tahoma,Verdana,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(d.sym,p.x,y);g.textBaseline='alphabetic';}
    g.fillStyle='#000';g.fillRect(p.x-R-1,y-R-17,R*2+2,8);g.fillStyle=i?'#ff5252':'#00c853';g.fillRect(p.x-R,y-R-16,R*2*b[3]/b[4],6);});
-  g.fillStyle='#fff';g.font='bold 26px Tahoma';g.textAlign='center';g.fillText(`${(r.names||[])[0]||'P1'}  ${f.s[0]} : ${f.s[1]}  ${(r.names||[])[1]||'P2'}`,500,50);
-  if(f.ban){g.font='bold 48px Tahoma';g.fillStyle='#ffeb3b';g.fillText(f.ban,500,140);}
+  g.fillStyle='#fff';g.font='bold 26px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText(`${(r.names||[])[0]||'P1'}  ${f.s[0]} : ${f.s[1]}  ${(r.names||[])[1]||'P2'}`,500,50);
+  if(f.ban){g.font='bold 48px Tahoma,Verdana,sans-serif';g.fillStyle='#ffeb3b';g.fillText(f.ban,500,140);}
   g.font='bold 18px monospace';g.fillStyle='#f44';g.textAlign='left';if(this.play&&(performance.now()/500|0)%2)g.fillText('● REPLAY',20,680);
   const sec=x=>`${(x/20/60)|0}:${String(((x/20)|0)%60).padStart(2,'0')}`;$('rpt').textContent=`${sec(this.i)} / ${sec(r.f.length)}`;}};
 window.Rep=Rep;
@@ -85,7 +85,7 @@ const Hool={on:false,
   setTimeout(()=>{if(cc){cc.style.transition='opacity 1.5s';cc.style.opacity=0;setTimeout(()=>cc.remove(),1600);}},4000);
   const D=Math.max(40,Math.min(72,Math.round(b.r*p.k/700*cr.height*2+8)));const el=document.createElement('canvas');el.id='funball';el.width=el.height=D;el.title='Меня можно кидать мышкой! Двойной клик — вернуть на место';
   const x=el.getContext('2d'),R=D/2-2,gr=x.createRadialGradient(R*.65,R*.6,R*.1,R,R,R);gr.addColorStop(0,'#fff');gr.addColorStop(.3,d.color);gr.addColorStop(1,'#000');x.fillStyle=gr;x.beginPath();x.arc(D/2,D/2,R,0,7);x.fill();
-  if(!(window.LOGO&&LOGO.draw(x,d.id,D/2,D/2,R))){x.fillStyle='rgba(255,255,255,.85)';x.font=`bold ${R*.9|0}px Tahoma`;x.textAlign='center';x.textBaseline='middle';x.fillText(d.sym,D/2,D/2+1);}document.body.appendChild(el);
+  if(!(window.LOGO&&LOGO.draw(x,d.id,D/2,D/2,R))){x.fillStyle='rgba(255,255,255,.85)';x.font=`bold ${R*.9|0}px Tahoma,Verdana,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(d.sym,D/2,D/2+1);}document.body.appendChild(el);
   this.el=el;this.D=D;this.x=sx-D/2;this.y=sy-D/2;this.vx=(Math.random()<.5?-1:1)*(6+Math.random()*6);this.vy=-14-Math.random()*6;this.rot=0;this.on=true;this.drag=null;this.knocked=new WeakMap();this.home=[sx-D/2,sy-D/2];
   this.bind();cancelAnimationFrame(this.raf);this.lt=0;this.raf=requestAnimationFrame(t=>this.loop(t));if(window.Clip)Clip.say('Ого! Ваш шар разбил стекло и сбежал на рабочий стол! Его можно кидать мышкой, а двойной клик вернёт его на место.');},
  bind(){const el=this.el;let hist=[];
