@@ -153,7 +153,7 @@ UI.bpass=function(){ensure();qsnap();const t=bpTier(),q=save.bp.q,left=Math.max(
  <fieldset><legend>Узоры шара (рисуются под логотипом)</legend>${Object.keys(PSK).map(k=>save.pskins[k]?`<button data-p="${k}">${PSK[k]}</button>`:`<button disabled>${PSK[k]} 🔒</button>`).join(' ')} <button data-p="">Снять</button> <span class="stat">для шара: ${esc(BY[save.sel]?BY[save.sel].name:'—')}</span></fieldset>`,{w:640,icon:'🎫'});
  const w=$('w_bpass');if(!w)return;
  w.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{const i=+b.dataset.t;if(save.bp.cl[i]||i>bpTier())return;save.bp.cl[i]=1;giveRw(RW[i]);persist();checkAch();UI.bpass();});
- w.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const typ=b.dataset.q[0],k=b.dataset.q.slice(1),L=typ==='d'?QD:QW,x=L.find(y=>y.k===k),done=typ==='d'?q.dc:q.wc,base=typ==='d'?q.ds:q.ws;if(!x||done[k]||qprog(x,base)<x.t)return;done[k]=1;bpXP(x.xp);persist();UI.bpass();});
+ w.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const typ=b.dataset.q[0],k=b.dataset.q.slice(1),L=typ==='d'?QD:QW,x=L.find(y=>y.k===k),done=typ==='d'?q.dc:q.wc,base=typ==='d'?q.ds:q.ws;if(!x||done[k]||qprog(x,base)<x.t)return;done[k]=1;bpXP(x.xp);persist();if(typ==='d'&&QD.every(y=>q.dc[y.k])&&window.QOL)QOL.allDaily();UI.bpass();});
  w.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const id=save.sel;if(!id||!save.owned[id])return;if(b.dataset.p&&save.pskins[b.dataset.p])save.psel[id]=b.dataset.p;else delete save.psel[id];persist();checkAch();toast('Узор',b.dataset.p?PSK[b.dataset.p]:'снят');});};
 // ---------- узоры ----------
 function drawPat(ctx,k,s,t){ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,s.R,0,7);ctx.clip();const R=s.R;ctx.globalAlpha=.42;
@@ -177,7 +177,7 @@ window.recordMatch=function(won,xp){ensure();let id=null;try{const b=G&&G.balls&
 const PROG=window.PROG={clan:null,tags:{},pats:[null,null],their:null,
  tline(){const t=save&&save.title&&TITLES[save.title]?' «'+TITLES[save.title].n+'»':'';return t;},
  nick(n,tag,title){return (tag?`<b style="color:#800080">[${esc(tag)}]</b> `:'')+esc(n)+(title&&TITLES[title]?` <i class="stat">«${TITLES[title].n}»</i>`:'');},
- ensure,TITLES,addBX,giveMut,bpXP,bpTier,RW,seasonNo};
+ ensure,TITLES,PSK,addBX,giveMut,bpXP,bpTier,RW,seasonNo};
 const lim=(v,lo,hi)=>Math.min(hi,Math.max(lo,+v||1));
 function myExt(id){const u=upgMods(id,true);return {up:{hp:u.hp,dmg:u.dmg,spd:u.spd,cdMul:u.cdMul,ml:u.ml},mut:u.mut||'',pat:(save.psel&&save.psel[id])||'',ttl:save.title||'',tag:save.clanTag||''};}
 const osend=Net.send.bind(Net);

@@ -82,9 +82,10 @@ document.addEventListener('touchend',e=>{if(!sw)return;const p=e.changedTouches[
 
 // ---- сенсорное управление в матчах ----
 const tc=document.createElement('div');tc.id='tc';document.body.appendChild(tc);const rot=document.createElement('div');rot.id='rotate';rot.textContent='↻ Поверните телефон горизонтально для удобной игры';document.body.appendChild(rot);
-function joy(pi,style){const j=document.createElement('div');j.className='joy';Object.assign(j.style,style);j.innerHTML='<i></i>';tc.appendChild(j);const k=j.firstChild;let id=null;
+const CF=()=>window.CTL?CTL():{sz:140,sens:100,dz:25,pos:0,left:false,op:100};
+function joy(pi,style){const cf=CF(),S=cf.sz,KS=Math.round(S*.386),TR=S*.307;const j=document.createElement('div');j.className='joy';Object.assign(j.style,style,{width:S+'px',height:S+'px'});j.innerHTML='<i></i>';tc.appendChild(j);const k=j.firstChild;Object.assign(k.style,{width:KS+'px',height:KS+'px',left:((S-6-KS)/2)+'px',top:((S-6-KS)/2)+'px'});let id=null;const dz=cf.dz/100,gn=cf.sens/100,f=v=>Math.abs(v)<dz?0:Math.max(-1,Math.min(1,v*gn));
  const upd=p=>{const r=j.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=(p.clientX-cx)/(r.width/2),dy=(p.clientY-cy)/(r.height/2);const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}
-  MOB.tc[pi].x=Math.abs(dx)<.25?0:dx;MOB.tc[pi].y=Math.abs(dy)<.25?0:dy;k.style.transform=`translate(${dx*43}px,${dy*43}px)`;};
+  MOB.tc[pi].x=f(dx);MOB.tc[pi].y=f(dy);k.style.transform=`translate(${dx*TR}px,${dy*TR}px)`;};
  const rel=()=>{id=null;MOB.tc[pi].x=MOB.tc[pi].y=0;k.style.transform='';};
  j.addEventListener('pointerdown',e=>{e.preventDefault();id=e.pointerId;try{j.setPointerCapture(id);}catch(_){}upd(e);});
  j.addEventListener('pointermove',e=>{if(e.pointerId===id)upd(e);});['pointerup','pointercancel','lostpointercapture'].forEach(t=>j.addEventListener(t,e=>{if(e.pointerId===id)rel();}));}
@@ -92,8 +93,9 @@ function abtn(pi,style,label){const b=document.createElement('div');b.className=
  b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){}MOB.tc[pi].a=true;b.classList.add('on');if(navigator.vibrate)navigator.vibrate(10);});
  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>b.addEventListener(t,()=>{MOB.tc[pi].a=false;b.classList.remove('on');}));}
 let layout='';function build(local){const L=local?'2':'1';if(layout===L)return;layout=L;tc.innerHTML='';MOB.tc.forEach(s=>{s.x=s.y=0;s.a=false;});
- if(!local){joy(0,{left:'18px',bottom:'18px'});abtn(0,{right:'24px',bottom:'34px'},'⚡ Удар');}
- else{joy(0,{left:'12px',bottom:'12px'});abtn(0,{left:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И1');joy(1,{right:'12px',bottom:'12px'});abtn(1,{right:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И2');}
+ const cf=CF(),B0=cf.pos?100:0;tc.style.opacity=cf.op/100;
+ if(!local){const L=cf.left;joy(0,L?{right:'18px',bottom:(18+B0)+'px'}:{left:'18px',bottom:(18+B0)+'px'});abtn(0,L?{left:'24px',bottom:(34+B0)+'px'}:{right:'24px',bottom:(34+B0)+'px'},'⚡ Удар');}
+ else{const cs=Math.min(cf.sz,150);joy(0,{left:'12px',bottom:'12px'});abtn(0,{left:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И1');joy(1,{right:'12px',bottom:'12px'});abtn(1,{right:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И2');}
  const p=document.createElement('div');p.className='pz';p.textContent='❚❚';p.title='Пауза';tc.appendChild(p);p.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{onKey('Escape');}catch(_){}});}
 const ri=window.readInput;if(ri)window.readInput=readInput=function(set){const r=ri(set);if(!MOB.phone)return r;const local=typeof G!=='undefined'&&G&&G.kind==='local';const t=local?MOB.tc[set]:(set===0?MOB.tc[0]:null);
  if(!t)return r;return {x:Math.max(-1,Math.min(1,r.x+t.x)),y:Math.max(-1,Math.min(1,r.y+t.y)),a:r.a||t.a};};
@@ -103,5 +105,5 @@ setInterval(()=>{const gw=$('gamewin');const ing=MOB.phone&&typeof mode!=='undef
 // производительность: меньше частиц на телефоне
 const uf=window.updFx;if(uf)window.updFx=updFx=function(){if(MOB.phone){try{if(particles.length>90)particles.splice(0,particles.length-90);}catch(e){}}return uf.apply(this,arguments);};
 // замер FPS (для тестов)
-MOB.fps=0;let fc=0,ft=performance.now();(function f(n){fc++;if(n-ft>1000){MOB.fps=Math.round(fc*1000/(n-ft));fc=0;ft=n;}requestAnimationFrame(f);})(ft);
+MOB.rebuild=()=>{layout='';};MOB.fps=0;let fc=0,ft=performance.now();(function f(n){fc++;if(n-ft>1000){MOB.fps=Math.round(fc*1000/(n-ft));fc=0;ft=n;}requestAnimationFrame(f);})(ft);
 })();

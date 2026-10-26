@@ -396,6 +396,7 @@ function render(st,me){const A=ARENAS[st.arena]||ARENAS[0];ctx.save();ctx.clearR
  st.zones.forEach(z=>{if(z.k!=='bomb')drawZone(z);});
  st.fires.forEach(f=>{const p=P(f.x,f.y);const a=Math.min(1,f.t);ctx.fillStyle=`rgba(255,${100+Math.random()*100|0},20,${a*.7})`;ctx.beginPath();ctx.ellipse(p.x,p.y,12*p.k,6*p.k,0,0,7);ctx.fill();});
  ringFx.forEach(r=>{const p=P(r.x,r.y);const q=1-r.t/r.m;ctx.strokeStyle=r.c;ctx.globalAlpha=1-q;ctx.lineWidth=4;ctx.beginPath();ctx.ellipse(p.x,p.y,r.R*q*p.k,r.R*q*p.k*.45,0,0,7);ctx.stroke();ctx.globalAlpha=1;ctx.lineWidth=1;});
+ if(window.QOL)QOL.floor(st,me);
  const ents=[];st.balls.forEach((b,i)=>{if(!b.dead)ents.push({y:b.y,f:()=>drawBall(b,i,me,st)});});extraEnts(st,ents);st.clones.forEach(k=>ents.push({y:k.y,f:()=>drawSphere(k.x,k.y,k.r,k.c,.75)}));
  st.proj.forEach(p=>ents.push({y:p.y,f:()=>{const s=drawSphere(p.x,p.y,p.r,p.c,1,18);if(p.k==='dice'){ctx.fillStyle='#000';ctx.font='bold 14px Tahoma,Verdana,sans-serif';ctx.textAlign='center';ctx.fillText('⚄',s.x,s.y+5);}if(p.k==='harpoon'){const o=st.balls[p.o];const q=P(o.x,o.y);ctx.strokeStyle='#ccc';ctx.beginPath();ctx.moveTo(q.x,q.y-o.r*q.k);ctx.lineTo(s.x,s.y);ctx.stroke();}}}));
  st.zones.forEach(z=>{if(z.k==='bomb')ents.push({y:z.y,f:()=>{const s=drawSphere(z.x,z.y,16,Math.sin(G_t*30)>0?'#ff1744':'#222');ctx.fillStyle='#ffab00';ctx.fillRect(s.x-2,s.y-s.R-6,4,6);}});});
@@ -1033,5 +1034,5 @@ Cloud.startup();
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="prog98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script><script src="iso98.js"></script><script src="bz98.js"></script><script src="ui98.js"></script><script src="theme98.js"></script><script src="mobile98.js"></script>
+<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="prog98.js"></script><script src="qol98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script><script src="iso98.js"></script><script src="bz98.js"></script><script src="ui98.js"></script><script src="theme98.js"></script><script src="mobile98.js"></script>
 </body></html>
