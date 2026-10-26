@@ -243,7 +243,7 @@ function stun(e,t){if(e.fx.shield>0||e.fx.immune>0)return false;e.fx.frozen=Math
 function colMul(b){return (b.fx.spikes>0?3:1)*(b.fx.strike>0?2.5:1)*(b.fx.magnet>0?1.3:1);}
 function onTouch(a,v,vi,dealt){if(a.fx.vamp>0&&dealt>0)a.hp=Math.min(a.maxHp,a.hp+dealt*.5);if(a.fx.elec>0&&v.fx.shield<=0){damage(vi,2*a.dmgMul,v.x,v.y);stun(v,.6);emit({k:'ring',x:v.x,y:v.y,c:'#fff176'});}}
 function step(dt,inputs){
- dt*=G.ts||1;G.time+=dt;const AR=ARENAS[G.arena].id,M=G.mset||{},ICE=AR==='ice'||M.ice,LG=M.lowgrav,lo=G.lo||0,N=G.balls.length;
+ dt*=G.ts||1;G.time+=dt;const AR=ARENAS[G.arena].id,M=G.mset||{},ICE=AR==='ice'||M.ice||(G.ae&&G.ae.k==='frost'),LG=M.lowgrav,lo=G.lo||0,N=G.balls.length;
  const needOf=s=>G.needs?G.needs[s]:G.need;
  if(G.phase==='count'){G.timer-=dt;if(G.timer<=0){G.phase='fight';G.banner='';emit({k:'go'});}}
  else if(G.phase==='roundEnd'){G.timer-=dt;if(G.timer<=0){const ws=G.score.map((s,k)=>s>=needOf(k)?k:-1).filter(k=>k>=0);if(ws.length){G.phase='over';G.winner=ws[0];onMatchOver();return;}else{G.round++;resetRound();}}}
@@ -252,7 +252,7 @@ function step(dt,inputs){
  if(AR==='wind'){G.windT-=dt;if(G.windT<=0){G.windT=5;G.wind*=-1;}}
  G.balls.forEach((b,i)=>{if(b.dead)return;const ei=foeIdx(i),e=ei<0?null:G.balls[ei];const inp=fight&&inputs[i]?inputs[i]:{x:0,y:0,a:false};
   for(const k in b.fx)if(b.fx[k]>0)b.fx[k]=Math.max(0,b.fx[k]-dt);
-  if(G.ex){b.dmgMul=b.dmBase*(b.fx.dmg2>0?2:1);b.spd=b.spBase*(b.fx.spd2>0?1.4:1)*(b.bspd||1);if(b.regen&&fight)b.hp=Math.min(b.maxHp,b.hp+b.regen*dt);}
+  if(G.ex){b.dmgMul=b.dmBase*(b.fx.dmg2>0?2:1);b.spd=b.spBase*(b.fx.spd2>0?1.4:1)*(b.bspd||1)*(G.ae&&G.ae.k==='rush'?1.3:1);if(b.regen&&fight)b.hp=Math.min(b.maxHp,b.hp+b.regen*dt);}
   b.cd=Math.max(0,b.cd-dt);b.hitT=Math.max(0,b.hitT-dt);b.bladeCd=Math.max(0,b.bladeCd-dt);
   const tr=b.br*(b.fx.giant>0?1.5:1);b.r+=(tr-b.r)*Math.min(1,dt*8);b.m=b.mass*(b.r/34)**2;
   if(b.fx.frozen<=0){let l=Math.hypot(inp.x,inp.y);if(l>0){const acc=(ICE?700:1000)*b.spd*(LG?.65:1);b.vx+=inp.x/l*acc*dt;b.vy+=inp.y/l*acc*dt;}
@@ -445,7 +445,7 @@ function drawHUD(st,me){ctx.textAlign='left';
   ctx.fillStyle='#000080';ctx.fillText(fx.filter(k=>FXN[k]).map(k=>FXN[k]).join(' · '),x+150,y+84);});
  ctx.textAlign='center';bevel(420,10,160,60);ctx.fillStyle='#000';ctx.font='bold 26px "Courier New",monospace';ctx.fillText(st.score[0]+' : '+st.score[1],500,42);
  ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText('Раунд '+st.round+' · до '+(st.needs?st.needs[me<0?0:me]:st.need||2)+' поб.',500,60);
- ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(st.mset?modLine(st):ARENAS[st.arena].n,500,120);
+ ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(st.mset?modLine(st):ARENAS[st.arena].n,500,120);drawAevMsg(st,128);
  const box=(t,sz)=>{ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Сообщение',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;ctx.fillText(t,500,362);};
  if(st.phase==='count')box(st.banner+' — '+Math.ceil(st.timer),26);
  else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;box(st.banner,24);ctx.restore();}
@@ -589,7 +589,7 @@ function startBot(l){const I=levelInfo(l);closeWin('levels');
 function levelOpts(l){const I=levelInfo(l),F=levelFeat(l);const pers=!I.boss&&F.pers?rollPers(F.sniper):null;
  const opp=I.boss?I.bossId:pickN(pers?persPool(botPool(I.d),pers):botPool(I.d),3).sort((a,b)=>Math.random()<I.d?BY[b].hp*BY[b].mass-BY[a].hp*BY[a].mass:0)[0];
  const mods=F.mods?rollMods(I.boss?1:F.mods,F.wild):[];if(I.boss){const k=mods.indexOf('onehp');if(k>=0)mods.splice(k,1);}
- return {opp,o:{level:l,d:I.d,sk:botSkill(I.d),boss:I.boss,phases:I.boss,needs:I.boss?[1,2]:null,arena:I.arena,pers1:pers,mods,obs:I.boss?0:F.obs,pk:F.pk,pkTypes:l>=26?['shield','speed','dmg','heal','bomb']:null,
+ return {opp,o:{level:l,d:I.d,sk:botSkill(I.d),boss:I.boss,phases:I.boss,needs:I.boss?[1,2]:null,arena:I.arena,pers1:pers,mods,obs:I.boss?0:F.obs,pk:F.pk,aev:aevFor(l),pkTypes:l>=26?['shield','speed','dmg','heal','bomb']:null,
   names:['Вы',I.boss?'☠ '+I.bossName:'Бот ур.'+l],mods1:botMods(I.d,I.boss,I.boss,I.bossId)}};}
 function beginLevel(l,myId,m0){const L=levelOpts(l);L.o.mods0=m0||myMods(myId);Bot.t=0;newMatch('bot',[myId,L.opp],L.o);}
 function startLocal(){const p1=myPanel('Игрок 1 (WASD)'),p2=myPanel('Игрок 2 (стрелки)');p2.keys='←/→ — выбор · Enter — ок · Пр.Shift — переброс';p2.keyset=KS2;
@@ -599,7 +599,7 @@ function startSurvival(){showPick([myPanel('Ваш шар на весь забе
 function nextWave(){Surv.wave++;const d=Math.min(1,(Surv.wave-1)/20);const boss=Surv.wave%5===0;Bot.t=0;
  const w=Surv.wave,pers=!boss&&w>=3?rollPers(w>=10):null;
  newMatch('surv',[Surv.ball,boss?BOSSES[(Surv.wave/5-1)%BOSSES.length]:pickN(pers?persPool(botPool(d),pers):botPool(d),1)[0]],{d,sk:botSkill(d),need:1,arena:Math.random()*ARENAS.length|0,hp0Frac:Surv.hp,names:['Вы',(boss?'☠ Босс':'Волна')+' '+Surv.wave],
-  mods0:survMods(),mods1:survFoe(botMods(d*.7,boss),w),pers1:pers,phases:boss,pk:w>=4,obs:boss?0:w>=12?2:w>=7?1:0,mods:!boss&&w>=10&&w%2===0?rollMods(1,false):[]});}
+  mods0:survMods(),mods1:survFoe(botMods(d*.7,boss),w),pers1:pers,phases:boss,pk:w>=4,aev:aevFor(w*3+2),obs:boss?0:w>=12?2:w>=7?1:0,mods:!boss&&w>=10&&w%2===0?rollMods(1,false):[]});}
 const Tour={stage:0,names:[],P:[],R:[],on:null};const STAGES=['Четвертьфинал','Полуфинал','Финал'];
 const TPRIZE=[{c:700,g:15,crate:'rare',n:'1 место'},{c:300,g:5,n:'2 место'},{c:120,g:0,n:'3–4 место'},{c:30,g:0,n:'5–8 место'}];
 function tourBots(n){const nm=shuffle(BOTNAMES.slice());return Array.from({length:n},(_,i)=>{const d=.2+Math.random()*.6;return {nm:nm[i%nm.length],d,ball:pickN(botPool(d),1)[0],bot:1};});}
@@ -647,23 +647,51 @@ function onMatchOver(){const w=G.winner,me=G.me,won=w===me,sc=`Счёт ${G.scor
 const ENV={dmgMul:1,x:400,y:400,tm:-1};
 const PERS={aggr:{n:'Агрессор',c:'#ff6b6b',d:'всегда идёт в атаку'},coward:{n:'Трус',c:'#90caf9',d:'держит дистанцию и убегает'},trick:{n:'Хитрец',c:'#ce93d8',d:'копит способность для комбо'},hunter:{n:'Охотник',c:'#ffb74d',d:'дожимает, когда у вас мало HP'},sniper:{n:'Снайпер',c:'#a5d6a7',d:'держится как можно дальше и метко стреляет'}};
 const PERSK=Object.keys(PERS);
+// ----- арена-события (не бонусы): метеоры, шквал, заморозки, ускорение, рокировка -----
+const AEV=[{k:'meteor',lvl:14,n:'☄ Метеоритный дождь!',d:5.5},{k:'gust',lvl:19,n:'🌬 Шквальный ветер!',d:5},{k:'frost',lvl:24,n:'❄ Заморозки — скользко!',d:6},{k:'rush',lvl:30,n:'⚡ Ускорение для всех!',d:5},{k:'swap',lvl:38,n:'🔄 Рокировка!',d:1.3}];
+function aevFor(l){return AEV.filter(e=>l>=e.lvl).map(e=>e.k);}
+function aevStart(k){const E=AEV.find(e=>e.k===k);G.ae={k,t:E.d,mt:0};G.aeMsg={s:E.n,t:2};
+ if(k==='gust'){const a=rnd(0,6.283);G.ae.wx=Math.cos(a);G.ae.wy=Math.sin(a);}
+ if(k==='swap'){const al=G.balls.map((b,i)=>i).filter(i=>!G.balls[i].dead);const a=G.me>=0&&!G.balls[G.me].dead&&Math.random()<.5?G.me:rpick(al);const fs=al.filter(j=>G.balls[j].tm!==G.balls[a].tm);if(!fs.length){G.ae=null;G.aeMsg=null;return;}G.ae.a=a;G.ae.b=rpick(fs);}}
+function aevStep(dt,fight){if(G.aeMsg){G.aeMsg.t-=dt;if(G.aeMsg.t<=0)G.aeMsg=null;}
+ G.met.forEach(m=>{m.w-=dt;if(m.w<=0&&!m.hit){m.hit=1;emit({k:'ko',x:m.x,y:m.y,c:'#ff6d00',small:1});G.balls.forEach((b,i)=>{if(b.dead)return;const d=Math.hypot(b.x-m.x,b.y-m.y);if(d<m.R+b.r*.5){damage(i,9,b.x,b.y);const f=420;b.vx+=(b.x-m.x)/(d||1)*f;b.vy+=(b.y-m.y)/(d||1)*f;}});}});G.met=G.met.filter(m=>m.w>-.3);
+ const L=G.opts.aev;if(!L||!L.length||G.mode==='foot'||G.sdOn)return;if(!fight){G.ae=null;return;}
+ if(!G.ae){G.aeT-=dt;if(G.aeT<=0){G.aeT=rnd(18,26);aevStart(G.aeForce||rpick(L));G.aeForce=null;}return;}
+ const A=G.ae;A.t-=dt;A.mt-=dt;const lo=G.lo||0;
+ if(A.k==='meteor'&&A.mt<=0&&A.t>1.4){A.mt=1.1;const al=G.balls.filter(b=>!b.dead);const pts=al.length?[rpick(al),null]:[null];
+  pts.forEach(b=>{const x=clamp(b?b.x+rnd(-110,110):rnd(120,680),lo+70,W-lo-70),y=clamp(b?b.y+rnd(-110,110):rnd(120,680),lo+70,H-lo-70);G.met.push({x,y,R:70,w:1.4});});}
+ if(A.k==='gust')G.balls.forEach(b=>{if(!b.dead){b.vx+=A.wx*360*dt;b.vy+=A.wy*360*dt;}});
+ if(A.k==='swap'&&A.t<=0){const a=G.balls[A.a],b=G.balls[A.b];if(a&&b&&!a.dead&&!b.dead){const x=a.x,y=a.y;a.x=b.x;a.y=b.y;b.x=x;b.y=y;a.vx=a.vy=b.vx=b.vy=0;a.fx.port=b.fx.port=1.5;emit({k:'ring',x:a.x,y:a.y,c:'#b388ff'});emit({k:'ring',x:b.x,y:b.y,c:'#b388ff'});}}
+ if(A.t<=0)G.ae=null;}
+function drawAevMsg(st,y){const m=st.aeMsg;if(!m)return;ctx.save();ctx.globalAlpha=clamp(m.t/.5,0,1);ctx.textAlign='center';ctx.font='bold 13px Tahoma,Verdana,sans-serif';const w=ctx.measureText(m.s).width+24;bevel(500-w/2,y,w,24);ctx.fillStyle='#000080';ctx.fillText(m.s,500,y+17);ctx.restore();}
+function drawAevFloor(st){const A=st.ae,t=G_t;
+ if(A&&A.k==='frost')quad(0,0,W,H,'rgba(180,230,255,.16)',null);
+ if(A&&A.k==='gust'){ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=2;for(let i=0;i<10;i++){const u=((i*97+t*260)%900)-50,v=(i*173)%800;const x=400+(u-400)*A.wx-(v-400)*A.wy,y=400+(u-400)*A.wy+(v-400)*A.wx;if(x<0||x>W||y<0||y>H)continue;const a=P(x,y),b=P(x-A.wx*50,y-A.wy*50);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}ctx.lineWidth=1;}
+ if(A&&A.k==='swap'&&st.balls[A.a]&&st.balls[A.b]){const a=P(st.balls[A.a].x,st.balls[A.a].y),b=P(st.balls[A.b].x,st.balls[A.b].y);ctx.setLineDash([8,6]);ctx.strokeStyle='#b388ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=1;}
+ (st.met||[]).forEach(m=>{if(m.w>0)floorEllipse(m.x,m.y,m.R*(1-m.w/1.4*.25),Math.sin(t*18)>0?'rgba(255,60,0,.22)':'rgba(255,60,0,.1)','#ff3d00',2);else floorEllipse(m.x,m.y,m.R,'rgba(255,140,0,.45)',null,0);});}
+window.AEVforce=k=>{if(G){G.aeForce=k;G.ae=null;G.aeT=0;}};
 const MODS={lowgrav:'Низкая гравитация',ice:'Гололёд',shrink:'Сжимающийся куб',lava:'Лавовый пол',fog:'Туман',fast:'Двойная скорость',onehp:'Всем 1 HP',giant:'Гигантские шары'};
 const PKT={shield:{n:'Щит',c:'#4cc9f0',s:'◘'},speed:{n:'Скорость',c:'#ffd166',s:'»'},dmg:{n:'Урон x2',c:'#ff5252',s:'2'},heal:{n:'Лечение',c:'#4ade80',s:'+'},bomb:{n:'Бомба',c:'#37474f',s:'●'}};
 const FEAT=[
  {id:'pers',lvl:6,n:'Характеры ботов',d:'Боты получают характер: Агрессор, Трус, Хитрец или Охотник. Он подписан под шаром.'},
  {id:'raid',lvl:6,n:'Рейд на босса',d:'В окне «Режимы» можно снова сразиться с любым побеждённым боссом.'},
  {id:'daily',lvl:8,n:'Испытание дня',d:'Раз в день — бой с особыми условиями и наградой (окно «Режимы»).'},
- {id:'pk',lvl:11,n:'Бонусы на поле',d:'На арене появляются Щит, Скорость, Урон x2 и Лечение. Боты тоже за ними охотятся!'},
+ {id:'pk',lvl:11,n:'Бонусы на поле',d:'Изредка на арене появляются Щит, Скорость, Урон x2 и Лечение. Боты тоже за ними охотятся!'},
+ {id:'aev1',lvl:14,n:'Событие «Метеоритный дождь»',d:'Иногда с неба падают метеоры: уходите из красных кругов!'},
  {id:'ffa',lvl:13,n:'Режим «Все против всех»',d:'Вы против 4–6 ботов, раунд выигрывает последний выживший.'},
  {id:'obs',lvl:16,n:'Препятствия',d:'В кубе появляются шипы и прыжковые площадки.'},
  {id:'sniper',lvl:17,n:'Характер «Снайпер»',d:'Держится как можно дальше и метко стреляет.'},
  {id:'team2',lvl:18,n:'Режим «2 на 2»',d:'Вы и бот-напарник против двух ботов.'},
+ {id:'aev2',lvl:19,n:'Событие «Шквальный ветер»',d:'Порыв ветра на несколько секунд сносит все шары в одну сторону.'},
  {id:'mods',lvl:21,n:'Модификаторы арены',d:'Низкая гравитация, гололёд, туман, лавовый пол, сжимающийся куб, двойная скорость.'},
  {id:'koth',lvl:23,n:'Режим «Царь горы»',d:'Удерживайте зону дольше соперников.'},
+ {id:'aev3',lvl:24,n:'Событие «Заморозки»',d:'Пол на 6 секунд становится скользким для всех.'},
  {id:'obs2',lvl:26,n:'Ловушки и бонус «Бомба»',d:'Порталы, движущиеся стены и взрывные бочки. На поле появляется бонус «Бомба».'},
  {id:'foot',lvl:28,n:'Режим «Шаробол»',d:'Футбол 2 на 2: закатите мяч в ворота соперника.'},
+ {id:'aev4',lvl:30,n:'Событие «Ускорение»',d:'Все шары 5 секунд двигаются на 30% быстрее.'},
  {id:'team3',lvl:33,n:'Режим «3 на 3»',d:'Командный бой: вы и два бота-напарника.'},
  {id:'mods2',lvl:36,n:'Безумные модификаторы',d:'«Всем 1 HP» и «Гигантские шары».'},
+ {id:'aev5',lvl:38,n:'Событие «Рокировка»',d:'Два соперника меняются местами (пунктир предупреждает заранее).'},
  {id:'mods3',lvl:46,n:'Двойные модификаторы',d:'Теперь на уровнях действуют сразу два модификатора.'},
 ];
 const NLV=60;
@@ -681,7 +709,7 @@ function dside(i){return G.balls.length===2?1-i:(G.balls[i].tm===(G.balls[G.me]|
 function setupExtras(){const o=G.opts;G.mset={};(o.mods||[]).forEach(m=>G.mset[m]=1);G.ts0=G.ts=G.mset.fast?1.5:1;G.multi=!!o.multi;G.mode=o.mode||null;
  G.ex=!!((o.mods&&o.mods.length)||o.obs||o.pk||o.multi||o.phases||!['online','local','sim'].includes(G.kind));G.bph=1;G.bossKeep=null;G.needs=o.needs||null;G.mtime=0;G.tlim=o.tlim||0;G.bi=o.phases?1:-1;
  if(G.multi){G.score=o.teamNames.map(()=>0);G.names=o.teamNames;}G.hill=G.mode==='koth'?{x:400,y:400,R:115,t:15}:null;}
-function roundExtras(){const o=G.opts;G.lo=0;G.rft=0;G.sdOn=0;G.pk=[];G.pkT=4;G.lt=[];G.ltT=3;G.bsT=4;G.obs=o.obs?genObs(o.obs):[];
+function roundExtras(){const o=G.opts;G.lo=0;G.rft=0;G.sdOn=0;G.pk=[];G.pkT=12;G.ae=null;G.aeT=rnd(12,18);G.met=[];G.aeMsg=null;G.lt=[];G.ltT=3;G.bsT=4;G.obs=o.obs?genObs(o.obs):[];
  if(G.mode==='foot')G.puck={x:400,y:400,vx:0,vy:0,r:24};
  G.balls.forEach(b=>{if(G.mset.giant){b.br*=1.45;b.r=b.br;}if(G.mset.onehp){b.hp=b.maxHp=1;}});}
 function genObs(n){const L=[];const free=(x,y,R)=>Math.hypot(x-200,y-400)>R+90&&Math.hypot(x-600,y-400)>R+90&&L.every(o=>Math.hypot(o.x-x,o.y-y)>R+(o.R||o.r||60)+40);
@@ -697,9 +725,10 @@ function extrasPre(dt,fight){const M=G.mset;
  if(M.lava&&fight){G.ltT-=dt;if(G.ltT<=0){G.ltT=5;const n=3+(Math.random()*2|0);for(let k=0;k<n;k++)G.lt.push({x:(Math.random()*5|0)*160,y:(Math.random()*5|0)*160,t:4.3,w:1.3});}
   G.lt.forEach(t=>{t.t-=dt;t.w-=dt;});G.lt=G.lt.filter(t=>t.t>0);}
  G.obs.forEach(o=>{if(o.k==='mwall'){const s=Math.sin(G.time*o.sp+o.ph);o.x=o.cx+s*o.ax;o.y=o.cy+s*o.ay;}if(o.k==='barrel'&&o.dead){o.rt-=dt;if(o.rt<=0)o.dead=false;}});
- if(G.opts.pk&&fight){G.pkT-=dt;if(G.pkT<=0){G.pkT=rnd(5,8);if(G.pk.length<2){const types=G.opts.pkTypes||['shield','speed','dmg','heal'];
+ if(G.opts.pk&&fight){G.pkT-=dt;if(G.pkT<=0){G.pkT=rnd(16,24);if(G.pk.length<2){const types=G.opts.pkTypes||['shield','speed','dmg','heal'];
    for(let t=0;t<30;t++){const x=rnd(120,680),y=rnd(120,680);if(G.balls.every(b=>b.dead||Math.hypot(b.x-x,b.y-y)>140)&&G.obs.every(o=>Math.hypot(o.x-x,o.y-y)>80)&&x>G.lo+50&&x<W-G.lo-50&&y>G.lo+50&&y<H-G.lo-50){G.pk.push({k:(window.EVENTS&&EVENTS.candyPk&&EVENTS.candyPk())?'candy':rpick(types),x,y,t:12});break;}}}}
   G.pk.forEach(p=>p.t-=dt);G.pk=G.pk.filter(p=>p.t>0);}
+ aevStep(dt,fight);
  if(G.bi>=0&&fight)bossAI(dt);}
 function explodeBarrel(o){o.dead=true;o.rt=12;emit({k:'ko',x:o.x,y:o.y,c:'#ff6d00',small:1});
  G.balls.forEach((b,i)=>{if(b.dead)return;const d=Math.hypot(b.x-o.x,b.y-o.y);if(d<140){damage(i,10*(1-d/280),b.x,b.y);const f=(1-d/140)*800+200;b.vx+=(b.x-o.x)/(d||1)*f;b.vy+=(b.y-o.y)/(d||1)*f;}});}
@@ -783,6 +812,7 @@ function botInput(dt,d,side,S){side=side==null?1:side;S=S||Bot;const me=G.balls[
   const AR=ARENAS[G.arena].id;if(AR==='lava'&&d>.4)LAVA.forEach(L=>{if(Math.hypot(me.x-L.x,me.y-L.y)<L.R+50){tx=me.x+(me.x-L.x)*3;ty=me.y+(me.y-L.y)*3;}});
   if(G.obs&&d>.3)G.obs.forEach(o=>{if((o.k==='spike'||o.k==='barrel'&&!o.dead)&&Math.hypot(me.x-o.x,me.y-o.y)<o.r+me.r+60){tx+=(me.x-o.x)*2;ty+=(me.y-o.y)*2;}});
   if(G.lt&&d>.35)G.lt.forEach(t=>{if(me.x>t.x-20&&me.x<t.x+180&&me.y>t.y-20&&me.y<t.y+180){tx=me.x+(me.x-(t.x+80))*3;ty=me.y+(me.y-(t.y+80))*3;}});
+  if(G.met&&d>.3)G.met.forEach(m=>{if(m.w>0&&Math.hypot(me.x-m.x,me.y-m.y)<m.R+me.r+30){tx=me.x+(me.x-m.x)*3;ty=me.y+(me.y-m.y)*3;}});
   if(G.lo>40){tx=clamp(tx,G.lo+60,W-G.lo-60);ty=clamp(ty,G.lo+60,H-G.lo-60);}
   const n=lerp(.9,.1,d)*(pers==='sniper'?.6:1);let ax=tx-me.x+rnd(-1,1)*n*200,ay=ty-me.y+rnd(-1,1)*n*200;const l=Math.hypot(ax,ay)||1;S.dir={x:ax/l,y:ay/l};
   let want=false;let p=lerp(.25,.9,d);const rng=RANGED.includes(me.id);
@@ -799,7 +829,7 @@ function botInput(dt,d,side,S){side=side==null?1:side;S=S||Bot;const me=G.balls[
 // ----- отрисовка доп. объектов -----
 const TCOL=['#00c853','#ff5252','#ffd600','#40c4ff','#e040fb','#ff9100','#eeeeee'];
 function quad(x,y,w,h,fill,stroke){poly([P(x,y),P(x+w,y),P(x+w,y+h),P(x,y+h)],fill,stroke);}
-function drawFloorX(st){const t=G_t;
+function drawFloorX(st){const t=G_t;drawAevFloor(st);
  (st.lt||[]).forEach(l=>{if(l.w>0){if(Math.sin(t*20)>0)quad(l.x,l.y,160,160,'rgba(255,200,0,.18)','#ffd54f');}else quad(l.x,l.y,160,160,'rgba(255,80,0,.55)','#ff3d00');});
  if(st.hill){const h=st.hill;floorEllipse(h.x,h.y,h.R,h.own>=0?(h.own===(st.balls[st.me]||{}).tm?'rgba(0,200,83,.25)':'rgba(255,82,82,.25)'):'rgba(255,255,255,.12)','#fff59d',3);}
  if(st.puck){ctx.lineWidth=4;ctx.strokeStyle='#fff';[[0,'#00c853'],[W,'#ff5252']].forEach(([x,c])=>{const a=P(x,310),b=P(x,490);ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(b.x,b.y-50);ctx.lineTo(a.x,a.y-40);ctx.closePath();ctx.stroke();});ctx.lineWidth=1;
@@ -829,13 +859,13 @@ function drawHUDMulti(st,me){ctx.textAlign='left';const meb=st.balls[me]||st.bal
  else if(st.score.length===2){s1=st.score[0]+' : '+st.score[1];s2='Раунд '+st.round+' · до '+st.need+' поб.';}
  else{s1='Ваши победы: '+st.score[meb.tm];s2='Раунд '+st.round+' · до '+st.need+' · лидер '+Math.max(...st.score);}
  ctx.font='bold 20px "Courier New",monospace';ctx.fillText(s1,500,36);ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText(s2,500,58);
- ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillText(modLine(st),500,88);
+ ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillText(modLine(st),500,88);drawAevMsg(st,96);
  if(st.phase==='count')hudBox(st.banner+' — '+Math.ceil(st.timer),26);else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;hudBox(st.banner,24);ctx.restore();}
  if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);hudBox('Пауза: Esc — продолжить, Q — выход',20);}}
 // ----- запуск режимов -----
 function modeD(){return clamp(.12+(save.unlocked-1)/(NLV-1)*.7,.12,.82);}
 function mkBot(d,tm,o){o=o||{};const pers=o.pers||rollPers(save.unlocked>=17);const id=o.id||pickN(persPool(botPool(d),pers),1)[0];return {id,tm,pers,nm:o.nm||rpick(BOTNAMES),sk:botSkill(d),mods:botMods(d,false)};}
-function modeFeat(){const u=save.unlocked;return {pk:u>=11,obs:u>=26?2:u>=16?1:0,pkTypes:u>=26?['shield','speed','dmg','heal','bomb']:null};}
+function modeFeat(){const u=save.unlocked;return {aev:aevFor(u),pk:u>=11,obs:u>=26?2:u>=16?1:0,pkTypes:u>=26?['shield','speed','dmg','heal','bomb']:null};}
 const MODEDEF={
  ffa:{n:'Все против всех',lvl:13,d:'Вы против 4–6 ботов. Раунд выигрывает последний выживший, до 2 побед.'},
  team2:{n:'2 на 2',lvl:18,d:'Вы и бот-напарник против двух ботов. До 2 побед.'},
@@ -849,7 +879,7 @@ function beginMode(mode,myId,o){o=o||{};const d=o.d!=null?o.d:modeD(),F=modeFeat
  else if(mode==='team2'||mode==='team3'||mode==='foot'){const n=mode==='team3'?3:2;for(let i=1;i<n;i++){const b=nb(0,d);b.nm='Напарник '+b.nm;roster.push(b);}for(let i=0;i<n;i++)roster.push(nb(1,d));teamNames=['Ваша команда','Соперники'];if(mode==='foot'){need=3;tlim=150;}}
  else if(mode==='koth'){for(let i=1;i<=3;i++)roster.push(nb(i,d*.9));teamNames=roster.map(r=>r.nm);need=25;tlim=150;}
  if(mode==='foot')roster.forEach(r=>{if(r!==me&&RANGED.includes(r.id))r.id=rpick(['dash','shield','heal','giant','spikes','wave','tele']);});
- Bot.t=0;newMatch(mode,roster.map(r=>r.id),{multi:1,mode,roster,teamNames,need,tlim,d,arena:mode==='foot'?0:Math.random()*ARENAS.length|0,pk:F.pk&&mode!=='foot',pkTypes:F.pkTypes,obs:mode==='foot'?0:F.obs,mods:o.mods||[],names:teamNames});}
+ Bot.t=0;newMatch(mode,roster.map(r=>r.id),{multi:1,mode,roster,teamNames,need,tlim,d,arena:mode==='foot'?0:Math.random()*ARENAS.length|0,pk:F.pk&&mode!=='foot',aev:mode==='foot'?[]:F.aev,pkTypes:F.pkTypes,obs:mode==='foot'?0:F.obs,mods:o.mods||[],names:teamNames});}
 function startMode(mode){if(!has(mode)&&MODEDEF[mode]&&save.unlocked<MODEDEF[mode].lvl)return;closeWin('modes');showPick([myPanel('Вы')],c=>{closePick();beginMode(mode,c[0]);},'Режим «'+MODEDEF[mode].n+'»: выберите шар');}
 function raidBosses(){const r=[];for(let l=5;l<=NLV;l+=5)if(save.unlocked>l)r.push(l);return r;}
 function startRaid(l){closeWin('modes');const I=levelInfo(l);showPick([myPanel('Вы')],c=>{closePick();beginRaid(l,c[0]);},'Рейд: '+I.bossName);}
