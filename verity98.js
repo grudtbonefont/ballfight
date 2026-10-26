@@ -100,7 +100,7 @@ function reply(t){const s=t.toLowerCase().replace(/ё/g,'е');const mm=math(s);i
  V.mood=V.mood+(V.mood<0?1:0);return pick(FB[tier()]);}
 V.reply=reply;window.Verity=V;
 // ---------- hooks ----------
-const _run=Cmd.run.bind(Cmd);Cmd.run=function(line){if(/^\s*help\s*$/i.test(line||'')){_run(line);this.out('  ICONS    стиль значков рабочего стола (ICONS — список)\n  ░░ скрытое ░░\n  REPLACE VERITY   ...Verity ждёт\n  REPLACE CLIPPY   вернуть Скрепыша (или REPLACE СКРЕПЫШ / SKREPYSH)');return;}const m=(line||'').trim().toLowerCase().match(/^replace\s+(\S+)/);
+const _run=Cmd.run.bind(Cmd);Cmd.run=function(line){if(/^\s*help\s*$/i.test(line||'')){_run(line);this.out('  ICONS    стиль значков: 3d, 3d-цвет, 3d-золото, 3d-неон, win98... (ICONS — список)\n  ░░ скрытое ░░\n  REPLACE VERITY   ...Verity ждёт\n  REPLACE CLIPPY   вернуть Скрепыша (или REPLACE СКРЕПЫШ / SKREPYSH)');return;}const m=(line||'').trim().toLowerCase().match(/^replace\s+(\S+)/);
  if(m){if(m[1]==='verity'||m[1]==='верити'){if(V.on){this.out('Verity уже здесь.');return;}this.out('Замена файла CLIPPY.EXE на VERITY.EXE...\n▓▓▓▓▓▒▒▒░░ ОШИБКА ЧТЕНИЯ СЕКТОРА 0x0BAD\n...готово. Verity здесь.');V.summon();return;}
   if(['clippy','скрепыш','skrepysh','clip','скрепка'].includes(m[1])){if(!V.on){this.out('Скрепыш и так на месте.');return;}this.out('Замена файла VERITY.EXE на CLIPPY.EXE... готово.');V.bye();return;}
   this.out('REPLACE: файл не найден — '+m[1]);return;}
