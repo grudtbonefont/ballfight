@@ -148,7 +148,7 @@ table.t tr:hover td{background:#000080;color:#fff}
 .crate .px98e svg.px,.dlg .ico .px98e svg.px{width:32px;height:32px}
 .pdot{display:inline-block;width:10px;height:10px;box-shadow:inset -1px -1px #000,inset 1px 1px #fff;vertical-align:-1px;margin:0 1px}
 /* анимация открытия/сворачивания — каркас окна, как в Win98 */
-.zoom98{position:fixed;z-index:99990;pointer-events:none;border:2px solid #808080;outline:1px solid #fff;mix-blend-mode:difference}
+.zoom98{display:none!important;position:fixed;z-index:99990;pointer-events:none;border:2px solid #808080;outline:1px solid #fff;mix-blend-mode:difference}
 /* загрузочный экран */
 #boot{background:#000!important;font-family:var(--w98-font)!important}
 #boot .flag98{display:grid;grid-template-columns:repeat(2,40px);gap:6px;transform:perspective(220px) rotateY(-18deg) skewY(-6deg);margin-bottom:14px;filter:drop-shadow(4px 4px 0 rgba(255,255,255,.08))}
@@ -197,7 +197,7 @@ const mo=new MutationObserver(ms=>{for(const m of ms){if(m.type==='childList'){c
 const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
 function taskRect(w){const ws=[...document.querySelectorAll('.win:not(.hide):not(.mini)')];const bs=[...document.querySelectorAll('#tasks button')];const i=ws.indexOf(w);const b=bs[i]||$('startbtn');return b?b.getBoundingClientRect():{left:0,top:innerHeight-30,width:60,height:22};}
 let lastTask=null;
-function zoom(a,b){if(reduce||document.hidden)return;const z=document.createElement('div');z.className='zoom98';document.body.appendChild(z);const N=6;let i=0;
+function zoom(a,b){return;if(reduce||document.hidden)return;const z=document.createElement('div');z.className='zoom98';document.body.appendChild(z);const N=6;let i=0;
  const step=()=>{const t=i/N;z.style.left=(a.left+(b.left-a.left)*t)+'px';z.style.top=(a.top+(b.top-a.top)*t)+'px';z.style.width=Math.max(8,a.width+(b.width-a.width)*t)+'px';z.style.height=Math.max(6,a.height+(b.height-a.height)*t)+'px';
   if(i++<N)setTimeout(step,22);else z.remove();};step();}
 function zoomCheck(w,old){if(!w.classList||!w.classList.contains('win')||w.id==='gamewin')return;const was=/\b(hide|mini)\b/.test(old||''),is=w.classList.contains('hide')||w.classList.contains('mini');
