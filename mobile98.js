@@ -42,7 +42,7 @@ body.phone.ingame .win:not(#gamewin),body.phone.ingame .toast{display:none!impor
 body.phone #vscare.vs-rush .vsst,body.phone #vscare.vs-dark{animation-duration:.3s!important}`;
 document.head.appendChild(css);
 
-function choose(ph){MOB.phone=ph;MOB.chosen=true;document.body.classList.toggle('phone',ph);document.body.classList.toggle('pc',!ph);const d=$('devpick');if(d)d.remove();
+function choose(ph){MOB.phone=ph;MOB.chosen=true;document.body.classList.toggle('phone',ph);document.body.classList.remove('pc');document.body.classList.toggle('desk98pc',!ph);const d=$('devpick');if(d)d.remove();
  if(ph){try{const el=document.documentElement;const r=el.requestFullscreen||el.webkitRequestFullscreen;if(r){const p=r.call(el,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>{});}}catch(e){}fitWins();}
  try{if(window.Desk&&Desk.render)Desk.render();}catch(e){}window.dispatchEvent(new Event('resize'));}
 MOB.choose=choose;
