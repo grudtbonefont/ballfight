@@ -60,6 +60,12 @@ http.createServer(async(req,res)=>{const o=req.headers.origin;
    const h=await hashPw(pass,u?u.salt:'x'.repeat(32));
    if(!u||!crypto.timingSafeEqual(Buffer.from(h,'hex'),Buffer.from(u.hash,'hex')))return send(res,401,{error:'Wrong nickname or password'},o);
    return send(res,200,Object.assign({token:await newSession(u.id),nick:u.nick},await getSave(u.id)),o);}
+  if(req.method==='POST'&&url==='/api/account/delete'){const u=await auth(req);if(!u)return send(res,401,{error:'Session expired, sign in again'},o);
+   if(limited('del:'+ip(req),10,600000))return send(res,429,{error:'Too many attempts. Wait 10 minutes.'},o);
+   const b=await body(req);const r=await pool.query('SELECT salt,hash FROM bf.users WHERE id=$1',[u.id]);const x=r.rows[0];const h=await hashPw(String(b.pass||''),x.salt);
+   if(!crypto.timingSafeEqual(Buffer.from(h,'hex'),Buffer.from(x.hash,'hex')))return send(res,401,{error:'Wrong password'},o);
+   for(const q of ['DELETE FROM bf.reports WHERE user_id=$1 OR opp_id=$1','DELETE FROM bf.invites WHERE from_id=$1 OR to_id=$1',"DELETE FROM bf.trades WHERE (from_id=$1 OR to_id=$1)",'UPDATE bf.clans SET owner=NULL WHERE owner=$1'])await pool.query(q,[u.id]).catch(()=>{});
+   await pool.query('DELETE FROM bf.users WHERE id=$1',[u.id]);return send(res,200,{ok:true},o);}
   if(PRG&&await PRG.handle(req,res,url,o))return;
   if(SOC&&await SOC.handle(req,res,url,o))return;
   if(url==='/api/save'||url==='/api/logout'||url==='/api/me'){const u=await auth(req);if(!u)return send(res,401,{error:'Session expired, sign in again'},o);
