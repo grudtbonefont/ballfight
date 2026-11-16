@@ -17,26 +17,26 @@ const ensureR=id=>pool.query('INSERT INTO bf.ratings(user_id) VALUES($1) ON CONF
 function normOffer(x){x=x||{};const balls=[...new Set((Array.isArray(x.balls)?x.balls:[]).map(String).filter(s=>/^[a-z0-9_]{1,24}$/.test(s)))].slice(0,5);
  const coins=Math.max(0,Math.min(1e6,x.coins|0));const cards={};for(const[k,v]of Object.entries(x.cards||{}))if(/^[a-z0-9_]{1,24}$/.test(k)&&(v|0)>0)cards[k]=Math.min(999,v|0);return{balls,coins,cards};}
 const empty=o=>!o.balls.length&&!o.coins&&!Object.keys(o.cards).length;
-function canPay(s,o){if(!s||!s.owned)return 'нет сохранения';if((s.coins|0)<o.coins)return 'не хватает монет';for(const b of o.balls)if(!s.owned[b])return 'нет шара '+b;
- for(const[k,v]of Object.entries(o.cards))if(!s.owned[k]||(s.owned[k].cards|0)<v)return 'не хватает карт '+k;
- if(Object.keys(s.owned).length-o.balls.length<1)return 'нельзя отдать все шары';return null;}
-function canRecv(s,o){for(const b of o.balls)if(s.owned[b])return 'уже есть шар '+b;for(const k of Object.keys(o.cards))if(!s.owned[k]&&!o.balls.includes(k))return 'нет шара для карт '+k;return null;}
+function canPay(s,o){if(!s||!s.owned)return 'no save';if((s.coins|0)<o.coins)return 'not enough coins';for(const b of o.balls)if(!s.owned[b])return 'missing ball '+b;
+ for(const[k,v]of Object.entries(o.cards))if(!s.owned[k]||(s.owned[k].cards|0)<v)return 'not enough cards '+k;
+ if(Object.keys(s.owned).length-o.balls.length<1)return 'can’t give away all your balls';return null;}
+function canRecv(s,o){for(const b of o.balls)if(s.owned[b])return 'already has the ball '+b;for(const k of Object.keys(o.cards))if(!s.owned[k]&&!o.balls.includes(k))return 'no ball for the cards '+k;return null;}
 function pay(a,b,o){a.coins=(a.coins|0)-o.coins;b.coins=(b.coins|0)+o.coins;
  for(const id of o.balls){b.owned[id]=a.owned[id];delete a.owned[id];if(a.sel===id)a.sel=Object.keys(a.owned)[0];if(a.skins&&a.skins[id]){b.skins=b.skins||{};b.skins[id]=a.skins[id];delete a.skins[id];}}
  for(const[k,v]of Object.entries(o.cards)){a.owned[k].cards-=v;b.owned[k].cards=(b.owned[k].cards|0)+v;}}
 async function trade(tid,uid){const c=await pool.connect();try{await c.query('BEGIN');
- const t=(await c.query("SELECT * FROM bf.trades WHERE id=$1 FOR UPDATE",[tid])).rows[0];if(!t||t.to_id!==uid||t.status!=='open'){await c.query('ROLLBACK');return{error:'Сделка недоступна'};}
+ const t=(await c.query("SELECT * FROM bf.trades WHERE id=$1 FOR UPDATE",[tid])).rows[0];if(!t||t.to_id!==uid||t.status!=='open'){await c.query('ROLLBACK');return{error:'Trade unavailable'};}
  const rows=(await c.query('SELECT user_id,data FROM bf.saves WHERE user_id = ANY($1) ORDER BY user_id FOR UPDATE',[[t.from_id,t.to_id]])).rows;
  const A=(rows.find(r=>r.user_id===t.from_id)||{}).data,B=(rows.find(r=>r.user_id===t.to_id)||{}).data;
  const give=normOffer(t.give),want=normOffer(t.want);
- const err=(A&&B)?(canPay(A,give)||canPay(B,want)||canRecv(B,give)||canRecv(A,want)):'нет облачного сохранения';
- if(err){await c.query("UPDATE bf.trades SET status='failed',note=$2,done=now() WHERE id=$1",[tid,err]);await c.query('COMMIT');return{error:'Сделка невозможна: '+err};}
+ const err=(A&&B)?(canPay(A,give)||canPay(B,want)||canRecv(B,give)||canRecv(A,want)):'no cloud save';
+ if(err){await c.query("UPDATE bf.trades SET status='failed',note=$2,done=now() WHERE id=$1",[tid,err]);await c.query('COMMIT');return{error:'Trade not possible: '+err};}
  pay(A,B,give);pay(B,A,want);A._rev=(A._rev|0)+1;B._rev=(B._rev|0)+1;
  await c.query('UPDATE bf.saves SET data=$2,updated=now() WHERE user_id=$1',[t.from_id,JSON.stringify(A)]);
  await c.query('UPDATE bf.saves SET data=$2,updated=now() WHERE user_id=$1',[t.to_id,JSON.stringify(B)]);
  await c.query("UPDATE bf.trades SET status='done',done=now() WHERE id=$1",[tid]);await c.query('COMMIT');return{ok:true,save:B};}
  catch(e){await c.query('ROLLBACK').catch(()=>{});throw e;}finally{c.release();}}
-async function report(u,b){const mid=String(b.mid||'');if(!/^[A-Za-z0-9]{8,32}$/.test(mid))return{error:'bad mid'};const opp=await uidByNick(b.opp);if(!opp||opp.id===u.id)return{error:'Соперник не найден'};
+async function report(u,b){const mid=String(b.mid||'');if(!/^[A-Za-z0-9]{8,32}$/.test(mid))return{error:'bad mid'};const opp=await uidByNick(b.opp);if(!opp||opp.id===u.id)return{error:'Rival not found'};
  await pool.query('INSERT INTO bf.reports(mid,user_id,opp_id,win) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[mid,u.id,opp.id,!!b.win]);
  const r=(await pool.query('SELECT * FROM bf.reports WHERE mid=$1',[mid])).rows;if(r.length<2)return{pending:true};
  const a=r.find(x=>x.user_id===u.id),o=r.find(x=>x.user_id===opp.id);if(!a||!o||a.opp_id!==o.user_id||o.opp_id!==a.user_id||a.win===o.win)return{rejected:true};
@@ -54,26 +54,26 @@ async function handle(req,res,url,o){
  if(req.method==='GET'&&url==='/api/chat'){const since=+(new URL(req.url,'http://x').searchParams.get('since'))||0;
   const r=(await pool.query('SELECT id,nick,text,created FROM bf.chat WHERE id>$1 ORDER BY id DESC LIMIT 100',[since])).rows.reverse();send(res,200,{msgs:r},o);return true;}
  if(!/^\/api\/(match|chat|friends|heartbeat|invite|trades?)(\/|$)/.test(url))return false;
- const u=await auth(req);if(!u){send(res,401,{error:'Войдите в аккаунт'},o);return true;}
+ const u=await auth(req);if(!u){send(res,401,{error:'Sign in to your account'},o);return true;}
  const b=req.method==='POST'?await body(req):{};
- if(url==='/api/match'&&req.method==='POST'){if(limited('rep:'+u.id,30,3600000)){send(res,429,{error:'Слишком часто'},o);return true;}send(res,200,await report(u,b),o);return true;}
- if(url==='/api/chat'&&req.method==='POST'){let t=String(b.text||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,200);if(!t){send(res,400,{error:'Пустое сообщение'},o);return true;}
-  if(limited('chat3:'+u.id,1,2500)||limited('chatm:'+u.id,12,60000)){send(res,429,{error:'Не так быстро!'},o);return true;}
+ if(url==='/api/match'&&req.method==='POST'){if(limited('rep:'+u.id,30,3600000)){send(res,429,{error:'Too fast'},o);return true;}send(res,200,await report(u,b),o);return true;}
+ if(url==='/api/chat'&&req.method==='POST'){let t=String(b.text||'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,200);if(!t){send(res,400,{error:'Empty message'},o);return true;}
+  if(limited('chat3:'+u.id,1,2500)||limited('chatm:'+u.id,12,60000)){send(res,429,{error:'Slow down!'},o);return true;}
   t=clean(t);const r=await pool.query('INSERT INTO bf.chat(nick,text) VALUES($1,$2) RETURNING id',[u.nick,t]);await pool.query('DELETE FROM bf.chat WHERE id<=$1',[r.rows[0].id-100]);send(res,200,{ok:true,id:r.rows[0].id,text:t},o);return true;}
  if(url==='/api/heartbeat'){await pool.query('INSERT INTO bf.presence(user_id,last,status) VALUES($1,now(),$2) ON CONFLICT(user_id) DO UPDATE SET last=now(),status=EXCLUDED.status',[u.id,String(b.status||'').slice(0,40)]);
   const inv=(await pool.query("SELECT i.id,u.nick,i.room FROM bf.invites i JOIN bf.users u ON u.id=i.from_id WHERE i.to_id=$1 AND i.created>now()-interval '2 minutes'",[u.id])).rows;if(inv.length)await pool.query('DELETE FROM bf.invites WHERE to_id=$1',[u.id]);
   const tr=(await pool.query("SELECT count(*) n FROM bf.trades WHERE to_id=$1 AND status='open'",[u.id])).rows[0].n;const rv=(await pool.query("SELECT COALESCE((data->>'_rev')::int,0) rv FROM bf.saves WHERE user_id=$1",[u.id])).rows[0];send(res,200,{invites:inv,trades:+tr,rev:rv?rv.rv:0},o);return true;}
- if(url==='/api/friends'){if(req.method==='POST'){const f=await uidByNick(b.nick);if(!f){send(res,404,{error:'Игрок не найден'},o);return true;}if(f.id===u.id){send(res,400,{error:'Это вы :)'},o);return true;}
-   if(b.remove)await pool.query('DELETE FROM bf.friends WHERE user_id=$1 AND friend_id=$2',[u.id,f.id]);else{const n=(await pool.query('SELECT count(*) n FROM bf.friends WHERE user_id=$1',[u.id])).rows[0].n;if(+n>=100){send(res,400,{error:'Максимум 100 друзей'},o);return true;}await pool.query('INSERT INTO bf.friends VALUES($1,$2) ON CONFLICT DO NOTHING',[u.id,f.id]);}}
+ if(url==='/api/friends'){if(req.method==='POST'){const f=await uidByNick(b.nick);if(!f){send(res,404,{error:'Player not found'},o);return true;}if(f.id===u.id){send(res,400,{error:'That’s you :)'},o);return true;}
+   if(b.remove)await pool.query('DELETE FROM bf.friends WHERE user_id=$1 AND friend_id=$2',[u.id,f.id]);else{const n=(await pool.query('SELECT count(*) n FROM bf.friends WHERE user_id=$1',[u.id])).rows[0].n;if(+n>=100){send(res,400,{error:'Max 100 friends'},o);return true;}await pool.query('INSERT INTO bf.friends VALUES($1,$2) ON CONFLICT DO NOTHING',[u.id,f.id]);}}
   const r=(await pool.query("SELECT u.nick,(p.last>now()-interval '60 seconds') AS online,p.status,COALESCE(r.elo,1000) elo FROM bf.friends f JOIN bf.users u ON u.id=f.friend_id LEFT JOIN bf.presence p ON p.user_id=f.friend_id LEFT JOIN bf.ratings r ON r.user_id=f.friend_id WHERE f.user_id=$1 ORDER BY online DESC NULLS LAST,u.nick",[u.id])).rows;
   send(res,200,{friends:r.map(x=>({nick:x.nick,online:!!x.online,status:x.online?x.status:'',elo:x.elo}))},o);return true;}
- if(url==='/api/invite'&&req.method==='POST'){const f=await uidByNick(b.nick);const room=String(b.room||'').toUpperCase();if(!f||!/^[A-Z0-9]{4,8}$/.test(room)){send(res,400,{error:'Неверный ник или код'},o);return true;}
-  if(limited('inv:'+u.id,10,60000)){send(res,429,{error:'Слишком часто'},o);return true;}await pool.query('INSERT INTO bf.invites(from_id,to_id,room) VALUES($1,$2,$3)',[u.id,f.id,room]);send(res,200,{ok:true},o);return true;}
+ if(url==='/api/invite'&&req.method==='POST'){const f=await uidByNick(b.nick);const room=String(b.room||'').toUpperCase();if(!f||!/^[A-Z0-9]{4,8}$/.test(room)){send(res,400,{error:'Wrong nickname or code'},o);return true;}
+  if(limited('inv:'+u.id,10,60000)){send(res,429,{error:'Too fast'},o);return true;}await pool.query('INSERT INTO bf.invites(from_id,to_id,room) VALUES($1,$2,$3)',[u.id,f.id,room]);send(res,200,{ok:true},o);return true;}
  if(url==='/api/trades'&&req.method==='GET'){const r=(await pool.query(`SELECT t.id,a.nick AS from_nick,b.nick AS to_nick,t.give,t.want,t.status,t.note,t.created,t.done FROM bf.trades t JOIN bf.users a ON a.id=t.from_id JOIN bf.users b ON b.id=t.to_id WHERE t.from_id=$1 OR t.to_id=$1 ORDER BY t.id DESC LIMIT 50`,[u.id])).rows;send(res,200,{trades:r,me:u.nick},o);return true;}
- if(url==='/api/trade'&&req.method==='POST'){if(limited('tr:'+u.id,20,60000)){send(res,429,{error:'Слишком часто'},o);return true;}
-  if(b.action==='offer'){const f=await uidByNick(b.to);if(!f||f.id===u.id){send(res,404,{error:'Игрок не найден'},o);return true;}const give=normOffer(b.give),want=normOffer(b.want);if(empty(give)&&empty(want)){send(res,400,{error:'Пустая сделка'},o);return true;}
+ if(url==='/api/trade'&&req.method==='POST'){if(limited('tr:'+u.id,20,60000)){send(res,429,{error:'Too fast'},o);return true;}
+  if(b.action==='offer'){const f=await uidByNick(b.to);if(!f||f.id===u.id){send(res,404,{error:'Player not found'},o);return true;}const give=normOffer(b.give),want=normOffer(b.want);if(empty(give)&&empty(want)){send(res,400,{error:'Empty trade'},o);return true;}
    const s=(await pool.query('SELECT data FROM bf.saves WHERE user_id=$1',[u.id])).rows[0];const e=canPay(s&&s.data,give);if(e){send(res,400,{error:e},o);return true;}
-   const n=(await pool.query("SELECT count(*) n FROM bf.trades WHERE from_id=$1 AND status='open'",[u.id])).rows[0].n;if(+n>=10){send(res,400,{error:'Слишком много открытых предложений'},o);return true;}
+   const n=(await pool.query("SELECT count(*) n FROM bf.trades WHERE from_id=$1 AND status='open'",[u.id])).rows[0].n;if(+n>=10){send(res,400,{error:'Too many open offers'},o);return true;}
    const r=await pool.query('INSERT INTO bf.trades(from_id,to_id,give,want) VALUES($1,$2,$3,$4) RETURNING id',[u.id,f.id,JSON.stringify(give),JSON.stringify(want)]);send(res,200,{ok:true,id:r.rows[0].id},o);return true;}
   const id=b.id|0;
   if(b.action==='accept'){send(res,200,await trade(id,u.id),o);return true;}

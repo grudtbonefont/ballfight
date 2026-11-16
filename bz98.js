@@ -27,13 +27,13 @@ const YAW=-.38,PIT=.3;const camRot=p=>rot(p,[PIT,YAW,0]);
 const LD=nrm([-.55,.7,.6]),HV=nrm([LD[0],LD[1],LD[2]+1]);
 const B4=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
 function shade(prs,mat,P,n,st,vd){if(mat==='globe'){const v=Math.sin(P[0]*5+1)*Math.cos(P[1]*4)+Math.sin(P[2]*6+P[1]*3)*.6;mat=v>.35?'green':'blue';}let base=hex(M[mat]||'#ff00ff'),metal=MT[mat]===1,emis=mat==='screen'?.35:0;
- if(st==='3d-цвет'){const m=(base[0]+base[1]+base[2])/3;base=base.map(v=>cl(m+(v-m)*1.6+.03,0,1));}
- if(st==='3d-золото'){const l=.3*base[0]+.59*base[1]+.11*base[2];base=[1*(.55+.45*l),.72*(.5+.5*l),.25*(.4+.6*l)];metal=true;}
+ if(st==='3d-color'){const m=(base[0]+base[1]+base[2])/3;base=base.map(v=>cl(m+(v-m)*1.6+.03,0,1));}
+ if(st==='3d-gold'){const l=.3*base[0]+.59*base[1]+.11*base[2];base=[1*(.55+.45*l),.72*(.5+.5*l),.25*(.4+.6*l)];metal=true;}
  const nl=dot(n,LD),dif=Math.max(0,nl*.8+.2);
  let ao=1;for(let i=1;i<=4;i++){const h=i*.06;ao-=(h-scene(prs,[P[0]+n[0]*h,P[1]+n[1]*h,P[2]+n[2]*h])[0])*(1.6/i);}ao=cl(ao,.35,1);
  const spec=Math.pow(Math.max(0,dot(n,HV)),metal?18:40)*(metal?1.1:.85);
  const fr=Math.pow(1-Math.max(0,dot(n,vd)),3);
- if(st==='3d-неон'){const g=fr*1.8+.08+spec*.6;return base.map(v=>cl(v*g*1.3+v*.05,0,1));}
+ if(st==='3d-neon'){const g=fr*1.8+.08+spec*.6;return base.map(v=>cl(v*g*1.3+v*.05,0,1));}
  let col;if(metal){const env=.45+.55*(n[1]*.5+.5);col=base.map(v=>v*(.25+.85*dif*env)*ao+spec);}
  else col=base.map((v,i)=>v*(.32*ao+.85*dif*ao)+spec+fr*.18*[.75,.85,1][i]+emis*v);
  return col.map(v=>cl(v,0,1));}
@@ -49,7 +49,7 @@ const cache={};
 function make(name,st){const k=name+'|'+st;if(cache[k])return cache[k];const prs=BZ[name];const R=N*SS,img=renderRaw(prs,st);
  const cv=document.createElement('canvas');cv.width=cv.height=N;const cx=cv.getContext('2d'),id=cx.createImageData(N,N),D=id.data;const A=[];
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){let c=[0,0,0],n=0;for(let b=0;b<SS;b++)for(let a=0;a<SS;a++){const v=img[(y*SS+b)*R+x*SS+a];if(v){c[0]+=v[0];c[1]+=v[1];c[2]+=v[2];n++;}}A[y*N+x]=n>=2?c.map(v=>v/n):null;}
- const neon=st==='3d-неон',lv=7;
+ const neon=st==='3d-neon',lv=7;
  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const i=(y*N+x)*4,c=A[y*N+x];
   if(!c){// contact shadow / neon halo
    const nb=[[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>A[(y+b)*N+x+a]&&x+a>=0&&x+a<N&&y+b<N&&y+b>=0);

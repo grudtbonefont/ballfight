@@ -1,9 +1,9 @@
-// ---- Мобильный режим: выбор устройства при каждом запуске, сенсорное управление ----
+// ---- Mobile mode: device pick on every launch, touch controls ----
 (function(){
 const $=id=>document.getElementById(id);
 const auto=matchMedia('(pointer:coarse)').matches||/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const MOB=window.MOB={phone:false,chosen:false,auto,tc:[{x:0,y:0,a:false},{x:0,y:0,a:false}]};
-// пиксельный 3D-телефон (своя SVG, 16x16 с тенью)
+// pixel 3D phone (own SVG, 16x16 with shadow)
 function phoneSvg(s){const P=['....kkkkkkkk....','...kGGGGGGGGk...','...kGddddddGk...','...kGdbbbbbdGk..','...kGdbccbbdGk..','...kGdbbcbbdGk..','...kGdbbbbbdGk..','...kGdbbbbbdGk..','...kGdbbbbbdGk..','...kGddddddGkk..','...kGGGkkGGGkk..','...kGGkwwkGGkk..','...kGGGkkGGGkk..','...kkkkkkkkkkk..','....kkkkkkkkkk..','................'];
  const C={k:'#000',G:'#9aa4b8',d:'#40485a',b:'#1a6fd8',c:'#9fe0ff',w:'#fff'};let r='';P.forEach((row,y)=>[...row].forEach((ch,x)=>{if(C[ch]){let c=C[ch];if(ch==='G'&&x<=4)c='#dfe6f5';if(ch==='b'&&(x+y)%5===0)c='#3c8cf0';r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`;}}));
  return `<svg class="px" width="${s}" height="${s}" viewBox="0 0 16 16" shape-rendering="crispEdges">${r}</svg>`;}
@@ -47,41 +47,41 @@ function choose(ph){MOB.phone=ph;MOB.chosen=true;document.body.classList.toggle(
  try{if(window.Desk&&Desk.render)Desk.render();}catch(e){}window.dispatchEvent(new Event('resize'));}
 MOB.choose=choose;
 function picker(){if($('devpick'))return;const d=document.createElement('div');d.id='devpick';
- d.innerHTML=`<div class="dw"><div class="dt">🖥️ Битва Шаров 98 — Настройка</div><div class="db"><b style="font-size:15px">На чём вы играете?</b>
- <div class="bb"><button id="dp_pc" class="${auto?'':'auto'}">${pcIco(64)}Компьютер</button><button id="dp_ph" class="${auto?'auto':''}">${phoneSvg(64)}Телефон</button></div>
- <div class="hint">Определено автоматически: <b>${auto?'Телефон':'Компьютер'}</b>. Вопрос задаётся при каждом запуске.</div></div></div>`;
+ d.innerHTML=`<div class="dw"><div class="dt">🖥️ Ball Brawl 98 — Setup</div><div class="db"><b style="font-size:15px">What are you playing on?</b>
+ <div class="bb"><button id="dp_pc" class="${auto?'':'auto'}">${pcIco(64)}Desktop</button><button id="dp_ph" class="${auto?'auto':''}">${phoneSvg(64)}Mobile</button></div>
+ <div class="hint">Auto-detected: <b>${auto?'Mobile':'Desktop'}</b>. We ask every time you launch.</div></div></div>`;
  document.body.appendChild(d);
  const st=e=>e.stopPropagation();d.addEventListener('pointerdown',st);d.addEventListener('click',st);
  $('dp_pc').onclick=()=>choose(false);$('dp_ph').onclick=()=>choose(true);(auto?$('dp_ph'):$('dp_pc')).focus();
  d.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();choose(auto);}});}
 picker();
 
-// окна во весь экран телефона
+// full-screen windows on phones
 function fitOne(w){if(!MOB.phone||!w||w.id==='gamewin')return;const ww=Math.min(w.offsetWidth,innerWidth);w.style.width=ww+'px';w.style.left=Math.max(0,(innerWidth-ww)/2)+'px';w.style.top='0px';}
 function fitWins(){document.querySelectorAll('.win:not(.hide)').forEach(fitOne);}
 const ow=window.openWin;if(ow)window.openWin=openWin=function(){const w=ow.apply(this,arguments);if(MOB.phone)fitOne(w);return w;};
 addEventListener('resize',()=>{if(MOB.phone)setTimeout(fitWins,50);});
 
-// касание -> мышь для перетаскивания заголовков и холстов с onmousedown (Скетч и т.п.)
+// touch -> mouse for dragging title bars and canvases with onmousedown (Sketch etc.)
 const mevt=(t,el,p)=>el.dispatchEvent(new MouseEvent(t,{bubbles:true,cancelable:true,clientX:p.clientX,clientY:p.clientY,button:0,buttons:1,view:window}));
 document.addEventListener('touchstart',e=>{if(!MOB.phone||e.touches.length>1)return;const t=e.target;const tb=t.closest&&t.closest('.win .tb');const cv=t.tagName==='CANVAS'&&t.onmousedown;
  if((tb&&t.tagName!=='BUTTON')||cv){e.preventDefault();const el=cv?t:tb;mevt('mousedown',el,e.touches[0]);
   const mv=ev=>{ev.preventDefault();mevt('mousemove',cv?t:document,ev.touches[0]);};const end=ev=>{mevt('mouseup',cv?t:document,ev.changedTouches[0]);document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',end);document.removeEventListener('touchcancel',end);};
   document.addEventListener('touchmove',mv,{passive:false});document.addEventListener('touchend',end);document.addEventListener('touchcancel',end);}},{passive:false,capture:true});
 
-// долгое нажатие = правый щелчок
+// long press = right-click
 let lp=null;document.addEventListener('touchstart',e=>{if(!MOB.phone||e.touches.length>1)return;const t=e.target;if(t.closest('#msg,#tc,#gamewin,canvas,input,textarea'))return;const p=e.touches[0],x=p.clientX,y=p.clientY;clearTimeout(lp&&lp.t);
  lp={x,y,t:setTimeout(()=>{lp.fired=1;t.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:x,clientY:y,button:2,view:window}));if(navigator.vibrate)navigator.vibrate(20);},550)};},{passive:true,capture:true});
 document.addEventListener('touchmove',e=>{if(lp&&Math.hypot(e.touches[0].clientX-lp.x,e.touches[0].clientY-lp.y)>10)clearTimeout(lp.t);},{passive:true,capture:true});
 document.addEventListener('touchend',e=>{if(!lp)return;clearTimeout(lp.t);if(lp.fired){e.preventDefault();lp=null;}},{passive:false,capture:true});
 addEventListener('contextmenu',e=>{if(MOB.phone&&e.isTrusted&&e.target.closest&&!e.target.closest('#msg'))e.preventDefault();},true);
 
-// змейка: свайпы
+// snake: swipes
 let sw=null;document.addEventListener('touchstart',e=>{if(e.target.id==='snc'){const p=e.touches[0];sw={x:p.clientX,y:p.clientY};}},{passive:true});
 document.addEventListener('touchend',e=>{if(!sw)return;const p=e.changedTouches[0],dx=p.clientX-sw.x,dy=p.clientY-sw.y;sw=null;if(Math.max(Math.abs(dx),Math.abs(dy))<20||!window.Snake)return;if(Math.abs(dx)>Math.abs(dy))Snake.dir(dx>0?1:-1,0);else Snake.dir(0,dy>0?1:-1);});
 
-// ---- сенсорное управление в матчах ----
-const tc=document.createElement('div');tc.id='tc';document.body.appendChild(tc);const rot=document.createElement('div');rot.id='rotate';rot.textContent='↻ Поверните телефон горизонтально для удобной игры';document.body.appendChild(rot);
+// ---- touch controls in matches ----
+const tc=document.createElement('div');tc.id='tc';document.body.appendChild(tc);const rot=document.createElement('div');rot.id='rotate';rot.textContent='↻ Turn your phone sideways for a better game';document.body.appendChild(rot);
 const CF=()=>window.CTL?CTL():{sz:140,sens:100,dz:25,pos:0,left:false,op:100};
 function joy(pi,style){const cf=CF(),S=cf.sz,KS=Math.round(S*.386),TR=S*.307;const j=document.createElement('div');j.className='joy';Object.assign(j.style,style,{width:S+'px',height:S+'px'});j.innerHTML='<i></i>';tc.appendChild(j);const k=j.firstChild;Object.assign(k.style,{width:KS+'px',height:KS+'px',left:((S-6-KS)/2)+'px',top:((S-6-KS)/2)+'px'});let id=null;const dz=cf.dz/100,gn=cf.sens/100,f=v=>Math.abs(v)<dz?0:Math.max(-1,Math.min(1,v*gn));
  const upd=p=>{const r=j.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=(p.clientX-cx)/(r.width/2),dy=(p.clientY-cy)/(r.height/2);const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}
@@ -94,16 +94,16 @@ function abtn(pi,style,label){const b=document.createElement('div');b.className=
  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>b.addEventListener(t,()=>{MOB.tc[pi].a=false;b.classList.remove('on');}));}
 let layout='';function build(local){const L=local?'2':'1';if(layout===L)return;layout=L;tc.innerHTML='';MOB.tc.forEach(s=>{s.x=s.y=0;s.a=false;});
  const cf=CF(),B0=cf.pos?100:0;tc.style.opacity=cf.op/100;
- if(!local){const L=cf.left;joy(0,L?{right:'18px',bottom:(18+B0)+'px'}:{left:'18px',bottom:(18+B0)+'px'});abtn(0,L?{left:'24px',bottom:(34+B0)+'px'}:{right:'24px',bottom:(34+B0)+'px'},'⚡ Удар');}
- else{const cs=Math.min(cf.sz,150);joy(0,{left:'12px',bottom:'12px'});abtn(0,{left:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И1');joy(1,{right:'12px',bottom:'12px'});abtn(1,{right:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ И2');}
- const p=document.createElement('div');p.className='pz';p.textContent='❚❚';p.title='Пауза';tc.appendChild(p);p.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{onKey('Escape');}catch(_){}});}
+ if(!local){const L=cf.left;joy(0,L?{right:'18px',bottom:(18+B0)+'px'}:{left:'18px',bottom:(18+B0)+'px'});abtn(0,L?{left:'24px',bottom:(34+B0)+'px'}:{right:'24px',bottom:(34+B0)+'px'},'⚡ Hit');}
+ else{const cs=Math.min(cf.sz,150);joy(0,{left:'12px',bottom:'12px'});abtn(0,{left:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ P1');joy(1,{right:'12px',bottom:'12px'});abtn(1,{right:'40px',bottom:'170px',width:'80px',height:'80px'},'⚡ P2');}
+ const p=document.createElement('div');p.className='pz';p.textContent='❚❚';p.title='Pause';tc.appendChild(p);p.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();try{onKey('Escape');}catch(_){}});}
 const ri=window.readInput;if(ri)window.readInput=readInput=function(set){const r=ri(set);if(!MOB.phone)return r;const local=typeof G!=='undefined'&&G&&G.kind==='local';const t=local?MOB.tc[set]:(set===0?MOB.tc[0]:null);
  if(!t)return r;return {x:Math.max(-1,Math.min(1,r.x+t.x)),y:Math.max(-1,Math.min(1,r.y+t.y)),a:r.a||t.a};};
 setInterval(()=>{const gw=$('gamewin');const ing=MOB.phone&&typeof mode!=='undefined'&&mode==='game'&&typeof G!=='undefined'&&G&&gw&&!gw.classList.contains('hide')&&G.phase!=='over';
  document.body.classList.toggle('ingame',!!ing);document.body.classList.toggle('portrait',innerHeight>innerWidth);if(ing)build(G.kind==='local');else{layout='';tc.innerHTML='';MOB.tc.forEach(s=>{s.x=s.y=0;s.a=false;});}},150);
 
-// производительность: меньше частиц на телефоне
+// performance: fewer particles on phones
 const uf=window.updFx;if(uf)window.updFx=updFx=function(){if(MOB.phone){try{if(particles.length>90)particles.splice(0,particles.length-90);}catch(e){}}return uf.apply(this,arguments);};
-// замер FPS (для тестов)
+// FPS meter (for tests)
 MOB.rebuild=()=>{layout='';};MOB.fps=0;let fc=0,ft=performance.now();(function f(n){fc++;if(n-ft>1000){MOB.fps=Math.round(fc*1000/(n-ft));fc=0;ft=n;}requestAnimationFrame(f);})(ft);
 })();

@@ -65,9 +65,9 @@ mute:0,spk:0,user2:0};
 A.reel=A.media;A.shield=A.clan;A.tcup=A.trophy;A.binf=A.bin.concat([['r',5,0,5,4,'w'],['r',10,0,4,3,'y']]);
 const hx=c=>{c=c.replace('#','');return[0,2,4].map(i=>parseInt(c.substr(i,2),16));},to=a=>'#'+a.map(v=>Math.max(0,Math.min(255,v|0)).toString(16).padStart(2,'0')).join('');
 const mix=(c,t,k)=>{const a=hx(c),b=hx(t);return to(a.map((v,i)=>v+(b[i]-v)*k));},lum=c=>{const[r,g,b]=hx(c);return(.3*r+.59*g+.11*b)/255;};
-const TONE={'3d':c=>c,'3d-цвет':c=>{const a=hx(c),m=(a[0]+a[1]+a[2])/3;return to(a.map(v=>m+(v-m)*1.6));},
- '3d-золото':c=>{const l=lum(c);return to([90+165*l,55+165*l,15+70*l*l]);},
- '3d-неон':c=>{const l=lum(c);return ['#7a2bff','#ff2bd6','#2bf0ff','#b6ff2b','#fff36b'][Math.min(4,(l*5)|0)];}};
+const TONE={'3d':c=>c,'3d-color':c=>{const a=hx(c),m=(a[0]+a[1]+a[2])/3;return to(a.map(v=>m+(v-m)*1.6));},
+ '3d-gold':c=>{const l=lum(c);return to([90+165*l,55+165*l,15+70*l*l]);},
+ '3d-neon':c=>{const l=lum(c);return ['#7a2bff','#ff2bd6','#2bf0ff','#b6ff2b','#fff36b'][Math.min(4,(l*5)|0)];}};
 function render(ops,s,st){const F=[];for(let y=0;y<N;y++){F[y]=[];for(let x=0;x<N;x++)F[y][x]=null;}
  const tn=TONE[st]||TONE['3d'];
  const set=(x,y,col,body)=>{x+=OX;y+=OY;if(x<0||y<0||x>=N||y>=N)return;if(body)F[y][x]={c:col,b:col};else if(F[y][x])F[y][x].c=col;};
@@ -78,7 +78,7 @@ function render(ops,s,st){const F=[];for(let y=0;y<N;y++){F[y]=[];for(let x=0;x<
   else if(T==='p')for(let y=-3;y<N;y++)for(let x=-3;x<N;x++){if(inPoly(x+.5,y+.5,op[1]))set(x,y,col,body);}
   else if(T==='t')op[3].forEach((row,j)=>[...row].forEach((ch,i)=>{if(ch==='#')set(op[1]+i,op[2]+j,col,false);}));}
  const B=(x,y)=>x>=0&&y>=0&&x<N&&y<N&&F[y][x];const P=[];const put=(x,y,c)=>P.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`);
- const neon=st==='3d-неон';
+ const neon=st==='3d-neon';
  for(let d=D;d>=1;d--)for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(B(x,y))continue;const q=B(x+d,y-d);if(!q)continue;
   let bottom=false;for(let j=1;j<=D+1;j++)if(B(x,y-j)){bottom=true;break;}
   put(x,y,mix(q.b,neon?'#10002a':'#000000',bottom?(neon?.6:.42):(neon?.45:.24)));}

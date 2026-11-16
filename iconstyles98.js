@@ -1,8 +1,8 @@
-// ---- Desktop icon styles: `icons <style>` in MS-DOS, also in Свойства экрана ----
+// ---- Desktop icon styles: `icons <style>` in MS-DOS, also in Display Properties ----
 (function(){
 const LS=localStorage,K='bf_icostyle';
-const ST={'3d':'3D — рендер в стиле 90-х, пиксельный (по умолчанию)','3d-цвет':'3D Цвет — яркий глянцевый пластик','3d-золото':'3D Золото — металлическое золото','3d-неон':'3D Неон — светящиеся объёмы',iso:'ISO — изометрические пиксельные блоки',win98:'Windows 98 — классика',win95:'Windows 95 — плоские, старая палитра',winxp:'Windows XP — крупные, глянцевые',mono:'Mono — 1-бит, как старый Mac',dos:'DOS — зелёный ASCII на чёрном',neon:'Neon — светящийся контур',verity:'Verity — ☺ (нужно встретить Verity)'};
-const AL={'3d-color':'3d-цвет','3d-gold':'3d-золото','3d-neon':'3d-неон',color:'3d-цвет',gold:'3d-золото'};
+const ST={'3d':'3D — 90s-style render, pixelated (default)','3d-color':'3D Color — bright glossy plastic','3d-gold':'3D Gold — metallic gold','3d-neon':'3D Neon — glowing volumes',iso:'ISO — isometric pixel blocks',win98:'Windows 98 — classic',win95:'Windows 95 — flat, old palette',winxp:'Windows XP — big, glossy',mono:'Mono — 1-bit, like an old Mac',dos:'DOS — green ASCII on black',neon:'Neon — glowing outline',verity:'Verity — ☺ (you have to meet Verity)'};
+const AL={'3d-цвет':'3d-color','3d-золото':'3d-gold','3d-неон':'3d-neon',color:'3d-color',gold:'3d-gold',neon:'3d-neon'};
 const met=()=>LS.getItem('bf_vmet')==='1'||LS.getItem('bf_verity')==='1';
 const mood=()=>window.Verity?Verity.mood:+(LS.getItem('bf_vmood')||0);
 const hex=c=>{c=c.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');return [0,2,4].map(i=>parseInt(c.substr(i,2),16));};
@@ -15,11 +15,11 @@ function grid(g,PAL){const M=[];for(let y=0;y<16;y++){M[y]=[];const row=(g[y]||'
 function d3(M,s,st){const N=32,A=[];for(let y=0;y<N;y++){A[y]=[];for(let x=0;x<N;x++)A[y][x]=M[y>>1][x>>1];}
  const BK=c=>c&&lum(c)<.06,body=(x,y)=>{const c=A[y][x];if(!BK(c))return c;for(const[a,b]of[[-1,-1],[-1,0],[0,-1],[-2,-2],[-2,0],[0,-2]]){const q=A[y+b]&&A[y+b][x+a];if(q&&!BK(q))return q;}return '#404040';};const dk=(x,y)=>!inn(x,y)||BK(A[y][x]);const inn=(x,y)=>x>=0&&y>=0&&x<N&&y<N&&A[y][x];const mix=(c,t,k)=>{const a=hex(c),b=hex(t);return to(a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k);};
  const B=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
- const tone=c=>{if(!c)return '#404040';const[r,g,b]=hex(c),l=lum(c);if(st==='3d-золото')return l<.08?'#3a2000':to(70+185*l,40+170*l,10+60*l*l);
-  if(st==='3d-цвет'){const m=(r+g+b)/3,sat=Math.max(r,g,b)-Math.min(r,g,b);if(sat<30&&l>.08)return mix(c,l>.6?'#7fd8ff':'#3a5cff',.55);return to(m+(r-m)*1.8+20,m+(g-m)*1.8+10,m+(b-m)*1.8+30);}
-  if(st==='3d-неон')return l<.08?'#12002a':['#ff2bd6','#b02bff','#2bf0ff','#b6ff2b','#ffe62b'][Math.min(4,(l*5)|0)];return c;};
+ const tone=c=>{if(!c)return '#404040';const[r,g,b]=hex(c),l=lum(c);if(st==='3d-gold')return l<.08?'#3a2000':to(70+185*l,40+170*l,10+60*l*l);
+  if(st==='3d-color'){const m=(r+g+b)/3,sat=Math.max(r,g,b)-Math.min(r,g,b);if(sat<30&&l>.08)return mix(c,l>.6?'#7fd8ff':'#3a5cff',.55);return to(m+(r-m)*1.8+20,m+(g-m)*1.8+10,m+(b-m)*1.8+30);}
+  if(st==='3d-neon')return l<.08?'#12002a':['#ff2bd6','#b02bff','#2bf0ff','#b6ff2b','#ffe62b'][Math.min(4,(l*5)|0)];return c;};
  const P=[];const put=(x,y,c,o)=>{P.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"${o?` opacity="${o}"`:''}/>`);};
- const neon=st==='3d-неон',occ=(x,y)=>inn(x,y)||inn(x-1,y-1)||inn(x-2,y-2);
+ const neon=st==='3d-neon',occ=(x,y)=>inn(x,y)||inn(x-1,y-1)||inn(x-2,y-2);
  if(neon)for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(!occ(x,y)&&(occ(x+1,y)||occ(x-1,y)||occ(x,y+1)||occ(x,y-1)))put(x,y,'#ff2bd6',.35);}
  // drop shadow (dithered, offset down-right)
  if(!neon)for(let y=0;y<N;y++)for(let x=0;x<N;x++)if(!occ(x,y)&&inn(x-4,y-4)&&((x+y)&1))put(x,y,'#000',.45);
@@ -58,7 +58,7 @@ function draw(g,s,PAL){let st=ISTY.cur;const M=grid(g,PAL);if(st.startsWith('3d'
   if(ang)extra+=`<rect x="0" y="${(Math.random()*14)|0}" width="16" height=".6" fill="#ff0040" opacity=".55"/>`;}
  else each((x,y,c)=>{r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${c}"/>`;});
  return `<svg class="px isty-${st}" viewBox="0 0 16 16" width="${s}" height="${s}" shape-rendering="${sr}">${defs?'<defs>'+defs+'</defs>':''}${pre}${r}${extra}</svg>`;}
-window.ISTY={cur:LS.getItem(K)||'3d',ST,met,draw,on(){return this.cur!=='win98';},
+window.ISTY={cur:(s=>s&&AL[s]&&!ST[s]?(LS.setItem(K,AL[s]),AL[s]):s&&ST[s]?s:'3d')(LS.getItem(K)),ST,met,draw,on(){return this.cur!=='win98';},
  set(n){n=AL[n]||n;if(n==='verity'&&!met())return 'locked';if(!ST[n])return 'bad';this.cur=n;LS.setItem(K,n);this.apply();return 'ok';},
  apply(){if(this.cur==='verity'&&!met()){this.cur='win98';}try{Desk.render();}catch(e){}try{updTasks();updTray&&updTray();}catch(e){}document.body.dataset.icons=this.cur;}};
 if(ISTY.cur==='verity'&&!met())ISTY.cur='win98';
@@ -68,14 +68,14 @@ setInterval(()=>{if(ISTY.cur==='verity'&&mood()<=-35)try{Desk.render();}catch(e)
 // DOS command
 const _r=Cmd.run.bind(Cmd);Cmd.run=function(line){const m=(line||'').trim().toLowerCase().match(/^icons(?:\s+(\S+))?\s*$/);
  if(!m)return _r(line);const a=m[1];
- if(!a){this.out('Стили значков (текущий: '+ISTY.cur.toUpperCase()+'):\n'+Object.keys(ST).map(k=>'  '+k.padEnd(10)+(k===ISTY.cur?'* ':'  ')+(k==='verity'&&!met()?'??????? [ЗАБЛОКИРОВАНО]':ST[k])).join('\n')+'\nИспользование: ICONS <стиль> | ICONS RESET (=3d)\nПример: ICONS 3d-неон (или 3d-neon, 3d-gold, 3d-color)');return;}
+ if(!a){this.out('Icon styles (current: '+ISTY.cur.toUpperCase()+'):\n'+Object.keys(ST).map(k=>'  '+k.padEnd(10)+(k===ISTY.cur?'* ':'  ')+(k==='verity'&&!met()?'??????? [LOCKED]':ST[k])).join('\n')+'\nUsage: ICONS <style> | ICONS RESET (=3d)\nExample: ICONS 3d-neon (or 3d-gold, 3d-color)');return;}
  const n=a==='reset'||a==='default'?'3d':a;const res=ISTY.set(n);
- this.out(res==='ok'?'Стиль значков: '+n.toUpperCase()+'. Рабочий стол обновлён.':res==='locked'?'ДОСТУП ЗАПРЕЩЁН. Сначала познакомься с ним.':'ICONS: неизвестный стиль — '+a+'. Введите ICONS для списка.');};
+ this.out(res==='ok'?'Icon style: '+n.toUpperCase()+'. Desktop refreshed.':res==='locked'?'ACCESS DENIED. Get to know them first.':'ICONS: unknown style — '+a+'. Type ICONS for the list.');};
 // help line
 if(Cmd.cmds&&Cmd.cmds.help){}
-// Свойства экрана
+// Display Properties
 const _p=Desk.props.bind(Desk);Desk.props=function(){_p();setTimeout(()=>{const w=document.getElementById('w_props');if(!w||w.querySelector('#isty'))return;const b=w.querySelector('.wb')||w;const d=document.createElement('div');d.style.cssText='margin:8px 0;font-size:12px';
- d.innerHTML='<b>Стиль значков:</b> <select id="isty">'+Object.keys(ST).map(k=>`<option value="${k}" ${k===ISTY.cur?'selected':''} ${k==='verity'&&!met()?'disabled':''}>${k==='verity'&&!met()?'??? (заблокировано)':ST[k]}</option>`).join('')+'</select>';
+ d.innerHTML='<b>Icon style:</b> <select id="isty">'+Object.keys(ST).map(k=>`<option value="${k}" ${k===ISTY.cur?'selected':''} ${k==='verity'&&!met()?'disabled':''}>${k==='verity'&&!met()?'??? (locked)':ST[k]}</option>`).join('')+'</select>';
  d.innerHTML+='<div id="istyp" style="margin-top:4px;padding:4px;background:#008080;display:flex;gap:6px"></div>';b.insertBefore(d,b.firstChild);const pv=()=>{const p=d.querySelector('#istyp');if(p&&window.PX9)p.innerHTML=['pc','bin','folder','globe','cmd'].map(n=>PX9(n)).join('');};pv();d.querySelector('select').onchange=e=>{ISTY.set(e.target.value);pv();};},30);};
 ISTY.apply();
 })();

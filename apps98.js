@@ -1,11 +1,11 @@
 'use strict';
-// ===================== НАГРАДЫ С ЛИМИТОМ =====================
+// ===================== CAPPED REWARDS =====================
 const Reward={MAX:5,
  st(){const d=new Date().toDateString();let o;try{o=JSON.parse(localStorage.getItem('bf_rw'))||{};}catch(e){o={};}if(o.d!==d)o={d,c:{}};return o;},
  left(k){return this.MAX-(this.st().c[k]||0);},
- give(k,n,title){const o=this.st();const c=o.c[k]||0;if(c>=this.MAX){toast(title||'Победа!','Лимит наград на сегодня исчерпан ('+this.MAX+'/'+this.MAX+')');return 0;}
-  o.c[k]=c+1;try{localStorage.setItem('bf_rw',JSON.stringify(o));}catch(e){}save.coins+=n;persist();toast(title||'Победа!',`+${n} 🪙 (наград сегодня: ${c+1}/${this.MAX})`);return n;}};
-// ===================== SVG-ЗНАЧКИ =====================
+ give(k,n,title){const o=this.st();const c=o.c[k]||0;if(c>=this.MAX){toast(title||'Victory!','Daily reward limit reached ('+this.MAX+'/'+this.MAX+')');return 0;}
+  o.c[k]=c+1;try{localStorage.setItem('bf_rw',JSON.stringify(o));}catch(e){}save.coins+=n;persist();toast(title||'Victory!',`+${n} 🪙 (rewards today: ${c+1}/${this.MAX})`);return n;}};
+// ===================== SVG ICONS =====================
 const SV=(b)=>`<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${b}</svg>`;
 const ICO={
  paint:SV('<rect x="3" y="6" width="22" height="20" fill="#fff" stroke="#000"/><rect x="5" y="20" width="4" height="4" fill="#f00"/><rect x="10" y="20" width="4" height="4" fill="#0a0"/><rect x="15" y="20" width="4" height="4" fill="#00f"/><path d="M14 4 L28 18 L25 21 L11 7Z" fill="#fc0" stroke="#000"/><path d="M11 7 L8 4 L14 4Z" fill="#555"/>'),
@@ -20,7 +20,7 @@ const ICO={
  cd:SV('<circle cx="16" cy="16" r="12" fill="#ddd" stroke="#000"/><circle cx="16" cy="16" r="12" fill="url(#g)" opacity=".5"/><circle cx="16" cy="16" r="3" fill="#fff" stroke="#000"/><path d="M8 10 A10 10 0 0 1 16 6" stroke="#f0f" stroke-width="2" fill="none"/>'),
  folder:SV('<path d="M2 8 H12 L14 10 H30 V27 H2Z" fill="#fc3" stroke="#000"/>'),
  ctrl:SV('<rect x="3" y="5" width="26" height="22" fill="#fff" stroke="#000"/><rect x="6" y="9" width="8" height="6" fill="#00f"/><rect x="18" y="9" width="8" height="6" fill="#0a0"/><rect x="6" y="18" width="8" height="6" fill="#f80"/><rect x="18" y="18" width="8" height="6" fill="#c0c"/>')};
-window.EXTRA=[{k:'Мой компьютер',ico:ICO.pc,run:'Explorer.open()',cat:'std'},{k:'Paint',ico:ICO.paint,run:'Paint.open()',cat:'std'},{k:'Калькулятор',ico:ICO.calc,run:'Calc.open()',cat:'std'},{k:'Проигрыватель',ico:ICO.media,run:'Media.open()',cat:'std'}];
+window.EXTRA=[{k:'My Computer',ico:ICO.pc,run:'Explorer.open()',cat:'std'},{k:'Paint',ico:ICO.paint,run:'Paint.open()',cat:'std'},{k:'Calculator',ico:ICO.calc,run:'Calc.open()',cat:'std'},{k:'Media Player',ico:ICO.media,run:'Media.open()',cat:'std'}];
 (function(){const st=document.createElement('style');st.textContent=`
 .pt{display:flex;gap:4px}.pt .tools{display:grid;grid-template-columns:repeat(2,26px);gap:1px;align-content:start}
 .pt .tools button,.pt .sz button{min-width:0;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center}.pt .tools button.on,.pt .sz button.on{border-color:#000 #fff #fff #000;background:repeating-conic-gradient(#c0c0c0 0 25%,#fff 0 50%) 0 0/2px 2px}
@@ -38,15 +38,15 @@ window.EXTRA=[{k:'Мой компьютер',ico:ICO.pc,run:'Explorer.open()',ca
 // ===================== PAINT =====================
 const Paint={tool:'pencil',size:2,c1:'#000000',c2:'#ffffff',undo:[],
  PAL:['#000000','#808080','#800000','#808000','#008000','#008080','#000080','#800080','#808040','#004040','#0080ff','#004080','#8000ff','#804000','#ffffff','#c0c0c0','#ff0000','#ffff00','#00ff00','#00ffff','#0000ff','#ff00ff','#ffff80','#00ff80','#80ffff','#8080ff','#ff0080','#ff8040'],
- T:{pencil:['Карандаш','<path d="M3 15 L5 17 L16 6 L14 4Z" fill="#fc0" stroke="#000"/><path d="M3 15 L2 18 L5 17Z" fill="#000"/>'],brush:['Кисть','<path d="M10 2 L13 2 L13 10 L10 10Z" fill="#a52" stroke="#000"/><path d="M9 10 H14 L14 13 Q11 18 9 13Z" fill="#00f" stroke="#000"/>'],
-  eraser:['Ластик','<path d="M3 12 L10 5 L16 11 L9 18Z" fill="#fff" stroke="#000"/><path d="M3 12 L9 18 L6 18 L2 14Z" fill="#f9c" stroke="#000"/>'],fill:['Заливка','<path d="M4 9 L10 3 L16 9 L10 15Z" fill="#ddd" stroke="#000"/><path d="M15 10 Q18 15 16 16 Q13 15 15 10Z" fill="#00f"/>'],
-  line:['Линия','<path d="M3 16 L16 3" stroke="#000" stroke-width="2"/>'],rect:['Прямоугольник','<rect x="3" y="5" width="13" height="10" fill="none" stroke="#000" stroke-width="2"/>'],
-  ellipse:['Эллипс','<ellipse cx="9.5" cy="10" rx="7" ry="5" fill="none" stroke="#000" stroke-width="2"/>'],pick:['Пипетка','<path d="M12 3 L16 7 L8 15 L4 16 L5 12Z" fill="#cde" stroke="#000"/>']},
- open(){openWin('paint','Безымянный — Paint',`<div style="font-size:12px;margin:-4px 0 4px;display:flex;gap:6px"><button style="min-width:0;padding:1px 8px" onclick="Paint.doUndo()">↶ Отменить</button><button style="min-width:0;padding:1px 8px" onclick="Paint.clear()">🗋 Очистить</button><button style="min-width:0;padding:1px 8px" onclick="Paint.savePng()">💾 Сохранить PNG</button><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="ptfill"> заливка фигур</label></div>
+ T:{pencil:['Pencil','<path d="M3 15 L5 17 L16 6 L14 4Z" fill="#fc0" stroke="#000"/><path d="M3 15 L2 18 L5 17Z" fill="#000"/>'],brush:['Brush','<path d="M10 2 L13 2 L13 10 L10 10Z" fill="#a52" stroke="#000"/><path d="M9 10 H14 L14 13 Q11 18 9 13Z" fill="#00f" stroke="#000"/>'],
+  eraser:['Eraser','<path d="M3 12 L10 5 L16 11 L9 18Z" fill="#fff" stroke="#000"/><path d="M3 12 L9 18 L6 18 L2 14Z" fill="#f9c" stroke="#000"/>'],fill:['Fill','<path d="M4 9 L10 3 L16 9 L10 15Z" fill="#ddd" stroke="#000"/><path d="M15 10 Q18 15 16 16 Q13 15 15 10Z" fill="#00f"/>'],
+  line:['Line','<path d="M3 16 L16 3" stroke="#000" stroke-width="2"/>'],rect:['Rectangle','<rect x="3" y="5" width="13" height="10" fill="none" stroke="#000" stroke-width="2"/>'],
+  ellipse:['Ellipse','<ellipse cx="9.5" cy="10" rx="7" ry="5" fill="none" stroke="#000" stroke-width="2"/>'],pick:['Color Picker','<path d="M12 3 L16 7 L8 15 L4 16 L5 12Z" fill="#cde" stroke="#000"/>']},
+ open(){openWin('paint','Untitled — Paint',`<div style="font-size:12px;margin:-4px 0 4px;display:flex;gap:6px"><button style="min-width:0;padding:1px 8px" onclick="Paint.doUndo()">↶ Undo</button><button style="min-width:0;padding:1px 8px" onclick="Paint.clear()">🗋 Clear</button><button style="min-width:0;padding:1px 8px" onclick="Paint.savePng()">💾 Save PNG</button><label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="ptfill"> fill shapes</label></div>
  <div class="pt"><div><div class="tools">${Object.entries(this.T).map(([k,v])=>`<button data-t="${k}" title="${v[0]}" onclick="Paint.setTool('${k}')"><svg viewBox="0 0 19 19">${v[1]}</svg></button>`).join('')}</div>
- <div class="sz">${[1,2,4,8,12,20].map(z=>`<button data-z="${z}" title="Толщина ${z}" onclick="Paint.setSize(${z})"><i style="display:block;width:${Math.min(z,18)}px;height:${Math.min(z,18)}px;border-radius:50%;background:#000"></i></button>`).join('')}</div></div>
+ <div class="sz">${[1,2,4,8,12,20].map(z=>`<button data-z="${z}" title="Size ${z}" onclick="Paint.setSize(${z})"><i style="display:block;width:${Math.min(z,18)}px;height:${Math.min(z,18)}px;border-radius:50%;background:#000"></i></button>`).join('')}</div></div>
  <div class="cv"><div style="position:relative;display:inline-block"><canvas id="ptc" width="640" height="400"></canvas><canvas id="pto" width="640" height="400" style="position:absolute;left:0;top:0;background:transparent;pointer-events:none"></canvas></div></div></div>
- <div class="pal"><div class="cur" title="Основной / фоновый цвет (левая / правая кнопка)"><i id="ptc2" style="right:3px;bottom:3px"></i><i id="ptc1" style="left:3px;top:3px"></i></div><div class="grid">${this.PAL.map(c=>`<div style="background:${c}" data-c="${c}"></div>`).join('')}</div></div>`,{w:760,icon:'🎨'});
+ <div class="pal"><div class="cur" title="Primary / secondary color (left / right button)"><i id="ptc2" style="right:3px;bottom:3px"></i><i id="ptc1" style="left:3px;top:3px"></i></div><div class="grid">${this.PAL.map(c=>`<div style="background:${c}" data-c="${c}"></div>`).join('')}</div></div>`,{w:760,icon:'🎨'});
   const c=document.getElementById('ptc');if(!c.dataset.ev){c.dataset.ev=1;this.ctx=c.getContext('2d',{willReadFrequently:true});this.ctx.fillStyle='#fff';this.ctx.fillRect(0,0,640,400);this.bind(c);}
   document.querySelector('#w_paint .grid').onpointerdown=e=>{const c=e.target.dataset.c;if(!c)return;if(e.button===2)this.c2=c;else this.c1=c;this.ui();};document.querySelector('#w_paint .grid').oncontextmenu=e=>e.preventDefault();this.ui();},
  ui(){document.querySelectorAll('#w_paint .tools button').forEach(b=>b.classList.toggle('on',b.dataset.t===this.tool));document.querySelectorAll('#w_paint .sz button').forEach(b=>b.classList.toggle('on',+b.dataset.z===this.size));
@@ -55,7 +55,7 @@ const Paint={tool:'pencil',size:2,c1:'#000000',c2:'#ffffff',undo:[],
  snap(){this.undo.push(this.ctx.getImageData(0,0,640,400));if(this.undo.length>25)this.undo.shift();},
  doUndo(){const d=this.undo.pop();if(d)this.ctx.putImageData(d,0,0);},
  clear(){this.snap();this.ctx.fillStyle='#fff';this.ctx.fillRect(0,0,640,400);},
- savePng(){const a=document.createElement('a');a.download='рисунок.png';a.href=document.getElementById('ptc').toDataURL('image/png');a.click();},
+ savePng(){const a=document.createElement('a');a.download='drawing.png';a.href=document.getElementById('ptc').toDataURL('image/png');a.click();},
  bind(c){const o=document.getElementById('pto').getContext('2d');const P=e=>{const r=c.getBoundingClientRect();return [(e.clientX-r.left)*640/r.width,(e.clientY-r.top)*400/r.height];};
   c.oncontextmenu=e=>e.preventDefault();
   c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);const col=e.button===2?this.c2:this.c1,[x0,y0]=P(e),g=this.ctx,t=this.tool;
@@ -74,13 +74,13 @@ const Paint={tool:'pencil',size:2,c1:'#000000',c2:'#ffffff',undo:[],
   while(st.length){let [cx,cy]=st.pop();let i=(cy*W+cx)*4;while(cx>=0&&m(i)){cx--;i-=4;}cx++;i+=4;let up=false,dn=false;
    while(cx<W&&m(i)){d[i]=R;d[i+1]=G;d[i+2]=B;d[i+3]=255;if(cy>0){const u=i-W*4;if(m(u)){if(!up){st.push([cx,cy-1]);up=true;}}else up=false;}if(cy<H-1){const v=i+W*4;if(m(v)){if(!dn){st.push([cx,cy+1]);dn=true;}}else dn=false;}cx++;i+=4;}}
   g.putImageData(im,0,0);}};
-// ===================== КАЛЬКУЛЯТОР =====================
+// ===================== CALCULATOR =====================
 const Calc={v:'0',acc:null,op:null,fresh:true,mem:0,
  open(){const K=[['MC','b','mc'],['7','','7'],['8','','8'],['9','','9'],['/','r','/'],['MR','b','mr'],['4','','4'],['5','','5'],['6','','6'],['*','r','*'],['MS','b','ms'],['1','','1'],['2','','2'],['3','','3'],['-','r','-'],['M+','b','m+'],['0','','0'],['±','b','neg'],[',','','.'],['+','r','+'],['C','r','c'],['CE','r','ce'],['√','b','sqrt'],['%','b','%'],['=','r','=']];
-  openWin('calc','Калькулятор',`<div class="calcd" id="cald">0</div><div class="calc">${K.map(k=>`<button class="${k[1]}" onclick="Calc.key('${k[2]}')">${k[0]}</button>`).join('')}</div>`,{w:270,icon:'🧮'});this.show();},
+  openWin('calc','Calculator',`<div class="calcd" id="cald">0</div><div class="calc">${K.map(k=>`<button class="${k[1]}" onclick="Calc.key('${k[2]}')">${k[0]}</button>`).join('')}</div>`,{w:270,icon:'🧮'});this.show();},
  show(){const e=document.getElementById('cald');if(e)e.textContent=(this.mem?'M ':'')+this.v.replace('.',',');},
  calc(a,b,o){return o==='+'?a+b:o==='-'?a-b:o==='*'?a*b:b===0?NaN:a/b;},
- fmt(x){if(!isFinite(x))return 'Ошибка';return String(+x.toPrecision(12));},
+ fmt(x){if(!isFinite(x))return 'Error';return String(+x.toPrecision(12));},
  key(k){Sfx.click();const n=parseFloat(this.v)||0;
   if(/^[0-9]$/.test(k)){this.v=this.fresh||this.v==='0'?k:this.v+k;this.fresh=false;}
   else if(k==='.'){if(this.fresh){this.v='0.';this.fresh=false;}else if(!this.v.includes('.'))this.v+='.';}
@@ -91,12 +91,12 @@ const Calc={v:'0',acc:null,op:null,fresh:true,mem:0,
   else if(k==='mc')this.mem=0;else if(k==='mr'){this.v=this.fmt(this.mem);this.fresh=true;}else if(k==='ms')this.mem=n;else if(k==='m+')this.mem+=n;
   this.show();}};
 addEventListener('keydown',e=>{const w=document.getElementById('w_calc');if(!w||w.classList.contains('hide')||w.classList.contains('inactive')||e.target.tagName==='INPUT')return;const m={Enter:'=',Escape:'c',Backspace:'ce',',':'.'};const k=m[e.key]||e.key;if(/^[0-9.+\-*/=]$/.test(k)||['c','ce'].includes(k)){Calc.key(k);e.preventDefault();}});
-// ===================== ПРОИГРЫВАТЕЛЬ =====================
+// ===================== MEDIA PLAYER =====================
 const Media={raf:0,
- open(){Music.init();openWin('media','Проигрыватель — music.mp3',`<div class="mp"><canvas class="scr" id="mpc" width="360" height="110" style="width:100%"></canvas>
-  <div style="font-size:12px;margin-top:4px">🎵 <b>Фоновая музыка</b> — «Битва Шаров 98» <span id="mpt" style="float:right"></span></div>
-  <input type="range" id="mppos" min="0" max="1000" value="0" title="Перемотка">
-  <div class="row"><button onclick="Media.play()" title="Воспроизвести">▶</button><button onclick="Media.pause()" title="Пауза">❚❚</button><button onclick="Media.stop()" title="Стоп">■</button><span style="margin-left:auto;font-size:12px">Громкость</span><input type="range" id="mpvol" min="0" max="100" style="width:110px"></div></div>`,{w:400,icon:'🎵'});
+ open(){Music.init();openWin('media','Media Player — music.mp3',`<div class="mp"><canvas class="scr" id="mpc" width="360" height="110" style="width:100%"></canvas>
+  <div style="font-size:12px;margin-top:4px">🎵 <b>Background music</b> — “Ball Brawl 98” <span id="mpt" style="float:right"></span></div>
+  <input type="range" id="mppos" min="0" max="1000" value="0" title="Scrub">
+  <div class="row"><button onclick="Media.play()" title="Play">▶</button><button onclick="Media.pause()" title="Pause">❚❚</button><button onclick="Media.stop()" title="Stop">■</button><span style="margin-left:auto;font-size:12px">Volume</span><input type="range" id="mpvol" min="0" max="100" style="width:110px"></div></div>`,{w:400,icon:'🎵'});
   const a=Music.a,vol=document.getElementById('mpvol'),pos=document.getElementById('mppos');vol.value=Math.round(a.volume*100);
   vol.oninput=()=>{a.volume=vol.value/100;try{localStorage.setItem('ballfight_vol',a.volume);}catch(e){}};pos.oninput=()=>{if(a.duration)a.currentTime=pos.value/1000*a.duration;};
   cancelAnimationFrame(this.raf);const loop=()=>{this.draw();if(!document.getElementById('w_media').classList.contains('hide'))this.raf=requestAnimationFrame(loop);};loop();},
@@ -106,19 +106,19 @@ const Media={raf:0,
   const f=s=>isFinite(s)?Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'):'--:--';const e=document.getElementById('mpt');if(e&&a)e.textContent=f(a.currentTime)+' / '+f(a.duration)+(on?' ▶':' ❚❚');
   const p=document.getElementById('mppos');if(p&&a&&a.duration&&document.activeElement!==p)p.value=a.currentTime/a.duration*1000;}};
 try{const v=parseFloat(localStorage.getItem('ballfight_vol'));if(v>=0){const _i=Music.init.bind(Music);Music.init=function(){const f=!this.a;_i();if(f)this.a.volume=v;};}}catch(e){}
-// ===================== МОЙ КОМПЬЮТЕР =====================
+// ===================== MY COMPUTER =====================
 const Explorer={path:'',
  open(p){this.path=p||'';const it=(ico,n,run)=>`<div class="it2" ondblclick="${run}" onclick="if(event.pointerType!=='mouse')${run}">${ico}<br><span>${n}</span></div>`;let items,addr;
-  if(!this.path){addr='Мой компьютер';items=it(ICO.drive,'Диск 3,5 (A:)',"UI.msg('Диск A:','Вставьте дискету в дисковод A:.',[['Повтор',''],['Отмена','']],'⚠️')")+it(ICO.drive,'Локальный диск (C:)',"Explorer.open('C')")+it(ICO.cd,'BALLFIGHT98 (D:)',"Explorer.open('D')")+it(ICO.ctrl,'Панель управления',"Desk.props()")+it(ICO.folder,'Принтеры',"UI.msg('Принтеры','Принтер не установлен. Может, оно и к лучшему.',[['ОК','']],'🖨️')");}
-  else if(this.path==='C'){addr='C:\\';items=it(ICO.folder,'Program Files',"Explorer.open('P')")+it(ICO.folder,'Мои документы',"Explorer.open('M')")+it(ICO.folder,'WINDOWS',"UI.msg('WINDOWS','Системная папка. Лучше ничего тут не трогать.',[['ОК','']],'⚠️')")+`<div class="it2">${ICO.paint}<br><span>autoexec.bat</span></div>`;}
-  else if(this.path==='P'){addr='C:\\Program Files';items=(window.EXTRA||[]).concat([{k:'Сапёр',ico:'💣',run:'Mines.open()'},{k:'Шахматы',ico:'♞',run:'Chess.open()'},{k:'Блокнот',ico:'📝',run:'Desk.notes()'}]).filter(a=>a.k!=='Мой компьютер').map(a=>it(typeof a.ico==='string'&&a.ico.startsWith('<svg')?a.ico:`<div style="font-size:28px">${a.ico}</div>`,a.k+'.exe',a.run)).join('');}
-  else if(this.path==='M'){addr='C:\\Мои документы';items=it(`<div style="font-size:28px">📝</div>`,'Патчноут.txt','Desk.notes()')+it(ICO.paint,'рисунок.bmp','Paint.open()');}
+  if(!this.path){addr='My Computer';items=it(ICO.drive,'3½ Floppy (A:)',"UI.msg('Drive A:','Insert a disk into drive A:.',[['Replay',''],['Cancel','']],'⚠️')")+it(ICO.drive,'Local Disk (C:)',"Explorer.open('C')")+it(ICO.cd,'BALLFIGHT98 (D:)',"Explorer.open('D')")+it(ICO.ctrl,'Control Panel',"Desk.props()")+it(ICO.folder,'Printers',"UI.msg('Printers','No printer installed. Probably for the best.',[['OK','']],'🖨️')");}
+  else if(this.path==='C'){addr='C:\\';items=it(ICO.folder,'Program Files',"Explorer.open('P')")+it(ICO.folder,'My Documents',"Explorer.open('M')")+it(ICO.folder,'WINDOWS',"UI.msg('WINDOWS','System folder. Better not touch anything here.',[['OK','']],'⚠️')")+`<div class="it2">${ICO.paint}<br><span>autoexec.bat</span></div>`;}
+  else if(this.path==='P'){addr='C:\\Program Files';items=(window.EXTRA||[]).concat([{k:'Minesweeper',ico:'💣',run:'Mines.open()'},{k:'Chess',ico:'♞',run:'Chess.open()'},{k:'Notepad',ico:'📝',run:'Desk.notes()'}]).filter(a=>a.k!=='My Computer').map(a=>it(typeof a.ico==='string'&&a.ico.startsWith('<svg')?a.ico:`<div style="font-size:28px">${a.ico}</div>`,a.k+'.exe',a.run)).join('');}
+  else if(this.path==='M'){addr='C:\\My Documents';items=it(`<div style="font-size:28px">📝</div>`,'Patchnotes.txt','Desk.notes()')+it(ICO.paint,'drawing.bmp','Paint.open()');}
   else{addr='D:\\ (BALLFIGHT98)';items=it(`<div style="font-size:28px">🎮</div>`,'BALLFIGHT.EXE','UI.levels()')+it(ICO.media,'music.mp3','Media.open()')+it(`<div style="font-size:28px">❓</div>`,'README.TXT','UI.help()');}
-  openWin('explorer',addr,`<div class="ex"><div class="bar"><button style="min-width:0;padding:1px 8px" onclick="Explorer.open(${this.path==='P'||this.path==='M'?"'C'":"''"})" ${this.path?'':'disabled'}>⬆ Вверх</button>Адрес:<div class="addr">${addr}</div></div><div class="items">${items}</div>
-  <div class="sb">Объектов: ${(items.match(/class="it2"/g)||[]).length}${this.path==='C'?' · Свободно: 640 КБ (должно хватить всем)':''}</div></div>`,{w:520,icon:'💻'});}};
-// ===================== КОСЫНКА =====================
+  openWin('explorer',addr,`<div class="ex"><div class="bar"><button style="min-width:0;padding:1px 8px" onclick="Explorer.open(${this.path==='P'||this.path==='M'?"'C'":"''"})" ${this.path?'':'disabled'}>⬆ Up</button>Address:<div class="addr">${addr}</div></div><div class="items">${items}</div>
+  <div class="sb">Items: ${(items.match(/class="it2"/g)||[]).length}${this.path==='C'?' · Free: 640 KB (should be enough for anybody)':''}</div></div>`,{w:520,icon:'💻'});}};
+// ===================== SOLITAIRE =====================
 const Sol={W:71,H:96,
- open(){openWin('sol','Косынка',`<div style="font-size:12px;margin:-4px 0 4px;display:flex;gap:6px;align-items:center"><button style="min-width:0;padding:1px 8px" onclick="Sol.deal()">🂠 Новая раздача</button><button style="min-width:0;padding:1px 8px" onclick="Sol.undo()">↶ Отменить</button><button style="min-width:0;padding:1px 8px" onclick="Sol.autoAll()">⇧ Всё в дом</button><span id="solst" style="margin-left:auto"></span></div>
+ open(){openWin('sol','Solitaire',`<div style="font-size:12px;margin:-4px 0 4px;display:flex;gap:6px;align-items:center"><button style="min-width:0;padding:1px 8px" onclick="Sol.deal()">🂠 New deal</button><button style="min-width:0;padding:1px 8px" onclick="Sol.undo()">↶ Undo</button><button style="min-width:0;padding:1px 8px" onclick="Sol.autoAll()">⇧ All home</button><span id="solst" style="margin-left:auto"></span></div>
   <canvas id="solc" width="620" height="520" style="width:100%;background:#008000;display:block;touch-action:none;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>`,{w:660,icon:'🃏'});
   const c=document.getElementById('solc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');this.bind(c);}if(!this.tab)this.deal();else this.draw();},
  deal(){cancelAnimationFrame(this.anim);this.anim=0;const d=[];for(let s=0;s<4;s++)for(let r=1;r<=13;r++)d.push({s,r,up:false});for(let i=d.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[d[i],d[j]]=[d[j],d[i]];}
@@ -147,7 +147,7 @@ const Sol={W:71,H:96,
   for(let i=0;i<4;i++){const f=this.found[i];const n=f.length-(this.drag&&this.drag.from==='f'+i?1:0);if(n>0)this.card(g,f[n-1],this.px(3+i),10);else this.slot(g,this.px(3+i),10,[0,1,2,3][i]);}
   this.tab.forEach((p,i)=>{if(!p.length)this.slot(g,this.px(i),130);const n=this.drag&&this.drag.from==='t'+i?this.drag.k:p.length;for(let k=0;k<n;k++)this.card(g,p[k],this.px(i),this.tabY(p,k));});
   if(this.drag){this.drag.cards.forEach((c,k)=>this.card(g,c,this.drag.x,this.drag.y+k*22));}
-  const e=document.getElementById('solst');if(e)e.textContent=`Ходов: ${this.moves} · В доме: ${this.found.reduce((a,f)=>a+f.length,0)}/52`;},
+  const e=document.getElementById('solst');if(e)e.textContent=`Moves: ${this.moves} · Home: ${this.found.reduce((a,f)=>a+f.length,0)}/52`;},
  P(c,e){const r=c.getBoundingClientRect();return [(e.clientX-r.left)*620/r.width,(e.clientY-r.top)*520/r.height];},
  hit(x,y){const W=this.W,H=this.H,inx=i=>x>=this.px(i)&&x<this.px(i)+W;
   if(y>=10&&y<10+H){if(inx(0))return {from:'s'};if(inx(1)&&this.waste.length)return {from:'w',k:this.waste.length-1};for(let i=0;i<4;i++)if(inx(3+i))return {from:'f'+i,k:this.found[i].length-1};}
@@ -172,20 +172,20 @@ const Sol={W:71,H:96,
     for(let i=0;i<7;i++){if('t'+i===d.from)continue;const p=this.tab[i];const ty=p.length?this.tabY(p,p.length-1):130;const dx=Math.abs(cx-this.px(i)-this.W/2),dy=Math.abs(cy-ty-this.H/2);if(dx<this.W*.8&&dy<this.H*1.2&&this.canT(c0,i)&&dx+dy<bd){bd=dx+dy;best=['t',i];}}
     if(best){this.snapH();const src=this.pile(d.from);const mv=src.splice(d.k);(best[0]==='f'?this.found:this.tab)[best[1]].push(...mv);done=true;this.after();}}
    if(!done)this.draw();});},
- win(){this.won=true;this.draw();const t=Math.round((Date.now()-this.t0)/1000);Sfx.startup();Reward.give('sol',10,`🃏 Косынка разложена! ${this.moves} ходов, ${t} с`);
+ win(){this.won=true;this.draw();const t=Math.round((Date.now()-this.t0)/1000);Sfx.startup();Reward.give('sol',10,`🃏 Solitaire solved! ${this.moves} moves, ${t} s`);
   const g=this.g;const cards=[];for(let i=0;i<4;i++)for(let r=13;r>=1;r--)cards.push({c:{s:this.found[i][r-1].s,r,up:true},x:this.px(3+i),y:10});let k=0,cur=null;this.anim=1;
-  const step=()=>{if(!this.won||!document.getElementById('solc')){this.anim=0;return;}for(let n=0;n<3;n++){if(!cur||cur.x<-this.W||cur.x>620){if(k>=cards.length){this.anim=0;g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,220,620,60);g.fillStyle='#fff';g.font='bold 24px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('Победа! Нажмите «Новая раздача»',310,258);return;}cur=Object.assign({vx:(Math.random()<.5?-1:1)*(2+Math.random()*4),vy:-Math.random()*6},cards[k++]);}
+  const step=()=>{if(!this.won||!document.getElementById('solc')){this.anim=0;return;}for(let n=0;n<3;n++){if(!cur||cur.x<-this.W||cur.x>620){if(k>=cards.length){this.anim=0;g.fillStyle='rgba(0,0,0,.5)';g.fillRect(0,220,620,60);g.fillStyle='#fff';g.font='bold 24px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('You win! Hit “New deal”',310,258);return;}cur=Object.assign({vx:(Math.random()<.5?-1:1)*(2+Math.random()*4),vy:-Math.random()*6},cards[k++]);}
     cur.x+=cur.vx;cur.y+=cur.vy;cur.vy+=.5;if(cur.y>520-this.H){cur.y=520-this.H;cur.vy*=-.8;}this.card(g,cur.c,cur.x,cur.y);}this.anim=requestAnimationFrame(step);};step();}};
-window.EXTRA.push({k:'Косынка',ico:ICO.cards,run:'Sol.open()',cat:'game'});
-// ===================== общие клавиши =====================
+window.EXTRA.push({k:'Solitaire',ico:ICO.cards,run:'Sol.open()',cat:'game'});
+// ===================== shared keys =====================
 let KF=null;document.addEventListener('pointerdown',e=>{const w=e.target.closest&&e.target.closest('.win');KF=w?w.id:null;},true);
 const kOn=id=>{const w=document.getElementById('w_'+id);return w&&!w.classList.contains('hide')&&KF==='w_'+id;};
 const padBtns=(o)=>`<div style="display:flex;gap:3px;justify-content:center;margin-top:4px">${o.map(([l,f])=>`<button style="min-width:0;padding:2px 10px" onpointerdown="${f};event.preventDefault()">${l}</button>`).join('')}</div>`;
-// ===================== ПИНБОЛ =====================
+// ===================== PINBALL =====================
 const Pin={
- open(){openWin('pin','Пинбол — Космический кадет 98',`<div style="display:flex;gap:6px"><canvas id="pinc" width="360" height="540" style="height:min(540px,65vh);background:#000;touch-action:none;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
-  <div style="width:150px;flex:none;font-size:12px"><div style="background:#000;color:#f80;font:bold 22px monospace;padding:4px;text-align:right;border:2px inset" id="pins">0</div><div id="pinb" style="margin:6px 0">Шары: 3</div>
-  <button style="width:100%" onclick="Pin.reset()">Новая игра (F2)</button><p style="margin-top:8px;color:#333">Z / ← — левый флиппер<br>/ / → — правый флиппер<br>Пробел (держать) — запуск<br>Мышь: левая/правая половина стола — флипперы, низ лунки — запуск</p><div id="pinr" style="color:#060"></div></div></div>`,{w:560,icon:'🎯'});
+ open(){openWin('pin','Pinball — Space Cadet 98',`<div style="display:flex;gap:6px"><canvas id="pinc" width="360" height="540" style="height:min(540px,65vh);background:#000;touch-action:none;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="width:150px;flex:none;font-size:12px"><div style="background:#000;color:#f80;font:bold 22px monospace;padding:4px;text-align:right;border:2px inset" id="pins">0</div><div id="pinb" style="margin:6px 0">Balls: 3</div>
+  <button style="width:100%" onclick="Pin.reset()">New game (F2)</button><p style="margin-top:8px;color:#333">Z / ← — left flipper<br>/ / → — right flipper<br>Space (hold) — launch<br>Mouse: left/right half of the table — flippers, bottom of the lane — launch</p><div id="pinr" style="color:#060"></div></div></div>`,{w:560,icon:'🎯'});
   KF='w_pin';const c=document.getElementById('pinc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');this.bind(c);}if(!this.st)this.reset();cancelAnimationFrame(this.raf);this.loop();},
  reset(){this.st=1;this.score=0;this.balls=3;this.L={a:.5,v:0,up:false};this.R={a:.5,v:0,up:false};this.lights=[0,0,0];this.mult=1;this.plung=0;this.hold=false;this.over=false;this.newBall();this.hud();},
  newBall(){this.b={x:328,y:490,vx:0,vy:0,r:7,lane:true};},
@@ -205,10 +205,10 @@ const Pin={
     if(this.seg(b,x1,y1,x2,y2,.3)&&f.v<0){const sa=Math.sin(f.a),ca=Math.cos(f.a),k=-f.v*56*t*3/S*S;const nx=side<0?sa:-sa,ny=-ca;if(b.vx*nx+b.vy*ny<k){b.vx+=nx*k;b.vy+=ny*k;}}}
    for(const bm of this.bump){const dx=b.x-bm[0],dy=b.y-bm[1],d=Math.hypot(dx,dy);if(d<bm[2]+b.r){const nx=dx/d,ny=dy/d;b.x=bm[0]+nx*(bm[2]+b.r);b.y=bm[1]+ny*(bm[2]+b.r);const vn=b.vx*nx+b.vy*ny;b.vx-=vn*nx*2;b.vy-=vn*ny*2;b.vx+=nx*4;b.vy+=ny*4;bm[3]=8;this.add(100);Sfx.tone(660+Math.random()*200,0,.05);}}
    const sp=Math.hypot(b.vx,b.vy);if(sp>16){b.vx*=16/sp;b.vy*=16/sp;}}
-  if(b.y<60&&!b.lane)this.lanes.forEach((x,i)=>{if(Math.abs(b.x-x)<12&&!this.lights[i]){this.lights[i]=1;this.add(500);Sfx.ding();if(this.lights.every(v=>v)){this.lights=[0,0,0];this.mult=Math.min(5,this.mult+1);toast(`🎯 Множитель x${this.mult}!`);}}});
-  if(b.y>560){this.balls--;Sfx.error();if(this.balls<=0){this.over=true;if(this.score>=20000)Reward.give('pin',5,`🎯 Пинбол: ${this.score} очков`);}else this.newBall();this.mult=1;this.hud();}},
+  if(b.y<60&&!b.lane)this.lanes.forEach((x,i)=>{if(Math.abs(b.x-x)<12&&!this.lights[i]){this.lights[i]=1;this.add(500);Sfx.ding();if(this.lights.every(v=>v)){this.lights=[0,0,0];this.mult=Math.min(5,this.mult+1);toast(`🎯 Multiplier x${this.mult}!`);}}});
+  if(b.y>560){this.balls--;Sfx.error();if(this.balls<=0){this.over=true;if(this.score>=20000)Reward.give('pin',5,`🎯 Pinball: ${this.score} points`);}else this.newBall();this.mult=1;this.hud();}},
  add(n){this.score+=n*this.mult;this.hud();},
- hud(){const s=document.getElementById('pins');if(s)s.textContent=this.score;const b=document.getElementById('pinb');if(b)b.textContent=`Шары: ${Math.max(0,this.balls)} · x${this.mult}`;},
+ hud(){const s=document.getElementById('pins');if(s)s.textContent=this.score;const b=document.getElementById('pinb');if(b)b.textContent=`Balls: ${Math.max(0,this.balls)} · x${this.mult}`;},
  draw(){const g=this.g,b=this.b;g.fillStyle='#000814';g.fillRect(0,0,360,540);
   g.fillStyle='#123';for(let i=0;i<40;i++){g.fillRect((i*97)%360,(i*53)%540,2,2);}
   g.strokeStyle='#4af';g.lineWidth=3;g.lineCap='round';for(const w of this.walls){g.beginPath();g.moveTo(w[0],w[1]);g.lineTo(w[2],w[3]);g.stroke();}
@@ -217,8 +217,8 @@ const Pin={
   g.lineWidth=9;g.strokeStyle='#f80';for(const [s,f] of [[-1,this.L],[1,this.R]]){const [x1,y1,x2,y2]=this.flip(f,s);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();}
   g.fillStyle='#888';g.fillRect(320,500+this.plung*30,16,40);
   const gr=g.createRadialGradient(b.x-2,b.y-2,1,b.x,b.y,b.r);gr.addColorStop(0,'#fff');gr.addColorStop(1,'#888');g.fillStyle=gr;g.beginPath();g.arc(b.x,b.y,b.r,0,7);g.fill();
-  g.fillStyle='#4af';g.font='bold 14px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('КОСМИЧЕСКИЙ КАДЕТ',175,90);
-  if(this.over){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(30,230,280,80);g.fillStyle='#ff0';g.font='bold 22px Tahoma,Verdana,sans-serif';g.fillText('ИГРА ОКОНЧЕНА',170,265);g.font='13px Tahoma,Verdana,sans-serif';g.fillText('F2 или «Новая игра»',170,290);}},
+  g.fillStyle='#4af';g.font='bold 14px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('SPACE CADET',175,90);
+  if(this.over){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(30,230,280,80);g.fillStyle='#ff0';g.font='bold 22px Tahoma,Verdana,sans-serif';g.fillText('GAME OVER',170,265);g.font='13px Tahoma,Verdana,sans-serif';g.fillText('F2 or “New game”',170,290);}},
  loop(){if(!document.getElementById('pinc')){this.raf=0;return;}const w=document.getElementById('w_pin');if(!w.classList.contains('hide')&&!this.over)this.step();this.draw();this.raf=requestAnimationFrame(()=>this.loop());},
  launch(){if(this.b.lane&&this.b.y>=489){this.b.vy=-(8+this.plung*9);Sfx.tone(220,0,.1);}this.plung=0;this.hold=false;},
  bind(c){const side=e=>{const r=c.getBoundingClientRect();const x=(e.clientX-r.left)/r.width*360,y=(e.clientY-r.top)/r.height*540;return x>310&&y>440?'P':x<180?'L':'R';};
@@ -226,10 +226,10 @@ const Pin={
   const end=e=>{const s=ups[e.pointerId];delete ups[e.pointerId];if(s==='P')this.launch();else if(s)this[s].up=false;};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
   document.addEventListener('keydown',e=>{if(!kOn('pin'))return;const k=e.key;if(k==='z'||k==='Z'||k==='я'||k==='ArrowLeft'){this.L.up=true;e.preventDefault();}else if(k==='/'||k==='.'||k==='ArrowRight'){this.R.up=true;e.preventDefault();}else if(k===' '){this.hold=true;e.preventDefault();}else if(k==='F2'){this.reset();e.preventDefault();}});
   document.addEventListener('keyup',e=>{const k=e.key;if(k==='z'||k==='Z'||k==='я'||k==='ArrowLeft')this.L.up=false;else if(k==='/'||k==='.'||k==='ArrowRight')this.R.up=false;else if(k===' '&&this.hold)this.launch();});}};
-// ===================== ЗМЕЙКА =====================
+// ===================== SNAKE =====================
 const Snake={N:20,C:18,
- open(){openWin('snake','Змейка',`<canvas id="snc" width="360" height="360" style="width:min(360px,80vw);display:block;background:#9bbc0f;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
-  <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span id="sns">Счёт: 0</span><span>Рекорд: <b id="snh">${localStorage.bf_snake||0}</b></span><button style="min-width:0;padding:1px 8px" onclick="Snake.reset()">Заново</button></div>
+ open(){openWin('snake','Snake',`<canvas id="snc" width="360" height="360" style="width:min(360px,80vw);display:block;background:#9bbc0f;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px"><span id="sns">Score: 0</span><span>Best: <b id="snh">${localStorage.bf_snake||0}</b></span><button style="min-width:0;padding:1px 8px" onclick="Snake.reset()">Restart</button></div>
   ${padBtns([['◀',"Snake.dir(-1,0)"],['▲',"Snake.dir(0,-1)"],['▼',"Snake.dir(0,1)"],['▶',"Snake.dir(1,0)"]])}`,{w:390,icon:'🐍'});
   KF='w_snake';const c=document.getElementById('snc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');}
   if(!this.bound){this.bound=1;document.addEventListener('keydown',e=>{if(!kOn('snake'))return;const m={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1],ф:[-1,0],в:[1,0],ц:[0,-1],ы:[0,1]}[e.key];if(m){this.dir(...m);e.preventDefault();}else if(e.key===' '){this.reset();e.preventDefault();}});}
@@ -239,19 +239,19 @@ const Snake={N:20,C:18,
  food(){do{this.f=[Math.random()*20|0,Math.random()*20|0];}while(this.s.some(p=>p[0]===this.f[0]&&p[1]===this.f[1]));},
  tick(){if(!document.getElementById('snc')){clearInterval(this.iv);return;}if(document.getElementById('w_snake').classList.contains('hide'))return;if(this.q.length)this.d=this.q.shift();
   const h=[this.s[0][0]+this.d[0],this.s[0][1]+this.d[1]];if(h[0]<0||h[1]<0||h[0]>=20||h[1]>=20||this.s.some(p=>p[0]===h[0]&&p[1]===h[1])){this.dead=true;clearInterval(this.iv);Sfx.error();
-   if(this.sc>(+localStorage.bf_snake||0)){localStorage.bf_snake=this.sc;document.getElementById('snh').textContent=this.sc;}if(this.sc>=20)Reward.give('snake',5,`🐍 Змейка: ${this.sc} яблок`);this.draw();return;}
-  this.s.unshift(h);if(h[0]===this.f[0]&&h[1]===this.f[1]){this.sc++;Sfx.tone(880,0,.04);this.food();document.getElementById('sns').textContent='Счёт: '+this.sc;}else this.s.pop();this.draw();},
+   if(this.sc>(+localStorage.bf_snake||0)){localStorage.bf_snake=this.sc;document.getElementById('snh').textContent=this.sc;}if(this.sc>=20)Reward.give('snake',5,`🐍 Snake: ${this.sc} apples`);this.draw();return;}
+  this.s.unshift(h);if(h[0]===this.f[0]&&h[1]===this.f[1]){this.sc++;Sfx.tone(880,0,.04);this.food();document.getElementById('sns').textContent='Score: '+this.sc;}else this.s.pop();this.draw();},
  draw(){const g=this.g,C=this.C;g.fillStyle='#9bbc0f';g.fillRect(0,0,360,360);g.fillStyle='#8bac0f';for(let i=0;i<20;i++)for(let j=0;j<20;j++)if((i+j)%2)g.fillRect(i*C,j*C,C,C);
   g.fillStyle='#c00';g.beginPath();g.arc(this.f[0]*C+9,this.f[1]*C+10,7,0,7);g.fill();g.fillStyle='#060';g.fillRect(this.f[0]*C+9,this.f[1]*C+1,2,4);
   this.s.forEach((p,i)=>{g.fillStyle=i?'#306230':'#0f380f';g.fillRect(p[0]*C+1,p[1]*C+1,C-2,C-2);});const h=this.s[0];g.fillStyle='#fff';g.fillRect(h[0]*C+5,h[1]*C+5,3,3);g.fillRect(h[0]*C+11,h[1]*C+5,3,3);
-  if(this.dead){g.fillStyle='rgba(15,56,15,.8)';g.fillRect(40,140,280,80);g.fillStyle='#9bbc0f';g.font='bold 22px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('КОНЕЦ ИГРЫ',180,175);g.font='13px Tahoma,Verdana,sans-serif';g.fillText('Пробел или «Заново»',180,200);}}};
-// ===================== БЛОКИ =====================
+  if(this.dead){g.fillStyle='rgba(15,56,15,.8)';g.fillRect(40,140,280,80);g.fillStyle='#9bbc0f';g.font='bold 22px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('GAME OVER',180,175);g.font='13px Tahoma,Verdana,sans-serif';g.fillText('Space or “Restart”',180,200);}}};
+// ===================== BLOCKS =====================
 const Blocks={C:22,
  P:[[[1,1,1,1]],[[1,1],[1,1]],[[0,1,0],[1,1,1]],[[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]],COL:['#0ff','#ff0','#a0f','#00f','#f80','#f00','#0c0'],
- open(){openWin('blocks','Блоки',`<div style="display:flex;gap:8px"><canvas id="blc" width="220" height="440" style="height:min(440px,62vh);background:#000;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
-  <div style="width:120px;flex:none;font-size:12px">Следующая:<canvas id="bln" width="88" height="66" style="display:block;width:88px;height:66px;background:#000;margin:3px 0 8px;border:2px inset"></canvas>
-  <div id="bls">Очки: 0<br>Линии: 0<br>Уровень: 1</div><button style="width:100%;margin-top:8px" onclick="Blocks.reset()">Новая игра</button><button style="width:100%;margin-top:4px" onclick="Blocks.pause()">Пауза (P)</button>
-  <p style="color:#333">← → — двигать<br>↑ — повернуть<br>↓ — ускорить<br>Пробел — сбросить</p></div></div>
+ open(){openWin('blocks','Blocks',`<div style="display:flex;gap:8px"><canvas id="blc" width="220" height="440" style="height:min(440px,62vh);background:#000;border:2px solid;border-color:#808080 #fff #fff #808080"></canvas>
+  <div style="width:120px;flex:none;font-size:12px">Next:<canvas id="bln" width="88" height="66" style="display:block;width:88px;height:66px;background:#000;margin:3px 0 8px;border:2px inset"></canvas>
+  <div id="bls">Score: 0<br>Lines: 0<br>Level: 1</div><button style="width:100%;margin-top:8px" onclick="Blocks.reset()">New game</button><button style="width:100%;margin-top:4px" onclick="Blocks.pause()">Pause (P)</button>
+  <p style="color:#333">← → — move<br>↑ — rotate<br>↓ — soft drop<br>Space — hard drop</p></div></div>
   ${padBtns([['◀',"Blocks.mv(-1)"],['⟳',"Blocks.rot()"],['▼',"Blocks.down()"],['▶',"Blocks.mv(1)"],['⤓',"Blocks.drop()"]])}`,{w:440,icon:'🧱'});
   KF='w_blocks';const c=document.getElementById('blc');if(!c.dataset.ev){c.dataset.ev=1;this.g=c.getContext('2d');this.gn=document.getElementById('bln').getContext('2d');}
   if(!this.bound){this.bound=1;document.addEventListener('keydown',e=>{if(!kOn('blocks'))return;const f={ArrowLeft:()=>this.mv(-1),ArrowRight:()=>this.mv(1),ArrowUp:()=>this.rot(),ArrowDown:()=>this.down(),' ':()=>this.drop(),p:()=>this.pause(),з:()=>this.pause()}[e.key];if(f){f();e.preventDefault();}});}
@@ -265,15 +265,15 @@ const Blocks={C:22,
  down(){if(!this.ok())return false;if(!this.hit(this.x,this.y+1,this.m)){this.y++;this.draw();return true;}this.lock();return false;},
  drop(){if(!this.ok())return;let n=0;while(!this.hit(this.x,this.y+1,this.m)){this.y++;n++;}this.sc+=n*2;this.lock();},
  lock(){this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v&&this.y+i>=0)this.b[this.y+i][this.x+j]=this.t+1;}));let n=0;this.b=this.b.filter(r=>!r.every(v=>v));n=20-this.b.length;while(this.b.length<20)this.b.unshift(Array(10).fill(0));
-  if(n){this.sc+=[0,100,300,500,800][n]*this.lv;this.ln+=n;this.lv=1+Math.floor(this.ln/10);Sfx.ding();if(this.ln>=10&&!this.rew){this.rew=true;Reward.give('blocks',5,`🧱 Блоки: ${this.ln} линий`);}}else Sfx.tone(180,0,.03);this.hud();this.spawn();},
+  if(n){this.sc+=[0,100,300,500,800][n]*this.lv;this.ln+=n;this.lv=1+Math.floor(this.ln/10);Sfx.ding();if(this.ln>=10&&!this.rew){this.rew=true;Reward.give('blocks',5,`🧱 Blocks: ${this.ln} lines`);}}else Sfx.tone(180,0,.03);this.hud();this.spawn();},
  pause(){if(this.over)return;this.paused=!this.paused;if(!this.paused)this.sched();this.draw();},
  sched(){clearTimeout(this.to);this.to=setTimeout(()=>{if(!document.getElementById('blc'))return;if(this.over||this.paused)return;if(!document.getElementById('w_blocks').classList.contains('hide'))this.down();this.sched();},Math.max(80,600-(this.lv-1)*55));},
- hud(){const e=document.getElementById('bls');if(e)e.innerHTML=`Очки: ${this.sc}<br>Линии: ${this.ln}<br>Уровень: ${this.lv}`;},
+ hud(){const e=document.getElementById('bls');if(e)e.innerHTML=`Score: ${this.sc}<br>Lines: ${this.ln}<br>Level: ${this.lv}`;},
  cell(g,x,y,col,C){g.fillStyle=col;g.fillRect(x,y,C,C);g.fillStyle='rgba(255,255,255,.5)';g.fillRect(x,y,C,3);g.fillRect(x,y,3,C);g.fillStyle='rgba(0,0,0,.4)';g.fillRect(x,y+C-3,C,3);g.fillRect(x+C-3,y,3,C);},
  draw(){const g=this.g,C=this.C;if(!g)return;g.fillStyle='#000';g.fillRect(0,0,220,440);g.strokeStyle='#111';for(let i=0;i<=10;i++){g.beginPath();g.moveTo(i*C,0);g.lineTo(i*C,440);g.stroke();}
   this.b.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(g,j*C,i*C,this.COL[v-1],C);}));
   let gy=this.y;while(!this.hit(this.x,gy+1,this.m))gy++;g.strokeStyle='#666';this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v)g.strokeRect((this.x+j)*C+1,(gy+i)*C+1,C-2,C-2);}));
   this.m.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(g,(this.x+j)*C,(this.y+i)*C,this.COL[this.t],C);}));
   const n=this.gn;n.fillStyle='#000';n.fillRect(0,0,88,66);const pm=this.P[this.nx];pm.forEach((r,i)=>r.forEach((v,j)=>{if(v)this.cell(n,8+j*18+(4-pm[0].length)*9,12+i*18,this.COL[this.nx],18);}));
-  if(this.over||this.paused){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,180,220,70);g.fillStyle='#fff';g.font='bold 20px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText(this.over?'ИГРА ОКОНЧЕНА':'ПАУЗА',110,220);}}};
-window.EXTRA.push({k:'Пинбол',ico:ICO.pin,run:'Pin.open()',cat:'game'},{k:'Змейка',ico:ICO.snake,run:'Snake.open()',cat:'game'},{k:'Блоки',ico:ICO.blocks,run:'Blocks.open()',cat:'game'});
+  if(this.over||this.paused){g.fillStyle='rgba(0,0,0,.7)';g.fillRect(0,180,220,70);g.fillStyle='#fff';g.font='bold 20px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText(this.over?'GAME OVER':'PAUSED',110,220);}}};
+window.EXTRA.push({k:'Pinball',ico:ICO.pin,run:'Pin.open()',cat:'game'},{k:'Snake',ico:ICO.snake,run:'Snake.open()',cat:'game'},{k:'Blocks',ico:ICO.blocks,run:'Blocks.open()',cat:'game'});

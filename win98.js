@@ -1,5 +1,5 @@
 'use strict';
-// ===================== WIN98 РАБОЧИЙ СТОЛ =====================
+// ===================== WIN98 DESKTOP =====================
 (function(){const st=document.createElement('style');st.textContent=`
 .im svg{width:34px;height:34px;display:block;margin:2px auto}#startmenu .it svg{width:20px;height:20px}
 .tbb{min-width:0!important;padding:0!important}
@@ -37,7 +37,7 @@ const SYS=Object.assign({wp:'teal',snd:true,ss:true},(()=>{try{return JSON.parse
 function sysSave(){try{localStorage.setItem('bf_sys',JSON.stringify(SYS));}catch(e){}}
 function applyWp(){document.body.classList.remove('wp-teal','wp-clouds','wp-dark');document.body.classList.add('wp-'+SYS.wp);}
 applyWp();
-// ---- звуки ----
+// ---- sounds ----
 const Sfx={ac:null,
  ctx(){if(!this.ac){try{this.ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(this.ac&&this.ac.state==='suspended')this.ac.resume();return this.ac;},
  tone(f,t0,d,type,v){const a=this.ctx();if(!a||!SYS.snd)return;const o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;const t=a.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v||.15,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.05);},
@@ -46,17 +46,17 @@ const Sfx={ac:null,
  error(){this.tone(440,0,.25,'square',.08);this.tone(330,.12,.35,'square',.08);},ding(){this.tone(1046,0,.5,'sine',.15);this.tone(1568,0,.4,'sine',.05);},
  shut(){[[784,0],[659,.2],[523,.4],[392,.6]].forEach(([f,t])=>this.tone(f,t,.7,'triangle',.12));}};
 const _msg=UI.msg;UI.msg=function(t,b,btns,icon){if(icon==='⚠️'||icon==='❌')Sfx.error();else Sfx.ding();return _msg.apply(this,arguments);};
-// ---- окна: свернуть/развернуть/размер ----
+// ---- windows: minimize/maximize/resize ----
 function minWin(id){const w=document.getElementById('w_'+id);if(!w)return;w.classList.add('mini');Sfx.click();updTasks();}
 function maxWin(id){const w=document.getElementById('w_'+id);if(!w)return;w.classList.toggle('max');front(w);}
 function resizify(w){const g=w.querySelector('.grip');w.querySelector('.tb').addEventListener('dblclick',e=>{if(e.target.tagName!=='BUTTON')maxWin(w.id.slice(2));});
  g.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();front(w);const sx=e.clientX,sy=e.clientY,W=w.offsetWidth,H=w.offsetHeight;
   const mv=ev=>{w.classList.add('sized');w.style.width=Math.max(220,W+ev.clientX-sx)+'px';w.style.height=Math.max(120,H+ev.clientY-sy)+'px';};
   const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);};addEventListener('pointermove',mv);addEventListener('pointerup',up);});}
-// ---- значки ----
+// ---- icons ----
 const GX=96,GY=88;
 const APPS=MENU.map(m=>({k:m[1],ico:m[0],run:m[2]})).concat([
- {k:'Сапёр',ico:'💣',run:'Mines.open()'},{k:'Шахматы',ico:'♞',run:'Chess.open()'},{k:'Блокнот',ico:'📝',run:'Desk.notes()'},{k:'Свойства экрана',ico:'🖥️',run:'Desk.props()'},...(window.EXTRA||[]),{k:'Корзина',ico:'🗑️',run:'Desk.bin()',fixed:1}]);
+ {k:'Minesweeper',ico:'💣',run:'Mines.open()'},{k:'Chess',ico:'♞',run:'Chess.open()'},{k:'Notepad',ico:'📝',run:'Desk.notes()'},{k:'Display Properties',ico:'🖥️',run:'Desk.props()'},...(window.EXTRA||[]),{k:'Recycle Bin',ico:'🗑️',run:'Desk.bin()',fixed:1}]);
 const Desk={pos:{},binned:[],sel:new Set(),
  load(){try{const d=JSON.parse(localStorage.getItem('bf_icons'))||{};this.pos=d.pos||{};this.binned=d.bin||[];}catch(e){}},
  store(){try{localStorage.setItem('bf_icons',JSON.stringify({pos:this.pos,bin:this.binned}));}catch(e){}},
@@ -70,64 +70,64 @@ const Desk={pos:{},binned:[],sel:new Set(),
  render(){const box=document.getElementById('icons');const C=this.cols(),R=this.rows();let changed=false;
   for(const a of this.vis()){const p=this.pos[a.k];if(!p||p[0]>=C||p[1]>=R){this.pos[a.k]=this.free(p?p[0]:(a.fixed?C-1:0),p?p[1]:(a.fixed?R-1:0),a.k);changed=true;}}
   if(changed)this.store();
-  box.innerHTML=this.vis().map(a=>{const ico=a.fixed?(this.binned.length?'🗑️':'🗑'):a.ico;return `<div class="icon${this.sel.has(a.k)?' sel':''}" tabindex="0" data-k="${a.k}" title="${a.k} — двойной щелчок, чтобы открыть" style="left:${4+this.pos[a.k][0]*GX}px;top:${4+this.pos[a.k][1]*GY}px"><div class="im">${ico}</div><span>${a.k}</span></div>`;}).join('');},
+  box.innerHTML=this.vis().map(a=>{const ico=a.fixed?(this.binned.length?'🗑️':'🗑'):a.ico;return `<div class="icon${this.sel.has(a.k)?' sel':''}" tabindex="0" data-k="${a.k}" title="${a.k} — double-click to open" style="left:${4+this.pos[a.k][0]*GX}px;top:${4+this.pos[a.k][1]*GY}px"><div class="im">${ico}</div><span>${a.k}</span></div>`;}).join('');},
  run(k){const a=APPS.find(x=>x.k===k);if(a){Sfx.click();try{(new Function(a.run))();}catch(e){console.error(e);}}},
  select(ks){this.sel=new Set(ks);document.querySelectorAll('#icons .icon').forEach(el=>el.classList.toggle('sel',this.sel.has(el.dataset.k)));},
- toBin(ks){ks=ks.filter(k=>!APPS.find(a=>a.k===k).fixed);if(!ks.length)return;this.binned.push(...ks);ks.forEach(k=>delete this.pos[k]);this.sel.clear();this.store();this.render();Sfx.tone(300,0,.15,'sawtooth',.05);toast('🗑️ В корзине',ks.join(', ')+' — восстановить можно из Корзины');if(!document.getElementById('w_bin')?.classList.contains('hide'))this.bin(1);},
+ toBin(ks){ks=ks.filter(k=>!APPS.find(a=>a.k===k).fixed);if(!ks.length)return;this.binned.push(...ks);ks.forEach(k=>delete this.pos[k]);this.sel.clear();this.store();this.render();Sfx.tone(300,0,.15,'sawtooth',.05);toast('🗑️ Moved to Recycle Bin',ks.join(', ')+' — restore it from the Recycle Bin');if(!document.getElementById('w_bin')?.classList.contains('hide'))this.bin(1);},
  restore(k){this.binned=k?this.binned.filter(x=>x!==k):[];this.store();this.render();this.bin(1);},
  bin(re){const w=document.getElementById('w_bin');if(re&&(!w||w.classList.contains('hide')))return;
-  openWin('bin','Корзина',`<div class="inset" style="min-height:120px">${this.binned.length?this.binned.map(k=>{const a=APPS.find(x=>x.k===k);return `<div style="display:flex;align-items:center;gap:8px;padding:3px"><span style="font-size:22px">${a.ico}</span><span style="flex:1">${k}</span><button onclick="Desk.restore('${k}')">Восстановить</button></div>`;}).join(''):'<i style="color:#808080">Корзина пуста. Перетащите сюда ненужные значки.</i>'}</div>
-  <div style="text-align:right;margin-top:8px">${this.binned.length?'<button onclick="Desk.restore()">Восстановить все</button>':''}</div>`,{w:380,icon:'🗑️'});},
- notes(){openWin('notes','Патчноут.txt — Блокнот',`<div style="font-size:12px;margin:-4px 0 4px">Файл&nbsp;&nbsp;Правка&nbsp;&nbsp;Поиск&nbsp;&nbsp;Справка</div><textarea readonly style="width:100%;height:340px;font:13px 'Courier New',monospace;resize:none;border:2px solid;border-color:#808080 #fff #fff #808080">БИТВА ШАРОВ 98 — СПИСОК ИЗМЕНЕНИЙ
+  openWin('bin','Recycle Bin',`<div class="inset" style="min-height:120px">${this.binned.length?this.binned.map(k=>{const a=APPS.find(x=>x.k===k);return `<div style="display:flex;align-items:center;gap:8px;padding:3px"><span style="font-size:22px">${a.ico}</span><span style="flex:1">${k}</span><button onclick="Desk.restore('${k}')">Restore</button></div>`;}).join(''):'<i style="color:#808080">Recycle Bin is empty. Drag icons you don’t need here.</i>'}</div>
+  <div style="text-align:right;margin-top:8px">${this.binned.length?'<button onclick="Desk.restore()">Restore all</button>':''}</div>`,{w:380,icon:'🗑️'});},
+ notes(){openWin('notes','Patchnotes.txt — Notepad',`<div style="font-size:12px;margin:-4px 0 4px">File&nbsp;&nbsp;Edit&nbsp;&nbsp;Search&nbsp;&nbsp;Help</div><textarea readonly style="width:100%;height:340px;font:13px 'Courier New',monospace;resize:none;border:2px solid;border-color:#808080 #fff #fff #808080">BALL BRAWL 98 — PATCH NOTES
 ==================================
 
-v5 «Рабочий стол»
- * Значки можно перетаскивать (с привязкой к сетке),
-   выделять рамкой и открывать двойным щелчком.
- * Окна: свернуть, развернуть, изменить размер за уголок.
- * Правый щелчок по рабочему столу, Свойства экрана и обои.
- * Корзина: перетащите в неё лишний значок.
- * Новые программы: Сапёр и Шахматы (с наградами!).
- * Экранная заставка, звуки системы, загрузочный экран.
- * Пуск: подменю «Программы», «Игры», «Настройки».
+v5 “Desktop”
+ * Drag icons around (snaps to grid),
+   box-select them and double-click to open.
+ * Windows: minimize, maximize, resize from the corner.
+ * Right-click the desktop for Display Properties and wallpapers.
+ * Recycle Bin: drag spare icons into it.
+ * New apps: Minesweeper and Chess (with rewards!).
+ * Screensaver, system sounds, boot screen.
+ * Start: “Programs”, “Games”, “Settings” submenus.
 
-v4 «Аккаунты»
- * Вход по нику и паролю, сохранение в облаке.
+v4 “Accounts”
+ * Sign in with nickname + password, cloud saves.
 
-v3 «Баланс» + музыка
- * Переработан баланс шаров и уровней.
- * Фоновая музыка (🔊 в трее).
+v3 “Balance” + music
+ * Reworked ball and level balance.
+ * Background music (🔊 in the tray).
 
-v2 — 26 шаров, ящики, улучшения, 30 уровней,
-     выживание, турнир, онлайн-бои.
+v2 — 26 balls, crates, upgrades, 30 levels,
+     survival, tournament, online fights.
 
-Совет: нажмите Delete, чтобы отправить
-выделенные значки в Корзину.</textarea>`,{w:480,icon:'📝'});},
- props(){const wp=[['teal','Классика (бирюза)'],['clouds','Облака'],['dark','Тёмная тема']];
-  openWin('props','Свойства: Экран',`<div style="display:flex;gap:12px;flex-wrap:wrap"><div style="width:150px;height:110px;border:10px solid #555;border-bottom-width:20px;border-radius:6px" id="wpprev"></div>
-  <fieldset style="flex:1;min-width:180px"><legend>Обои и тема</legend>${wp.map(([k,n])=>`<label style="display:block;padding:2px"><input type="radio" name="wp" value="${k}" ${SYS.wp===k?'checked':''} onchange="SYS.wp='${k}';applyWp();sysSave();Desk.prev()"> ${n}</label>`).join('')}</fieldset></div>
-  <fieldset><legend>Прочее</legend><label style="display:block"><input type="checkbox" ${SYS.snd?'checked':''} onchange="SYS.snd=this.checked;sysSave()"> Системные звуки</label>
-  <label style="display:block"><input type="checkbox" ${SYS.ss?'checked':''} onchange="SYS.ss=this.checked;sysSave()"> Заставка «Летающие шары» (через 60 с бездействия)</label>
-  <label style="display:block"><input type="checkbox" ${Music.on?'checked':''} onchange="if(this.checked!==Music.on)Music.toggle()"> Фоновая музыка</label></fieldset>
-  <div style="text-align:right"><button onclick="Saver.start()">Просмотр заставки</button> <button onclick="closeWin('props')">ОК</button></div>`,{w:440,icon:'🖥️'});this.prev();},
+Tip: press Delete to send
+selected icons to the Recycle Bin.</textarea>`,{w:480,icon:'📝'});},
+ props(){const wp=[['teal','Classic (teal)'],['clouds','Clouds'],['dark','Dark mode']];
+  openWin('props','Properties: Display',`<div style="display:flex;gap:12px;flex-wrap:wrap"><div style="width:150px;height:110px;border:10px solid #555;border-bottom-width:20px;border-radius:6px" id="wpprev"></div>
+  <fieldset style="flex:1;min-width:180px"><legend>Wallpaper & theme</legend>${wp.map(([k,n])=>`<label style="display:block;padding:2px"><input type="radio" name="wp" value="${k}" ${SYS.wp===k?'checked':''} onchange="SYS.wp='${k}';applyWp();sysSave();Desk.prev()"> ${n}</label>`).join('')}</fieldset></div>
+  <fieldset><legend>Other</legend><label style="display:block"><input type="checkbox" ${SYS.snd?'checked':''} onchange="SYS.snd=this.checked;sysSave()"> System sounds</label>
+  <label style="display:block"><input type="checkbox" ${SYS.ss?'checked':''} onchange="SYS.ss=this.checked;sysSave()"> “Flying Balls” screensaver (after 60s idle)</label>
+  <label style="display:block"><input type="checkbox" ${Music.on?'checked':''} onchange="if(this.checked!==Music.on)Music.toggle()"> Background music</label></fieldset>
+  <div style="text-align:right"><button onclick="Saver.start()">Preview screensaver</button> <button onclick="closeWin('props')">OK</button></div>`,{w:440,icon:'🖥️'});this.prev();},
  prev(){const p=document.getElementById('wpprev');if(p)p.style.background={teal:'#008080',clouds:'linear-gradient(#3a7bd5,#cfe4fb)',dark:'#1b1b2b'}[SYS.wp];},
  clock(){const d=new Date(),y=d.getFullYear(),m=d.getMonth();const first=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate();let cells='';for(let i=0;i<first;i++)cells+='<td></td>';
   for(let i=1;i<=n;i++){cells+=`<td style="text-align:center;padding:2px 4px;${i===d.getDate()?'background:#000080;color:#fff':''}">${i}</td>`;if((first+i)%7===0)cells+='</tr><tr>';}
-  openWin('clock','Дата и время',`<div style="text-align:center;font:bold 28px 'Courier New'" id="clkbig"></div><div style="text-align:center;margin-bottom:6px">${d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
-  <table class="inset" style="margin:auto;border-collapse:collapse;font-size:12px"><tr>${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(x=>`<th style="padding:2px 4px">${x}</th>`).join('')}</tr><tr>${cells}</tr></table>`,{w:280,icon:'🕒'});this.tick();},
- tick(){const e=document.getElementById('clkbig');if(e)e.textContent=new Date().toLocaleTimeString('ru-RU');}};
+  openWin('clock','Date & Time',`<div style="text-align:center;font:bold 28px 'Courier New'" id="clkbig"></div><div style="text-align:center;margin-bottom:6px">${d.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+  <table class="inset" style="margin:auto;border-collapse:collapse;font-size:12px"><tr>${['Mo','Tu','We','Th','Fr','Sa','Su'].map(x=>`<th style="padding:2px 4px">${x}</th>`).join('')}</tr><tr>${cells}</tr></table>`,{w:280,icon:'🕒'});this.tick();},
+ tick(){const e=document.getElementById('clkbig');if(e)e.textContent=new Date().toLocaleTimeString('en-US');}};
 setInterval(()=>Desk.tick(),1000);
 Desk.load();Desk.render();
 addEventListener('resize',()=>Desk.render());
-// перетаскивание значков и рамка выделения
+// icon dragging and selection box
 (function(){const box=document.getElementById('icons'),desk=document.getElementById('desk');let lastTap={k:'',t:0};
  desk.addEventListener('pointerdown',e=>{if(e.button!==0)return;hideCtx();const ic=e.target.closest('.icon');
   if(ic){const k=ic.dataset.k;if(!Desk.sel.has(k))Desk.select(e.ctrlKey?[...Desk.sel,k]:[k]);const sx=e.clientX,sy=e.clientY;let drag=false;const els=[...box.querySelectorAll('.icon.sel')];const org=els.map(el=>[el.offsetLeft,el.offsetTop]);
    const mv=ev=>{const dx=ev.clientX-sx,dy=ev.clientY-sy;if(!drag&&Math.hypot(dx,dy)>5){drag=true;els.forEach(el=>el.classList.add('drag'));}if(drag)els.forEach((el,i)=>{el.style.left=org[i][0]+dx+'px';el.style.top=org[i][1]+dy+'px';});};
    const up=ev=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);
     if(!drag){const now=Date.now();if(e.pointerType!=='mouse'||(lastTap.k===k&&now-lastTap.t<450)){Desk.run(k);lastTap={k:'',t:0};}else lastTap={k,t:now};return;}
-    const binEl=box.querySelector('.icon[data-k="Корзина"]');const under=document.elementsFromPoint(ev.clientX,ev.clientY);
-    if(binEl&&under.includes(binEl)&&!Desk.sel.has('Корзина')){Desk.toBin([...Desk.sel]);return;}
+    const binEl=box.querySelector('.icon[data-k="Recycle Bin"]');const under=document.elementsFromPoint(ev.clientX,ev.clientY);
+    if(binEl&&under.includes(binEl)&&!Desk.sel.has('Recycle Bin')){Desk.toBin([...Desk.sel]);return;}
     const dx=ev.clientX-sx,dy=ev.clientY-sy;els.forEach((el,i)=>{const k2=el.dataset.k;Desk.pos[k2]=Desk.free(Math.round((org[i][0]+dx-4)/GX),Math.round((org[i][1]+dy-4)/GY),k2);});Desk.store();Desk.render();};
    addEventListener('pointermove',mv);addEventListener('pointerup',up);return;}
   if(e.target!==desk&&e.target!==box&&e.target.id!=='logo'&&!e.target.closest('#logo'))return;
@@ -138,39 +138,39 @@ addEventListener('resize',()=>Desk.render());
  box.addEventListener('keydown',e=>{if(e.key==='Enter'){const k=e.target.dataset&&e.target.dataset.k;if(k)Desk.run(k);}if(e.key==='Delete')Desk.toBin([...Desk.sel]);});
  addEventListener('keydown',e=>{if(e.key==='Delete'&&Desk.sel.size&&mode==='menu'&&e.target.tagName!=='INPUT'&&e.target.tagName!=='TEXTAREA')Desk.toBin([...Desk.sel]);});
  desk.addEventListener('contextmenu',e=>{e.preventDefault();const ic=e.target.closest('.icon');
-  if(ic){const k=ic.dataset.k;Desk.select([k]);showCtx(e.clientX,e.clientY,[['<b>Открыть</b>',()=>Desk.run(k)],...(k==='Корзина'?[['Восстановить все',()=>Desk.restore()]]:[['Удалить в Корзину',()=>Desk.toBin([k])]])]);return;}
-  showCtx(e.clientX,e.clientY,[['Упорядочить значки',()=>Desk.arrange()],['Обновить',()=>{document.getElementById('icons').style.visibility='hidden';setTimeout(()=>{Desk.render();document.getElementById('icons').style.visibility='';},120);}],null,['Блокнот',()=>Desk.notes()],['Корзина',()=>Desk.bin()],null,['Свойства',()=>Desk.props()]]);});})();
+  if(ic){const k=ic.dataset.k;Desk.select([k]);showCtx(e.clientX,e.clientY,[['<b>Open</b>',()=>Desk.run(k)],...(k==='Recycle Bin'?[['Restore all',()=>Desk.restore()]]:[['Move to Recycle Bin',()=>Desk.toBin([k])]])]);return;}
+  showCtx(e.clientX,e.clientY,[['Arrange icons',()=>Desk.arrange()],['Refresh',()=>{document.getElementById('icons').style.visibility='hidden';setTimeout(()=>{Desk.render();document.getElementById('icons').style.visibility='';},120);}],null,['Notepad',()=>Desk.notes()],['Recycle Bin',()=>Desk.bin()],null,['Properties',()=>Desk.props()]]);});})();
 function showCtx(x,y,items){hideCtx();const m=document.createElement('div');m.className='ctxm';m.id='ctx';
  items.forEach(it=>{if(!it){m.appendChild(document.createElement('hr'));return;}const d=document.createElement('div');d.className='ci';d.innerHTML=it[0];d.onclick=()=>{hideCtx();Sfx.click();it[1]();};m.appendChild(d);});
  document.body.appendChild(m);m.style.left=Math.min(x,innerWidth-m.offsetWidth-2)+'px';m.style.top=Math.min(y,innerHeight-m.offsetHeight-2)+'px';}
 function hideCtx(){const m=document.getElementById('ctx');if(m)m.remove();}
 addEventListener('pointerdown',e=>{if(!e.target.closest('#ctx'))hideCtx();},true);
-// ---- меню Пуск с подменю ----
+// ---- Start menu with submenus ----
 (function(){const it=(ico,t,run)=>`<div class="it" onclick="event.stopPropagation();toggleStart();Sfx.click();${run}"><span style="font-size:20px">${ico}</span>${t}</div>`;
  const sub=(ico,t,inner)=>`<div class="it"><span style="font-size:20px">${ico}</span>${t}<span class="arr">▸</span><div class="sub">${inner}</div></div>`;
  const m=k=>{const a=APPS.find(x=>x.k===k);return it(a.ico,a.k,a.run);};
  document.getElementById('smitems').innerHTML=
-  sub('📁','Программы',['Бой с ботом','Вдвоём','Онлайн-бой','Выживание','Турнир'].map(m).join('')+'<hr>'+sub('🎲','Игры',m('Сапёр')+m('Шахматы')+(window.EXTRA||[]).filter(a=>a.cat==='game').map(a=>m(a.k)).join(''))+sub('🗂️','Стандартные',m('Блокнот')+(window.EXTRA||[]).filter(a=>a.cat==='std').map(a=>m(a.k)).join('')))+
-  sub('🎒','Игрок',['Ящики','Магазин','Инвентарь','Достижения','Статистика','Награды','Аккаунт'].map(m).join(''))+
-  sub('⚙️','Настройки',it('🖥️','Свойства экрана','Desk.props()')+'<div class="it" id="smmus" onclick="event.stopPropagation();toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div>'+it('🗂️','Упорядочить значки','Desk.arrange()'))+
-  m('Корзина')+m('Справка')+'<hr>'+it('⏻','Выключить компьютер...','UI.shutdown()');
+  sub('📁','Programs',['vs Bot','Couch 1v1','Online Match','Survival','Tournament'].map(m).join('')+'<hr>'+sub('🎲','Games',m('Minesweeper')+m('Chess')+(window.EXTRA||[]).filter(a=>a.cat==='game').map(a=>m(a.k)).join(''))+sub('🗂️','Accessories',m('Notepad')+(window.EXTRA||[]).filter(a=>a.cat==='std').map(a=>m(a.k)).join('')))+
+  sub('🎒','Player',['Crates','Shop','Inventory','Achievements','Stats','Rewards','Account'].map(m).join(''))+
+  sub('⚙️','Settings',it('🖥️','Display Properties','Desk.props()')+'<div class="it" id="smmus" onclick="event.stopPropagation();toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Music: on</div>'+it('🗂️','Arrange icons','Desk.arrange()'))+
+  m('Recycle Bin')+m('Help')+'<hr>'+it('⏻','Shut Down...','UI.shutdown()');
  Music.ui();})();
-UI.shutdown=function(){UI.msg('Завершение работы','Вы действительно хотите завершить работу?<br><small>Прогресс уже сохранён.</small>',[['Да','Desk.off()'],['Отмена','']],'🖥️');};
-Desk.off=function(){Sfx.shut();if(Music.a)Music.a.pause();const o=document.createElement('div');o.id='offscr';o.innerHTML='<div style="opacity:0;transition:opacity 1.5s">Теперь компьютер можно выключить.<br><small style="font-size:14px;color:#888;font-weight:normal">(щёлкните, чтобы включить снова)</small></div>';
+UI.shutdown=function(){UI.msg('Shut Down','Are you sure you want to shut down?<br><small>Progress is already saved.</small>',[['Yes','Desk.off()'],['Cancel','']],'🖥️');};
+Desk.off=function(){Sfx.shut();if(Music.a)Music.a.pause();const o=document.createElement('div');o.id='offscr';o.innerHTML='<div style="opacity:0;transition:opacity 1.5s">It is now safe to turn off your computer.<br><small style="font-size:14px;color:#888;font-weight:normal">(click to turn back on)</small></div>';
  document.body.appendChild(o);setTimeout(()=>o.firstChild.style.opacity=1,900);o.onclick=()=>{o.remove();Boot.run();};};
-// ---- загрузка ----
-const Boot={run(){const b=document.createElement('div');b.id='boot';b.innerHTML='<div style="font-size:64px">🔴🟡🟢🔵</div><div class="lg">Битва Шаров 98</div><div style="color:#9cf;margin-top:6px">Куб-Арена Edition</div><div class="bar"><i></i></div><div style="position:absolute;bottom:20px;color:#666;font-size:12px">Загрузка… (щелчок — пропустить)</div>';
+// ---- boot ----
+const Boot={run(){const b=document.createElement('div');b.id='boot';b.innerHTML='<div style="font-size:64px">🔴🟡🟢🔵</div><div class="lg">Ball Brawl 98</div><div style="color:#9cf;margin-top:6px">Cube Arena Edition</div><div class="bar"><i></i></div><div style="position:absolute;bottom:20px;color:#666;font-size:12px">Loading… (click to skip)</div>';
  document.body.appendChild(b);let done=false;const fin=()=>{if(done)return;done=true;b.style.transition='opacity .4s';b.style.opacity=0;setTimeout(()=>b.remove(),400);Sfx.startup();if(Music.on)Music.play();};
  b.onclick=fin;setTimeout(fin,2200);}};
 Boot.run();
-// ---- подсказки ----
+// ---- tooltips ----
 (function(){let tm=0,tip=null,cur=null;addEventListener('mouseover',e=>{const el=e.target.closest('[title],[data-tip]');if(el===cur)return;cur=el;clearTimeout(tm);if(tip){tip.remove();tip=null;}if(!el)return;
  if(el.title){el.dataset.tip=el.title;el.removeAttribute('title');}const x=e.clientX,y=e.clientY;tm=setTimeout(()=>{tip=document.createElement('div');tip.id='tip';tip.textContent=el.dataset.tip;document.body.appendChild(tip);
   tip.style.left=Math.min(x+8,innerWidth-tip.offsetWidth-4)+'px';tip.style.top=(y+20>innerHeight-40?y-24:y+20)+'px';},600);});
  addEventListener('pointerdown',()=>{clearTimeout(tm);if(tip){tip.remove();tip=null;}cur=null;});})();
-document.getElementById('clock').title='Щёлкните — дата и календарь';document.getElementById('clock').style.cursor='pointer';document.getElementById('clock').onclick=()=>Desk.clock();
+document.getElementById('clock').title='Click for date & calendar';document.getElementById('clock').style.cursor='pointer';document.getElementById('clock').onclick=()=>Desk.clock();
 document.getElementById('startbtn').addEventListener('click',()=>Sfx.click());
-// ---- заставка ----
+// ---- screensaver ----
 const Saver={idle:Date.now(),on:false,raf:0,
  start(){if(this.on)return;this.on=true;this.t0=Date.now();const c=document.createElement('canvas');c.id='ssaver';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);const g=c.getContext('2d');
   const bs=(typeof BALLS!=='undefined'?BALLS:[]).slice(0,12).map(b=>({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-.5)*6,vy:(Math.random()-.5)*6,r:20+Math.random()*25,c:b.color||'#f00',s:b.sym||''}));
@@ -178,7 +178,7 @@ const Saver={idle:Date.now(),on:false,raf:0,
   const step=()=>{if(!this.on)return;g.fillStyle='rgba(0,0,0,.25)';g.fillRect(0,0,c.width,c.height);
    for(const b of bs){b.x+=b.vx;b.y+=b.vy;if(b.x<b.r||b.x>c.width-b.r)b.vx*=-1;if(b.y<b.r||b.y>c.height-b.r)b.vy*=-1;const gr=g.createRadialGradient(b.x-b.r*.3,b.y-b.r*.3,2,b.x,b.y,b.r);gr.addColorStop(0,'#fff');gr.addColorStop(.3,b.c);gr.addColorStop(1,'#000');g.fillStyle=gr;g.beginPath();g.arc(b.x,b.y,b.r,0,7);g.fill();
     if(b.s){g.fillStyle='#fff';g.font=b.r+'px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(b.s,b.x,b.y);}}
-   g.fillStyle='rgba(255,255,255,.5)';g.font='bold 22px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('Битва Шаров 98',c.width/2,c.height-30);this.raf=requestAnimationFrame(step);};step();},
+   g.fillStyle='rgba(255,255,255,.5)';g.font='bold 22px Tahoma,Verdana,sans-serif';g.textAlign='center';g.fillText('Ball Brawl 98',c.width/2,c.height-30);this.raf=requestAnimationFrame(step);};step();},
  stop(){this.idle=Date.now();if(!this.on||Date.now()-this.t0<800)return;this.on=false;cancelAnimationFrame(this.raf);const c=document.getElementById('ssaver');if(c)c.remove();}};
 ['pointermove','pointerdown','keydown','wheel','touchstart'].forEach(ev=>addEventListener(ev,()=>Saver.stop(),true));
 setInterval(()=>{if(SYS.ss&&!Saver.on&&Date.now()-Saver.idle>60000&&document.getElementById('gamewin').classList.contains('hide')&&!document.getElementById('boot'))Saver.start();},2000);

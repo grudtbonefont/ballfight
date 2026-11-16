@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><script>try{if(!localStorage.getItem('bf_icons_v3d')){localStorage.setItem('bf_icostyle','3d');localStorage.setItem('bf_icons_v3d','1');}}catch(e){}</script>
-<title>Битва Шаров 98 — Куб-Арена</title><meta name="build" content="v16-events">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><script>try{if(!localStorage.getItem('bf_icons_v3d')){localStorage.setItem('bf_icostyle','3d');localStorage.setItem('bf_icons_v3d','1');}}catch(e){}</script>
+<title>Ball Brawl 98 — The Cube</title><meta name="build" content="v16-events">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden}
@@ -76,73 +76,73 @@ table.t{border-collapse:collapse;width:100%;background:#fff}table.t td{border:1p
 .toast b{display:block}
 </style></head><body>
 <div id="desk">
-<div id="logo">ШАРЫ 98<br><span style="font-size:22px">Куб-Арена Edition</span></div>
+<div id="logo">BALL BRAWL 98<br><span style="font-size:22px">Cube Arena Edition</span></div>
 <div id="icons"></div>
 </div>
-<div id="gamewin" class="win hide"><div class="tb"><span class="tt">🎮 КУБ-АРЕНА.EXE</span><span><button class="tbb" onclick="togglePause()">_</button><button class="tbb" onclick="leaveGame()">✕</button></span></div><div class="gb"><canvas id="c" width="1000" height="700"></canvas></div></div>
-<div id="startmenu" class="hide"><div class="side"><b>Шары</b>98</div><div class="items" id="smitems"></div></div>
+<div id="gamewin" class="win hide"><div class="tb"><span class="tt">🎮 BALLBRAWL.EXE</span><span><button class="tbb" onclick="togglePause()">_</button><button class="tbb" onclick="leaveGame()">✕</button></span></div><div class="gb"><canvas id="c" width="1000" height="700"></canvas></div></div>
+<div id="startmenu" class="hide"><div class="side"><b>Balls</b>98</div><div class="items" id="smitems"></div></div>
 <div id="toasts"></div>
-<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Пуск</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="tra" title="Аккаунт / облачное сохранение" style="cursor:pointer" onclick="UI.account()">👤 Гость</span><span id="trm" title="Музыка вкл/выкл" style="cursor:pointer" onclick="Music.toggle()">🔊</span><span id="clock"></span></div></div>
+<div id="taskbar"><button id="startbtn" onclick="toggleStart(event)">🟢 Start</button><div id="tasks"></div><div id="tray"><span id="trc"></span><span id="trg"></span><span id="trl"></span><span id="tra" title="Account / cloud save" style="cursor:pointer" onclick="UI.account()">👤 Guest</span><span id="trm" title="Music on/off" style="cursor:pointer" onclick="Music.toggle()">🔊</span><span id="clock"></span></div></div>
 <script>
 'use strict';
-// ===================== ДАННЫЕ =====================
+// ===================== DATA =====================
 const VERSION=4;
-const HPK=6,CDK=0.012,ADK=2.6;// баланс: множитель HP и коэффициент урона от столкновений
-const RAR={common:{n:'Обычный',c:'#8a8a8a',m:1},rare:{n:'Редкий',c:'#2f7bff',m:1.6},epic:{n:'Эпический',c:'#a335ee',m:2.5},legendary:{n:'Легендарный',c:'#ff8c00',m:4},mythic:{n:'Мифический',c:'#e0002a',m:6}};
+const HPK=6,CDK=0.012,ADK=2.6;// balance: HP multiplier and collision damage factor
+const RAR={common:{n:'Common',c:'#8a8a8a',m:1},rare:{n:'Rare',c:'#2f7bff',m:1.6},epic:{n:'Epic',c:'#a335ee',m:2.5},legendary:{n:'Legendary',c:'#ff8c00',m:4},mythic:{n:'Mythic',c:'#e0002a',m:6}};
 const RORD=['common','rare','epic','legendary','mythic'];
 function B(id,name,color,rar,ab,desc,cd,hp,spd,mass,sym){return {id,name,color,rar,ab,desc,cd,hp,spd,mass,sym};}
 const BALLS=[
-B('dash','Метеор','#ff5d73','common','Рывок','Рывок: двойной урон от удара',2.5,122,1,1,'»'),
-B('shield','Бастион','#4cc9f0','common','Щит','Неуязвимость и отражение урона 2.5с',8,132,.9,1.2,'◘'),
-B('fire','Пиро','#ff8c1a','common','Огненный след','Оставляет жгучий огонь 3с',6,86,1.05,.95,'♨'),
-B('heal','Яблочко','#e53935','common','Лечение','Мгновенно лечит 25 HP',8,104,1,1,'♥'),
-B('bomb','Бомбер','#455a64','common','Бомба','Бомба взрывается через 1с: урон и отброс',4,112,.95,1.1,'●'),
-B('magnet','Магнитар','#9aa5b1','rare','Магнит','Притягивает врага 2с',6,106,.95,1.15,'⊕'),
-B('ice','Морозко','#a8e6ff','rare','Заморозка','Заморозка 1.3с и урон врагу рядом',6,112,1,1,'❄'),
-B('tele','Фантом','#3ddc97','rare','Телепорт','Телепорт за спину и удар ×2',4,115,1.1,.85,'◊'),
-B('gun','Пулемёт','#78909c','rare','Очередь','8 пуль в сторону врага',6,88,1,1,'≡'),
-B('web','Паук','#6d4c41','rare','Паутина','Сети вокруг врага замедляют и ранят',7,115,1,1,'#'),
-B('acid','Кислотник','#9ccc65','rare','Кислота','Плевок оставляет лужу кислоты',6,104,1,1,'☣'),
-B('vamp','Вампир','#880e4f','rare','Вампиризм','5с: удары лечат на 50%, рядом — высасывает HP',10,89,1,1,'▼'),
-B('elec','Электро','#e6d23a','rare','Разряд','Разряд + 5с касания бьют током',7,92,1.05,1,'ϟ'),
-B('blades','Лезвия','#b0bec5','rare','Клинки','3 вращающихся клинка на 5с',8,93,1,1,'✕'),
-B('clone','Близнец','#b388ff','epic','Клоны','Три клона-камикадзе на 4с',7,99,1.05,.9,'∞'),
-B('giant','Титан','#c77dff','epic','Гигант','Растёт в 1.5 раза на 3с',10,109,.85,1.25,'▲'),
-B('spikes','Ёж','#8d6e63','epic','Шипы','Тройной урон от ударов 4с',7,119,1,1.05,'✱'),
-B('dice','Кубик','#eeeeee','epic','Бросок','Кубик: урон 1–6 ×5',5,95,1,1,'⚄'),
-B('cactus','Кактус','#43a047','epic','Кактусы','3 прыгающих от стен кактуса',6,100,.95,1.05,'¥'),
-B('laser','Лазер','#ff4081','epic','Луч','Через 0.4с мощный луч',6,97,1,1,'═'),
-B('wave','Гром','#ffd166','legendary','Ударная волна','Отбрасывает и ранит врага',6,88,1,1,'Ω'),
-B('harpoon','Гарпун','#00838f','legendary','Гарпун','Гарпун ранит и подтягивает врага',6,99,1,1.1,'↣'),
-B('hive','Улей','#ffb300','legendary','Пчёлы','4 самонаводящиеся ядовитые пчелы',8,101,1,1,'✿'),
-B('glass','Стекляш','#b2ebf2','legendary','Осколки','Взрыв 18 осколков',6,103,1.1,.9,'◇'),
-B('shackles','Кандалы','#37474f','mythic','Капканы','3 капкана сковывают врага',7,120,1,1.2,'§'),
-B('hole','Сингулярность','#4a2a9a','mythic','Чёрная дыра','Дыра у врага затягивает и ранит 3с',9,104,1,1.15,'◉'),
+B('dash','Meteor','#ff5d73','common','Dash','Dash: double hit damage',2.5,122,1,1,'»'),
+B('shield','Bastion','#4cc9f0','common','Shield','Invincible + reflects damage for 2.5s',8,132,.9,1.2,'◘'),
+B('fire','Pyro','#ff8c1a','common','Fire Trail','Leaves burning fire for 3s',6,86,1.05,.95,'♨'),
+B('heal','Appleseed','#e53935','common','Heal','Instantly heals 25 HP',8,104,1,1,'♥'),
+B('bomb','Bombshell','#455a64','common','Bomb','Bomb blows up after 1s: damage + knockback',4,112,.95,1.1,'●'),
+B('magnet','Magnetar','#9aa5b1','rare','Magnet','Pulls the enemy in for 2s',6,106,.95,1.15,'⊕'),
+B('ice','Frostbite','#a8e6ff','rare','Freeze','Freezes nearby enemy for 1.3s + damage',6,112,1,1,'❄'),
+B('tele','Phantom','#3ddc97','rare','Blink','Blinks behind the enemy, hit ×2',4,115,1.1,.85,'◊'),
+B('gun','Gatling','#78909c','rare','Burst','Fires 8 bullets at the enemy',6,88,1,1,'≡'),
+B('web','Weaver','#6d4c41','rare','Web','Webs around the enemy slow and hurt',7,115,1,1,'#'),
+B('acid','Toxic','#9ccc65','rare','Acid','Spit leaves an acid puddle',6,104,1,1,'☣'),
+B('vamp','Vamp','#880e4f','rare','Lifesteal','5s: hits heal 50%, drains HP up close',10,89,1,1,'▼'),
+B('elec','Volt','#e6d23a','rare','Zap','Zap + 5s of shocking touches',7,92,1.05,1,'ϟ'),
+B('blades','Razor','#b0bec5','rare','Blades','3 spinning blades for 5s',8,93,1,1,'✕'),
+B('clone','Twin','#b388ff','epic','Clones','Three kamikaze clones for 4s',7,99,1.05,.9,'∞'),
+B('giant','Titan','#c77dff','epic','Giant','Grows 1.5× for 3s',10,109,.85,1.25,'▲'),
+B('spikes','Spike','#8d6e63','epic','Spikes','Triple hit damage for 4s',7,119,1,1.05,'✱'),
+B('dice','Dice','#eeeeee','epic','Roll','Dice roll: 1–6 ×5 damage',5,95,1,1,'⚄'),
+B('cactus','Prickles','#43a047','epic','Cacti','3 wall-bouncing cacti',6,100,.95,1.05,'¥'),
+B('laser','Laser','#ff4081','epic','Beam','Huge beam after 0.4s',6,97,1,1,'═'),
+B('wave','Thunder','#ffd166','legendary','Shockwave','Knocks back and hurts the enemy',6,88,1,1,'Ω'),
+B('harpoon','Harpoon','#00838f','legendary','Harpoon','Harpoon hurts and reels in the enemy',6,99,1,1.1,'↣'),
+B('hive','Hive','#ffb300','legendary','Bees','4 homing poison bees',8,101,1,1,'✿'),
+B('glass','Shard','#b2ebf2','legendary','Shards','Bursts into 18 shards',6,103,1.1,.9,'◇'),
+B('shackles','Shackle','#37474f','mythic','Traps','3 traps lock the enemy down',7,120,1,1.2,'§'),
+B('hole','Singularity','#4a2a9a','mythic','Black Hole','A hole at the enemy pulls in and hurts for 3s',9,104,1,1.15,'◉'),
 ];
 const BY={};BALLS.forEach(b=>BY[b.id]=b);
-const EVBALLS=[['pumpkin','Тыквоголовый','#ff7518','bomb','Тыквенная бомба','halloween'],['ghost','Призрак','#b9c6ff','tele','Сквозь стены','halloween'],['bat','Нетопырь','#6a2c8a','vamp','Укус','halloween'],['snowman','Снеговик','#dff3ff','ice','Метель','newyear'],['cracker','Хлопушка','#ff3b6b','bomb','Конфетти-бум','newyear'],['comet','Комета','#00e5ff','laser','Звёздный луч','bp']].map(([id,n,c,al,ab,ev])=>{const s=BY[al];const b=B(id,n,c,'epic',ab,s.desc+' (ивентовый шар)',s.cd,s.hp,s.spd,s.mass,s.sym);b.al=al;b.ev=ev;BY[id]=b;return b;});
+const EVBALLS=[['pumpkin','Jack-O','#ff7518','bomb','Pumpkin Bomb','halloween'],['ghost','Ghost','#b9c6ff','tele','Phase Walk','halloween'],['bat','Batty','#6a2c8a','vamp','Bite','halloween'],['snowman','Frosty','#dff3ff','ice','Blizzard','newyear'],['cracker','Popper','#ff3b6b','bomb','Confetti Pop','newyear'],['comet','Comet','#00e5ff','laser','Starbeam','bp']].map(([id,n,c,al,ab,ev])=>{const s=BY[al];const b=B(id,n,c,'epic',ab,s.desc+' (event ball)',s.cd,s.hp,s.spd,s.mass,s.sym);b.al=al;b.ev=ev;BY[id]=b;return b;});
 const ARENAS=[
- {id:'classic',n:'Классический куб',f:['#2a2f5e','#3f4a98'],w:'#5b6ee1'},
- {id:'lava',n:'Лавовый куб',f:['#3a1a1a','#6a2a20'],w:'#e0603a'},
- {id:'ice',n:'Ледяной куб',f:['#4a6a90','#9ccbe8'],w:'#bfe6ff'},
- {id:'spikes',n:'Шипастый куб',f:['#2e2e2e','#575757'],w:'#bbbbbb'},
- {id:'bumpers',n:'Пинбол-куб',f:['#1d3b2a','#2f6b47'],w:'#5be38f'},
- {id:'grav',n:'Гравитационный куб',f:['#1a1030','#3a2470'],w:'#a080ff'},
- {id:'wind',n:'Ветреный куб',f:['#2a4a5a','#4a8aa0'],w:'#9fe0f0'},
+ {id:'classic',n:'Classic Cube',f:['#2a2f5e','#3f4a98'],w:'#5b6ee1'},
+ {id:'lava',n:'Lava Cube',f:['#3a1a1a','#6a2a20'],w:'#e0603a'},
+ {id:'ice',n:'Ice Cube',f:['#4a6a90','#9ccbe8'],w:'#bfe6ff'},
+ {id:'spikes',n:'Spike Cube',f:['#2e2e2e','#575757'],w:'#bbbbbb'},
+ {id:'bumpers',n:'Pinball Cube',f:['#1d3b2a','#2f6b47'],w:'#5be38f'},
+ {id:'grav',n:'Gravity Cube',f:['#1a1030','#3a2470'],w:'#a080ff'},
+ {id:'wind',n:'Wind Cube',f:['#2a4a5a','#4a8aa0'],w:'#9fe0f0'},
 ];
 const LAVA=[{x:400,y:200,R:70},{x:400,y:600,R:70}];
 const BUMP=[{x:400,y:400,r:42},{x:170,y:170,r:28},{x:630,y:630,r:28},{x:630,y:170,r:28},{x:170,y:630,r:28}];
 const CRATES={
- common:{n:'Обычный ящик',price:120,cur:'c',ico:'📦',w:{common:70,rare:25,epic:4.5,legendary:.5,mythic:0}},
- rare:{n:'Редкий ящик',price:400,cur:'c',ico:'🎁',w:{common:25,rare:55,epic:16,legendary:3.5,mythic:.5}},
- epic:{n:'Эпический ящик',price:1000,cur:'c',ico:'💼',w:{common:0,rare:45,epic:40,legendary:12,mythic:3}},
- gem:{n:'Кристальный ящик',price:30,cur:'g',ico:'💎',w:{common:0,rare:0,epic:55,legendary:35,mythic:10}},
+ common:{n:'Common Crate',price:120,cur:'c',ico:'📦',w:{common:70,rare:25,epic:4.5,legendary:.5,mythic:0}},
+ rare:{n:'Rare Crate',price:400,cur:'c',ico:'🎁',w:{common:25,rare:55,epic:16,legendary:3.5,mythic:.5}},
+ epic:{n:'Epic Crate',price:1000,cur:'c',ico:'💼',w:{common:0,rare:45,epic:40,legendary:12,mythic:3}},
+ gem:{n:'Crystal Crate',price:30,cur:'g',ico:'💎',w:{common:0,rare:0,epic:55,legendary:35,mythic:10}},
 };
 const BOSSES=['giant','hive','hole','wave','shackles','glass','fire','blades','ice','gun','dice','laser'];
-const BOSSNAMES=['Титан-Громила','Королева Улья','Пожиратель','Громовержец','Тюремщик','Хрустальный Король','Огненный Колосс','Лорд Клинков','Ледяной Великан','Кибер-Пулемёт','Император Кубика','Лазерный Архонт'];
-const BOTNAMES=['Шарик_98','xX_Ball_Xx','Колобок','NeoSphere','Пинг-Понг','Сфера-2000','DOOMball','Глобус','Мячик.exe','Bit_Ball'];
+const BOSSNAMES=['Big Bruiser','Hive Queen','The Devourer','Thunderlord','The Warden','Crystal King','Inferno Colossus','Blade Lord','Frost Giant','Cyber Gatling','Dice Emperor','Laser Archon'];
+const BOTNAMES=['Ballz_98','xX_Ball_Xx','Rollo','NeoSphere','PingPong','Sphere2000','DOOMball','Globetrotter','bouncy.exe','Bit_Ball'];
 const DAILY=[{c:50},{c:80},{g:3},{c:120},{crate:'common'},{c:200},{g:10,crate:'rare'}];
-// ===================== СОХРАНЕНИЕ =====================
+// ===================== SAVE =====================
 const SAVE_KEY='ballfight_save_v1';
 function defSave(){return {v:3,seen:{},dch:{last:''},raid:{last:''},coins:100,gems:0,owned:{dash:{lvl:1,cards:0},shield:{lvl:1,cards:0},fire:{lvl:1,cards:0}},unlocked:1,xp:0,plvl:1,
  stats:{matches:0,wins:0,losses:0,rounds:0,dmg:0,crates:0,bosses:0,survBest:0,tourWins:0,online:0,onlineWins:0,local:0,abil:0,upgrades:0},ach:{},daily:{last:'',streak:0}};}
@@ -155,11 +155,11 @@ function migrate(s){const d=defSave();
 function persist(){save._t=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();try{Cloud.queue();}catch(e){}}
 const ownedIds=()=>Object.keys(save.owned);
 function lvlMods(l){l=l||1;return {hp:1+.08*(l-1),dmg:1+.06*(l-1)};}
-// ===== МАСТЕРСТВО ШАРОВ, УЛУЧШЕНИЯ, МУТАЦИИ (малые капнутые бонусы) =====
-const MUT={gold:{n:'Золотой',c:'#ffd23f',dmg:1.04,hp:.975,d:'+4% урона, −2,5% HP'},shadow:{n:'Теневой',c:'#3b2463',spd:1.04,hp:.99,d:'+4% скорости, −1% HP'},rainbow:{n:'Радужный',c:'#ff40c0',cd:.93,dmg:.97,d:'−7% перезарядки, −3% урона'}};
-const UPG={dmg:{n:'Урон',per:.02,u:'%'},hp:{n:'Здоровье',per:.03,u:'%'},spd:{n:'Скорость',per:.015,u:'%'},cd:{n:'Перезарядка',per:-.035,u:'%'}};
+// ===== BALL MASTERY, UPGRADES, MUTATIONS (small capped bonuses) =====
+const MUT={gold:{n:'Gold',c:'#ffd23f',dmg:1.04,hp:.975,d:'+4% damage, −2.5% HP'},shadow:{n:'Shadow',c:'#3b2463',spd:1.04,hp:.99,d:'+4% speed, −1% HP'},rainbow:{n:'Prism',c:'#ff40c0',cd:.93,dmg:.97,d:'−7% cooldown, −3% damage'}};
+const UPG={dmg:{n:'Damage',per:.02,u:'%'},hp:{n:'Health',per:.03,u:'%'},spd:{n:'Speed',per:.015,u:'%'},cd:{n:'Cooldown',per:-.035,u:'%'}};
 const UPG_RANK=3,MASTER_MAX=10,VAR_LVL=8,PVP_K=.25;
-const VARS={guard:{n:'Бастион',d:'1,5 с после способности −15% входящего урона; −4% урона',dmg:.96},leech:{n:'Подпитка',d:'Способность лечит 0,8% HP; перезарядка +12%',cd:1.12},echo:{n:'Эхо',d:'Каждая 4-я способность перезаряжается вдвое быстрее; −4% HP',hp:.96}};
+const VARS={guard:{n:'Bastion',d:'1.5s after ability: −15% damage taken; −4% damage',dmg:.96},leech:{n:'Siphon',d:'Ability heals 0.8% HP; cooldown +12%',cd:1.12},echo:{n:'Echo',d:'Every 4th ability recharges twice as fast; −4% HP',hp:.96}};
 function bxOf(id){save.bx=save.bx||{};return save.bx[id]||(save.bx[id]={xp:0,lv:1,up:{},v:'',m:'',ms:[]});}
 function upgMods(id,pvp){const r={hp:1,dmg:1,spd:1,cdMul:1,mut:'',var:'',ml:1};const p=save.bx&&save.bx[id];if(!p)return r;const k=pvp?PVP_K:1,u=p.up||{};
  r.dmg*=1+UPG.dmg.per*Math.min(UPG_RANK,u.dmg|0)*k;r.hp*=1+UPG.hp.per*Math.min(UPG_RANK,u.hp|0)*k;r.spd*=1+UPG.spd.per*Math.min(UPG_RANK,u.spd|0)*k;r.cdMul*=1+UPG.cd.per*Math.min(UPG_RANK,u.cd|0)*k;
@@ -167,7 +167,7 @@ function upgMods(id,pvp){const r={hp:1,dmg:1,spd:1,cdMul:1,mut:'',var:'',ml:1};c
  if(!pvp&&VARS[p.v]&&(p.lv|0)>=VAR_LVL){const V=VARS[p.v];r.var=p.v;r.dmg*=V.dmg||1;r.hp*=V.hp||1;r.cdMul*=V.cd||1;}r.ml=Math.min(MASTER_MAX,p.lv|0||1);return r;}
 function applyUp(m,u){m=Object.assign({},m);m.hp=(m.hp||1)*u.hp;m.dmg=(m.dmg||1)*u.dmg;m.spd=(m.spd||1)*u.spd;m.cdMul=(m.cdMul||1)*u.cdMul;m.mut=u.mut;m.var=u.var;m.ml=u.ml;return m;}
 function upCost(id){const o=save.owned[id];return {c:Math.round(60*o.lvl*(1+(RAR[BY[id].rar].m-1)*.4)),cards:Math.ceil(o.lvl/3)};}
-// ===================== ВВОД =====================
+// ===================== INPUT =====================
 const keys={};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'].includes(e.code)&&mode!=='menu')e.preventDefault();onKey(e.code);});
 addEventListener('keyup',e=>{keys[e.code]=false;});
@@ -175,14 +175,14 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=false;});
 function readInput(set){const k=set===0?{u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',a:'Space'}:{u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',a:'Enter'};
  return {x:(keys[k.r]?1:0)-(keys[k.l]?1:0),y:(keys[k.d]?1:0)-(keys[k.u]?1:0),a:!!keys[k.a]};}
 function mergeIn(a,b){return {x:Math.max(-1,Math.min(1,a.x+b.x)),y:Math.max(-1,Math.min(1,a.y+b.y)),a:a.a||b.a};}
-// ===================== УТИЛИТЫ =====================
+// ===================== UTILS =====================
 const W=800,H=800,rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 function pickN(pool,n){const p=shuffle([...new Set(pool)]);if(p.length<n)shuffle(BALLS.map(b=>b.id).filter(i=>!p.includes(i))).forEach(i=>p.push(i));return p.slice(0,n);}
 function shade(hex,f){let n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;const m=v=>Math.round(clamp(f<0?v*(1+f):v+(255-v)*f,0,255));return `rgb(${m(r)},${m(g)},${m(b)})`;}
 function today(d){d=d||new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function seeded(s){let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return ()=>{h=Math.imul(h^h>>>15,2246822507);h=Math.imul(h^h>>>13,3266489909);return ((h^=h>>>16)>>>0)/4294967296;};}
-// ===================== СИМУЛЯЦИЯ =====================
+// ===================== SIMULATION =====================
 let G=null,mode='menu',paused=false;
 function makeBall(id,side,mods){const d=BY[id];mods=mods||{};const hp=Math.round(d.hp*HPK*(mods.hp||1));const r=34*(mods.size||1);
  return {id,x:side?W*0.75:W*0.25,y:H/2,vx:0,vy:0,r,br:r,m:d.mass,mass:d.mass,hp,maxHp:hp,cd:1.5,spd:d.spd*(mods.spd||1),
@@ -190,7 +190,7 @@ function makeBall(id,side,mods){const d=BY[id];mods=mods||{};const hp=Math.round
   tm:side,dead:false,pers:null,mut:mods.mut||'',vr:mods.var||'',ml:mods.ml||1,vN:0,vU:0,dmBase:mods.dmg||1,spBase:d.spd*(mods.spd||1),cdMul:mods.cdMul||1,life:mods.life||0,thorns:mods.thorns||0,regen:mods.regen||0};}
 function newMatch(kind,ids,opts){opts=opts||{};
  G={kind,ids,opts,need:opts.need||2,score:[0,0],round:1,phase:'count',timer:3,balls:[],clones:[],fires:[],proj:[],zones:[],beams:[],events:[],banner:'',winner:-1,
-  names:opts.names||['Игрок 1','Игрок 2'],time:0,arena:opts.arena||0,wind:1,windT:5,dmg:[0,0],me:opts.me==null?0:opts.me,mset:{},ts:1,ts0:1,lo:0,obs:[],pk:[],lt:[],bi:-1,ex:false};
+  names:opts.names||['Player 1','Player 2'],time:0,arena:opts.arena||0,wind:1,windT:5,dmg:[0,0],me:opts.me==null?0:opts.me,mset:{},ts:1,ts0:1,lo:0,obs:[],pk:[],lt:[],bi:-1,ex:false};
  setupExtras();resetRound();mode='game';paused=false;showGame(true);
 }
 function resetRound(){const o=G.opts;
@@ -199,7 +199,7 @@ function resetRound(){const o=G.opts;
  G.bs=G.balls.map(()=>({t:0,dir:{x:0,y:0},a:false}));roundExtras();if(G.multi)placeBalls();
  if(G.bi>=0){setPhase(1);if(G.bossKeep){G.balls[G.bi].hp=G.bossKeep.hp;setPhase(G.bossKeep.ph);}}
  if(o.hp0Frac!=null&&G.round===1)G.balls[0].hp=Math.max(1,Math.round(G.balls[0].maxHp*o.hp0Frac));
- G.clones=[];G.fires=[];G.proj=[];G.zones=[];G.beams=[];G.phase='count';G.timer=3;G.banner=G.mode==='koth'?'Царь горы':G.mode==='foot'?'Шаробол':'Раунд '+G.round;particles.length=0;
+ G.clones=[];G.fires=[];G.proj=[];G.zones=[];G.beams=[];G.phase='count';G.timer=3;G.banner=G.mode==='koth'?'King of the Hill':G.mode==='foot'?'Goal Rush':'Round '+G.round;particles.length=0;
  if(G.round===1&&G.opts.mods&&G.opts.mods.length)G.banner+=' · '+G.opts.mods.map(m=>MODS[m]).join(' + ');}
 function emit(ev){G.events.push(ev);spawnEvent(ev);}
 function useAbility(i){const b=G.balls[i],ei=foeIdx(i),e=G.balls[ei],d=BY[b.id];if(b.cd>0||b.fx.frozen>0||!e)return;b.cd=d.cd*(b.cdMul||1);if(b.vr){b.vN=(b.vN|0)+1;if(b.vr==='echo'&&b.vN%4===0)b.cd*=.5;else if(b.vr==='leech')b.hp=Math.min(b.maxHp,b.hp+b.maxHp*.008);else if(b.vr==='guard')b.vU=G.time+1.5;}
@@ -265,7 +265,7 @@ function step(dt,inputs){
   if(b.burst>0){b.burstT-=dt;if(b.burstT<=0){b.burst--;b.burstT=.18;const a=Math.atan2(e.y-b.y,e.x-b.x)+rnd(-.15,.15);
    G.proj.push({k:'bullet',x:b.x+Math.cos(a)*(b.r+6),y:b.y+Math.sin(a)*(b.r+6),vx:Math.cos(a)*780,vy:Math.sin(a)*780,r:5,o:i,t:1.2,dmg:3,c:'#ffeb3b'});}}}
   if(b.fx.poison>0)tick(i,4*dt,true);
-  // окружение
+  // environment
   if(AR==='lava')LAVA.forEach(L=>{if(Math.hypot(b.x-L.x,b.y-L.y)<L.R)tick(i,16*dt,false);});
   if(AR==='grav'){const dx=W/2-b.x,dy=H/2-b.y,dl=Math.hypot(dx,dy)||1;b.vx+=dx/dl*260*dt;b.vy+=dy/dl*260*dt;if(dl<45)tick(i,10*dt,false);}
   if(AR==='wind')b.vx+=G.wind*300*dt;
@@ -333,13 +333,13 @@ function step(dt,inputs){
  if(G.ex)extrasPost(dt,fight);
  if(fight&&!G.multi&&G.phase==='fight'){const a=G.balls[0],c=G.balls[1];const d0=a.hp<=0,d1=c.hp<=0;if(d0||d1){const w=d0&&d1?-1:d0?1:0;if(w>=0)G.score[w]++;G.phase='roundEnd';G.timer=2.5;
   if(G.bi>=0&&G.balls[G.bi].hp>0)G.bossKeep={hp:G.balls[G.bi].hp,ph:G.bph};
-  G.banner=w<0?'Ничья!':G.names[w]+' берёт раунд!';const l=d0?a:c;emit({k:'ko',x:l.x,y:l.y,c:BY[l.id].color});}}
+  G.banner=w<0?'Draw!':G.names[w]+' takes the round!';const l=d0?a:c;emit({k:'ko',x:l.x,y:l.y,c:BY[l.id].color});}}
 }
 function wallHit(b,i){const s=Math.hypot(b.vx,b.vy);if(s>250){emit({k:'spark',x:b.x,y:b.y,c:'#88aaff'});if(ARENAS[G.arena].id==='spikes'&&G.phase==='fight'&&b.fx.shield<=0){b.hp=Math.max(0,b.hp-12);b.hitT=.2;emit({k:'hit',x:b.x,y:b.y,c:'#ccc',n:12});}}}
-// ===================== БОТ =====================
+// ===================== BOT =====================
 const Bot={t:0,dir:{x:0,y:0},a:false};
 const RANGED=['gun','dice','cactus','harpoon','hive','laser','acid','hole','shackles','web','clone','magnet'];
-// ===================== ЧАСТИЦЫ =====================
+// ===================== PARTICLES =====================
 const particles=[],floats=[],ringFx=[];let shake=0;
 function spawnEvent(ev){const n=(k,c,sp,life,sz)=>{for(let i=0;i<k;i++){const a=rnd(0,6.28),s=rnd(.2,1)*sp;particles.push({x:ev.x,y:ev.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:life,m:life,c,sz:sz||4});}};
  switch(ev.k){case 'hit':n(10,ev.c,250,.5);if(ev.n>0)floats.push({x:ev.x,y:ev.y,t:1,s:'-'+ev.n,c:'#fff'});shake=Math.min(12,shake+ev.n*.4);break;
@@ -351,7 +351,7 @@ function spawnEvent(ev){const n=(k,c,sp,life,sz)=>{for(let i=0;i<k;i++){const a=
 function updFx(dt){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.95;p.vy*=.95;if(p.t<=0)particles.splice(i,1);}
  for(let i=floats.length-1;i>=0;i--){floats[i].t-=dt;if(floats[i].t<=0)floats.splice(i,1);}
  for(let i=ringFx.length-1;i>=0;i--){ringFx[i].t-=dt;if(ringFx[i].t<=0)ringFx.splice(i,1);}shake*=Math.pow(.02,dt);}
-// ===================== РЕНДЕР =====================
+// ===================== RENDER =====================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const BK=190,FR=650,BW=290,FW=455,CX=500,WH_B=140,WH_F=230;
 function P(x,y){const t=y/H;const hw=lerp(BW,FW,t);return {x:CX+(x-W/2)/(W/2)*hw,y:lerp(BK,FR,t),k:hw/(W/2)};}
@@ -423,7 +423,7 @@ function drawBall(b,i,me,st){const d=BY[b.id];let col=b.fx.frozen>0?'#cdefff':d.
  ctx.fillStyle='#fff';ctx.font='bold 12px Tahoma,Verdana,sans-serif';ctx.textAlign='center';ctx.fillText(ballLabel(b,i,me,st),s.x,s.y-s.R-22);
  if(b.pers&&PERS[b.pers]){const q=P(b.x,b.y);const t=PERS[b.pers].n;ctx.font='bold 11px Tahoma,Verdana,sans-serif';const tw=ctx.measureText(t).width+8;ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(q.x-tw/2,q.y+b.r*q.k*.4+2,tw,14);ctx.fillStyle=PERS[b.pers].c;ctx.fillText(t,q.x,q.y+b.r*q.k*.4+13);}}
 let G_t=0;
-// мутации: тонировка под логотипом + аура снаружи шара (логотип всегда рисуется поверх)
+// mutations: tint under the logo + aura outside the ball (logo always drawn on top)
 function drawMut(b,s){const m=MUT[b.mut],t=G_t;ctx.save();ctx.beginPath();ctx.arc(s.x,s.y,s.R,0,7);ctx.clip();
  if(b.mut==='rainbow'){const g=ctx.createLinearGradient(s.x-s.R,s.y-s.R,s.x+s.R,s.y+s.R);for(let k=0;k<6;k++)g.addColorStop(k/5,`hsla(${(k*60+t*120)%360},90%,60%,.28)`);ctx.fillStyle=g;}
  else ctx.fillStyle=b.mut==='gold'?'rgba(255,200,40,.32)':'rgba(30,10,60,.38)';ctx.fillRect(s.x-s.R,s.y-s.R,s.R*2,s.R*2);
@@ -436,25 +436,25 @@ function prog(x,y,w,h,f,col){ctx.fillStyle='#808080';ctx.fillRect(x,y,w,h);ctx.f
 function drawHUD(st,me){ctx.textAlign='left';
  [0,1].forEach(i=>{const b=st.balls[i],d=BY[b.id];const x=i?604:16,y=10,w=380;
   bevel(x,y,w,94);const g=ctx.createLinearGradient(x,0,x+w,0);g.addColorStop(0,me===i?'#000080':'#808080');g.addColorStop(1,me===i?'#1084d0':'#b5b5b5');ctx.fillStyle=g;ctx.fillRect(x+3,y+3,w-6,18);
-  ctx.fillStyle='#fff';ctx.font='bold 12px Tahoma,Verdana,sans-serif';ctx.fillText(st.names[i]+' — '+d.name+' (ур.'+(b.lvl||1)+')',x+8,y+16);
+  ctx.fillStyle='#fff';ctx.font='bold 12px Tahoma,Verdana,sans-serif';ctx.fillText(st.names[i]+' — '+d.name+' (Lv.'+(b.lvl||1)+')',x+8,y+16);
   ctx.fillStyle=RAR[d.rar].c;ctx.fillRect(x+8,y+26,40,40);ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(x+28,y+46,16,0,7);ctx.fill();if(!(window.LOGO&&LOGO.draw(ctx,d.id,x+28,y+46,16))){ctx.fillStyle='#fff';ctx.font='bold 14px Tahoma,Verdana,sans-serif';ctx.textAlign='center';ctx.fillText(d.sym,x+28,y+51);}ctx.textAlign='left';
   prog(x+56,y+26,w-66,16,b.hp/b.maxHp,b.hp/b.maxHp>.3?'#000080':'#c00000');
   ctx.fillStyle='#000';ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText('HP '+Math.ceil(b.hp)+'/'+b.maxHp,x+56,y+56);
   const cdf=b.cd/d.cd;prog(x+150,y+46,w-160,14,1-cdf,cdf<=0?'#008000':'#808080');
-  ctx.fillStyle='#000';ctx.fillText((cdf<=0?'✔ ':'')+d.ab+(cdf<=0?' — ГОТОВО':' '+b.cd.toFixed(1)+'с'),x+8,y+84);
-  const fx=Object.keys(b.fx).filter(k=>b.fx[k]>0);const FXN={shield:'щит',fire:'огонь',giant:'гигант',spikes:'шипы',frozen:'оглушён',magnet:'магнит',poison:'яд',vamp:'вампир',elec:'разряд',blades:'клинки',spd2:'скорость',dmg2:'урон x2'};
+  ctx.fillStyle='#000';ctx.fillText((cdf<=0?'✔ ':'')+d.ab+(cdf<=0?' — READY':' '+b.cd.toFixed(1)+'s'),x+8,y+84);
+  const fx=Object.keys(b.fx).filter(k=>b.fx[k]>0);const FXN={shield:'shield',fire:'fire',giant:'giant',spikes:'spikes',frozen:'stunned',magnet:'magnet',poison:'poison',vamp:'vamp',elec:'zap',blades:'blades',spd2:'speed',dmg2:'dmg x2'};
   ctx.fillStyle='#000080';ctx.fillText(fx.filter(k=>FXN[k]).map(k=>FXN[k]).join(' · '),x+150,y+84);});
  ctx.textAlign='center';bevel(420,10,160,60);ctx.fillStyle='#000';ctx.font='bold 26px "Courier New",monospace';ctx.fillText(st.score[0]+' : '+st.score[1],500,42);
- ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText('Раунд '+st.round+' · до '+(st.needs?st.needs[me<0?0:me]:st.need||2)+' поб.',500,60);
+ ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText('Round '+st.round+' · first to '+(st.needs?st.needs[me<0?0:me]:st.need||2)+' wins',500,60);
  ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillText(st.mset?modLine(st):ARENAS[st.arena].n,500,120);drawAevMsg(st,128);
- const box=(t,sz)=>{ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Сообщение',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;ctx.fillText(t,500,362);};
+ const box=(t,sz)=>{ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Message',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;ctx.fillText(t,500,362);};
  if(st.phase==='count')box(st.banner+' — '+Math.ceil(st.timer),26);
  else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;box(st.banner,24);ctx.restore();}
- if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);box('Пауза: Esc — продолжить, Q — выход',20);}}
-// ===================== ОКНА =====================
+ if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);box('Paused: Esc — resume, Q — quit',20);}}
+// ===================== WINDOWS =====================
 let zTop=10;
 function openWin(id,title,html,o){o=o||{};let w=document.getElementById('w_'+id);
- if(!w){w=document.createElement('div');w.className='win';w.id='w_'+id;w.innerHTML=`<div class="tb"><span class="tt"></span><span><button class="tbb" title="Свернуть" onclick="minWin('${id}')">_</button><button class="tbb" title="Развернуть" onclick="maxWin('${id}')">□</button><button class="tbb" title="Закрыть" onclick="closeWin('${id}')">✕</button></span></div><div class="wb"></div><div class="grip"></div>`;document.body.appendChild(w);dragify(w);resizify(w);w.addEventListener('mousedown',()=>front(w));}
+ if(!w){w=document.createElement('div');w.className='win';w.id='w_'+id;w.innerHTML=`<div class="tb"><span class="tt"></span><span><button class="tbb" title="Minimize" onclick="minWin('${id}')">_</button><button class="tbb" title="Maximize" onclick="maxWin('${id}')">□</button><button class="tbb" title="Close" onclick="closeWin('${id}')">✕</button></span></div><div class="wb"></div><div class="grip"></div>`;document.body.appendChild(w);dragify(w);resizify(w);w.addEventListener('mousedown',()=>front(w));}
  w.querySelector('.tt').textContent=(o.icon||'🗔')+' '+title;w.querySelector('.wb').innerHTML=html;w.dataset.title=title;w.dataset.icon=o.icon||'🗔';w.dataset.modal=o.modal?1:'';
  const ww=Math.min(o.w||560,innerWidth-8);w.style.width=ww+'px';w.classList.remove('hide','mini');front(w);if(typeof Sfx!=='undefined')Sfx.open();
  if(!w.dataset.placed||o.modal){w.style.left=Math.max(0,(innerWidth-ww)/2+(o.modal?0:rnd(-60,60)))+'px';w.style.top=Math.max(0,Math.min(o.modal?(innerHeight-30-w.offsetHeight)/2:40+rnd(0,40),innerHeight-40-w.offsetHeight))+'px';w.dataset.placed=1;}
@@ -464,69 +464,69 @@ function closeWin(id){const w=document.getElementById('w_'+id);if(w)w.classList.
 function dragify(w){const tb=w.querySelector('.tb');tb.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;const sx=e.clientX-w.offsetLeft,sy=e.clientY-w.offsetTop;
  const mv=ev=>{w.style.left=clamp(ev.clientX-sx,-w.offsetWidth+60,innerWidth-60)+'px';w.style.top=clamp(ev.clientY-sy,0,innerHeight-60)+'px';};const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up);};addEventListener('mousemove',mv);addEventListener('mouseup',up);});}
 function updTasks(){const t=document.getElementById('tasks');const ws=[...document.querySelectorAll('.win:not(.hide)')];const act=ws.filter(w=>!w.classList.contains('mini')).sort((a,b)=>(+b.style.zIndex||0)-(+a.style.zIndex||0))[0];
- t.innerHTML='';ws.forEach(w=>{const b=document.createElement('button');b.textContent=(w.id==='gamewin'?'🎮 Куб-Арена':(w.dataset.icon+' '+w.dataset.title));if(w===act&&!w.classList.contains('inactive'))b.className='act';b.onclick=()=>{if(w.id==='gamewin'){front(w);return;}if(w.classList.contains('mini')){w.classList.remove('mini');front(w);}else if(w===act)minWin(w.id.slice(2));else front(w);};t.appendChild(b);});}
-function updTray(){document.getElementById('trc').textContent='🪙 '+save.coins;document.getElementById('trg').textContent='💎 '+save.gems;document.getElementById('trl').textContent='★ Ур.'+save.plvl;}
+ t.innerHTML='';ws.forEach(w=>{const b=document.createElement('button');b.textContent=(w.id==='gamewin'?'🎮 The Cube':(w.dataset.icon+' '+w.dataset.title));if(w===act&&!w.classList.contains('inactive'))b.className='act';b.onclick=()=>{if(w.id==='gamewin'){front(w);return;}if(w.classList.contains('mini')){w.classList.remove('mini');front(w);}else if(w===act)minWin(w.id.slice(2));else front(w);};t.appendChild(b);});}
+function updTray(){document.getElementById('trc').textContent='🪙 '+save.coins;document.getElementById('trg').textContent='💎 '+save.gems;document.getElementById('trl').textContent='★ Lv.'+save.plvl;}
 setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');},1000);
 function toast(t,b){const d=document.createElement('div');d.className='toast';d.innerHTML=`<b>${t}</b>${b||''}`;document.getElementById('toasts').appendChild(d);setTimeout(()=>d.remove(),4500);}
 const MENU=[
- ['⚔️','Бой с ботом','UI.levels()'],['👥','Вдвоём','startLocal()'],['🌐','Онлайн-бой','UI.online()'],['💀','Выживание','UI.surv()'],['🏆','Турнир','UI.tour()'],['🏁','Режимы','UI.modes()'],
- ['📦','Ящики','UI.crates()'],['🛒','Магазин','UI.shop()'],['🎒','Инвентарь','UI.inv()'],['🎖️','Достижения','UI.ach()'],['📊','Статистика','UI.stats()'],['📅','Награды','UI.daily()'],['👤','Аккаунт','UI.account()'],['❓','Справка','UI.help()']];
+ ['⚔️','vs Bot','UI.levels()'],['👥','Couch 1v1','startLocal()'],['🌐','Online Match','UI.online()'],['💀','Survival','UI.surv()'],['🏆','Tournament','UI.tour()'],['🏁','Modes','UI.modes()'],
+ ['📦','Crates','UI.crates()'],['🛒','Shop','UI.shop()'],['🎒','Inventory','UI.inv()'],['🎖️','Achievements','UI.ach()'],['📊','Stats','UI.stats()'],['📅','Rewards','UI.daily()'],['👤','Account','UI.account()'],['❓','Help','UI.help()']];
 document.getElementById('icons').innerHTML=MENU.map(m=>`<div class="icon" tabindex="0" onclick="${m[2]}"><div class="im">${m[0]}</div><span>${m[1]}</span></div>`).join('');
-document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" id="smmus" onclick="toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Музыка: вкл</div><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Завершение работы...</div>';
+document.getElementById('smitems').innerHTML=MENU.map(m=>`<div class="it" onclick="toggleStart();${m[2]}"><span style="font-size:20px">${m[0]}</span>${m[1]}</div>`).join('')+'<hr><div class="it" id="smmus" onclick="toggleStart();Music.toggle()"><span style="font-size:20px">🎵</span>Music: on</div><div class="it" onclick="toggleStart();UI.shutdown()"><span style="font-size:20px">⏻</span>Shutting down...</div>';
 function toggleStart(e){if(e)e.stopPropagation();document.getElementById('startmenu').classList.toggle('hide');}
 addEventListener('click',e=>{const sm=document.getElementById('startmenu');if(!sm.contains(e.target)&&e.target.id!=='startbtn')sm.classList.add('hide');});
 function ballIco(b,sz){const lg=window.LOGO&&LOGO.has(b.id);return `<div class="ballico" style="${sz?`width:${sz}px;height:${sz}px;`:''}position:relative;background:${window.SKIN?SKIN.css(b):''}radial-gradient(circle at 35% 35%,${shade(b.color,.6)},${b.color} 55%,${shade(b.color,-.55)})">${lg?LOGO.svg(b.id):b.sym}</div>`;}
 function showGame(v){document.getElementById('gamewin').classList.toggle('hide',!v);if(v)front(document.getElementById('gamewin'));updTasks();}
-function leaveGame(){if(mode==='game'&&G&&G.phase!=='over'){paused=true;UI.msg('Покинуть бой?','Текущий матч будет засчитан как поражение (кроме режима «Вдвоём»).',[['Да, выйти','forfeit()'],['Отмена','paused=false']],'⚠️');}else UI.home();}
+function leaveGame(){if(mode==='game'&&G&&G.phase!=='over'){paused=true;UI.msg('Leave the match?','This match will count as a loss (except in Couch 1v1).',[['Yes, leave','forfeit()'],['Cancel','paused=false']],'⚠️');}else UI.home();}
 function forfeit(){if(G&&G.kind==='online'){Net.close();}else if(G&&G.kind!=='local'){save.stats.matches++;save.stats.losses++;persist();}paused=false;UI.home();}
 function togglePause(){if(mode==='game'&&G&&G.kind!=='online')paused=!paused;}
 const card=(b,extra,o)=>{o=o||{};const R=RAR[b.rar];const own=save.owned[b.id];const L=o.lvl||(own?own.lvl:1);const m=lvlMods(L);
- return `<div class="rb" style="background:${R.c}"></div>${ballIco(b)}<b>${b.name}</b>${own||o.showLvl?` <span class="stat">ур.${L}</span>`:''}<div class="rar" style="color:${R.c}">${R.n}</div><small>⚡ <b>${b.ab}</b>: ${b.desc}</small>
- <div class="stat">❤${Math.round(b.hp*m.hp)} 🏃${Math.round(b.spd*100)}% ⚖${b.mass} ⏱${b.cd}с${L>1?' ⚔+'+Math.round((m.dmg-1)*100)+'%':''}</div>${extra||''}`;};
-// ===================== ЭКРАНЫ =====================
+ return `<div class="rb" style="background:${R.c}"></div>${ballIco(b)}<b>${b.name}</b>${own||o.showLvl?` <span class="stat">Lv.${L}</span>`:''}<div class="rar" style="color:${R.c}">${R.n}</div><small>⚡ <b>${b.ab}</b>: ${b.desc}</small>
+ <div class="stat">❤${Math.round(b.hp*m.hp)} 🏃${Math.round(b.spd*100)}% ⚖${b.mass} ⏱${b.cd}s${L>1?' ⚔+'+Math.round((m.dmg-1)*100)+'%':''}</div>${extra||''}`;};
+// ===================== SCREENS =====================
 const UI={
  home(){document.querySelectorAll('.win').forEach(w=>{if(w.id!=='gamewin'&&w.dataset.modal)w.classList.add('hide');});closeWin('pick');showGame(false);mode='menu';G=null;paused=false;updTasks();},
  msg(t,b,btns,icon){if(mode!=='game')mode='msg';openWin('msg',t,`<div class="dlg"><div class="ico">${icon||'ℹ️'}</div><div style="font-size:14px">${b||''}</div></div><div class="btns">${
-  (btns||[['ОК','']]).map(x=>`<button onclick="closeWin('msg');${x[1]}">${x[0]}</button>`).join('')}</div>`,{modal:true,w:420,icon:icon||'ℹ️'});},
- levels(){let h='';for(let l=1;l<=NLV;l++){const I=levelInfo(l);h+=`<button class="${I.boss?'boss':''}" ${l>save.unlocked?'disabled':''} title="${ARENAS[I.arena].n}" onclick="startBot(${l})">${l>save.unlocked?'🔒':I.boss?'☠':'⭐'} ${l}<br><small>${I.boss?'БОСС':ARENAS[I.arena].n.split(' ')[0]}</small></button>`;}
-  const nx=FEAT.find(f=>f.lvl>save.unlocked);openWin('levels','Кампания — '+NLV+' уровней',`<p>Побеждайте ботов, открывайте уровни. Каждый 5-й уровень — <b style="color:#a00">БОСС</b> с тремя фазами (награда 💎). Пройдено: ${Math.min(NLV,save.unlocked-1)}/${NLV}${nx?'<br>Следующее открытие: <b>'+nx.n+'</b> на уровне '+nx.lvl:''}</p><div class="lv" style="max-height:420px;overflow-y:auto">${h}</div>`,{w:640,icon:'⚔️'});},
- crates(){openWin('crates','Ящики с шарами',`<div class="grid">${Object.entries(CRATES).map(([k,c])=>`<div class="card"><div class="crate">${c.ico}</div><b>${c.n}</b><div class="stat" style="text-align:left;margin:6px 0">${RORD.filter(r=>c.w[r]>0).map(r=>`<span style="color:${RAR[r].c}">■</span> ${RAR[r].n}: ${c.w[r]}%`).join('<br>')}</div>
-  <button ${(c.cur==='c'?save.coins:save.gems)<c.price?'disabled':''} onclick="openCrate('${k}')">Открыть ${c.cur==='c'?'🪙':'💎'}${c.price}</button></div>`).join('')}</div><p class="hint">Повторный шар превращается в карточку улучшения (+ немного монет).</p>`,{w:760,icon:'📦'});},
+  (btns||[['OK','']]).map(x=>`<button onclick="closeWin('msg');${x[1]}">${x[0]}</button>`).join('')}</div>`,{modal:true,w:420,icon:icon||'ℹ️'});},
+ levels(){let h='';for(let l=1;l<=NLV;l++){const I=levelInfo(l);h+=`<button class="${I.boss?'boss':''}" ${l>save.unlocked?'disabled':''} title="${ARENAS[I.arena].n}" onclick="startBot(${l})">${l>save.unlocked?'🔒':I.boss?'☠':'⭐'} ${l}<br><small>${I.boss?'BOSS':ARENAS[I.arena].n.split(' ')[0]}</small></button>`;}
+  const nx=FEAT.find(f=>f.lvl>save.unlocked);openWin('levels','Campaign — '+NLV+' levels',`<p>Beat bots, unlock levels. Every 5th level is a <b style="color:#a00">BOSS</b> with three phases (💎 reward). Cleared: ${Math.min(NLV,save.unlocked-1)}/${NLV}${nx?'<br>Next unlock: <b>'+nx.n+'</b> at level '+nx.lvl:''}</p><div class="lv" style="max-height:420px;overflow-y:auto">${h}</div>`,{w:640,icon:'⚔️'});},
+ crates(){openWin('crates','Ball Crates',`<div class="grid">${Object.entries(CRATES).map(([k,c])=>`<div class="card"><div class="crate">${c.ico}</div><b>${c.n}</b><div class="stat" style="text-align:left;margin:6px 0">${RORD.filter(r=>c.w[r]>0).map(r=>`<span style="color:${RAR[r].c}">■</span> ${RAR[r].n}: ${c.w[r]}%`).join('<br>')}</div>
+  <button ${(c.cur==='c'?save.coins:save.gems)<c.price?'disabled':''} onclick="openCrate('${k}')">Open ${c.cur==='c'?'🪙':'💎'}${c.price}</button></div>`).join('')}</div><p class="hint">Duplicate balls turn into upgrade cards (+ a few coins).</p>`,{w:760,icon:'📦'});},
  shop(){const r=seeded('shop'+today());const pool=BALLS.filter(b=>b.rar!=='mythic');const offers=[];while(offers.length<3){const b=pool[Math.floor(r()*pool.length)];if(!offers.includes(b))offers.push(b);}
-  openWin('shop','Магазин',`<fieldset><legend>Ежедневные предложения (обновятся завтра)</legend><div class="grid">${offers.map(b=>{const p=Math.round(RAR[b.rar].m*300);const own=!!save.owned[b.id];
-   return `<div class="card">${card(b,`<button ${save.coins<p?'disabled':''} onclick="buyBall('${b.id}',${p})">${own?'+3 карточки':'Купить'} 🪙${p}</button>`)}</div>`}).join('')}</div></fieldset>
-  <fieldset><legend>Обмен</legend><button ${save.gems<10?'disabled':''} onclick="exch()">💎10 → 🪙500</button> <button onclick="UI.crates()">📦 К ящикам</button></fieldset>`,{w:640,icon:'🛒'});},
- inv(){const own=ownedIds().length;openWin('inv','Инвентарь — '+own+'/'+BALLS.length+' шаров',`<div class="grid">${[...BALLS,...EVBALLS.filter(b=>save.owned[b.id])].sort((a,b)=>RORD.indexOf(b.rar)-RORD.indexOf(a.rar)).map(b=>{const o=save.owned[b.id];
-  if(!o)return `<div class="card lock"><div class="rb" style="background:${RAR[b.rar].c}"></div><div class="ballico" style="background:#555">?</div><b>???</b><div class="rar" style="color:${RAR[b.rar].c}">${RAR[b.rar].n}</div><small>Не найден</small></div>`;
+  openWin('shop','Shop',`<fieldset><legend>Daily deals (refresh tomorrow)</legend><div class="grid">${offers.map(b=>{const p=Math.round(RAR[b.rar].m*300);const own=!!save.owned[b.id];
+   return `<div class="card">${card(b,`<button ${save.coins<p?'disabled':''} onclick="buyBall('${b.id}',${p})">${own?'+3 cards':'Buy'} 🪙${p}</button>`)}</div>`}).join('')}</div></fieldset>
+  <fieldset><legend>Trade</legend><button ${save.gems<10?'disabled':''} onclick="exch()">💎10 → 🪙500</button> <button onclick="UI.crates()">📦 To Crates</button></fieldset>`,{w:640,icon:'🛒'});},
+ inv(){const own=ownedIds().length;openWin('inv','Inventory — '+own+'/'+BALLS.length+' balls',`<div class="grid">${[...BALLS,...EVBALLS.filter(b=>save.owned[b.id])].sort((a,b)=>RORD.indexOf(b.rar)-RORD.indexOf(a.rar)).map(b=>{const o=save.owned[b.id];
+  if(!o)return `<div class="card lock"><div class="rb" style="background:${RAR[b.rar].c}"></div><div class="ballico" style="background:#555">?</div><b>???</b><div class="rar" style="color:${RAR[b.rar].c}">${RAR[b.rar].n}</div><small>Not found</small></div>`;
   const c=upCost(b.id);const can=o.lvl<10&&save.coins>=c.c&&o.cards>=c.cards;
-  return `<div class="card">${card(b,`<div class="prog" style="margin:4px 0"><i style="width:${Math.min(100,o.cards/c.cards*100)}%"></i></div><div class="stat">🃏 ${o.cards}/${o.lvl<10?c.cards:'—'}</div>${o.lvl<10?`<button ${can?'':'disabled'} onclick="upgrade('${b.id}')">Улучшить 🪙${c.c}</button>`:'<b>МАКС. УРОВЕНЬ</b>'}`)}</div>`}).join('')}</div>`,{w:800,icon:'🎒'});},
- ach(){openWin('ach','Достижения',`<table class="t">${ACH.map(a=>`<tr><td>${save.ach[a.id]?'✅':'⬜'}</td><td><b>${a.n}</b><br><span class="stat">${a.d}</span></td><td>💎${a.g}</td></tr>`).join('')}</table>`,{w:480,icon:'🎖️'});},
- stats(){const s=save.stats;const rows=[['Уровень игрока',save.plvl+' ('+save.xp+'/'+xpNeed(save.plvl)+' XP)'],['Матчей',s.matches],['Побед / поражений',s.wins+' / '+s.losses],['Процент побед',s.matches?Math.round(s.wins/s.matches*100)+'%':'—'],
-  ['Раундов выиграно',s.rounds],['Нанесено урона',Math.round(s.dmg)],['Способностей применено',s.abil],['Открыто ящиков',s.crates],['Боссов повержено',s.bosses],['Рекорд выживания',s.survBest+' волн'],['Турниров выиграно',s.tourWins],
-  ['Онлайн-матчей / побед',s.online+' / '+s.onlineWins],['Матчей вдвоём',s.local],['Улучшений',s.upgrades],['Шаров собрано',ownedIds().length+'/'+BALLS.length],['Уровней пройдено',Math.min(NLV,save.unlocked-1)+'/'+NLV],['Испытаний дня',s.dch||0]];
-  openWin('stats','Статистика',`<table class="t">${rows.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>`,{w:420,icon:'📊'});},
+  return `<div class="card">${card(b,`<div class="prog" style="margin:4px 0"><i style="width:${Math.min(100,o.cards/c.cards*100)}%"></i></div><div class="stat">🃏 ${o.cards}/${o.lvl<10?c.cards:'—'}</div>${o.lvl<10?`<button ${can?'':'disabled'} onclick="upgrade('${b.id}')">Upgrade 🪙${c.c}</button>`:'<b>MAX LEVEL</b>'}`)}</div>`}).join('')}</div>`,{w:800,icon:'🎒'});},
+ ach(){openWin('ach','Achievements',`<table class="t">${ACH.map(a=>`<tr><td>${save.ach[a.id]?'✅':'⬜'}</td><td><b>${a.n}</b><br><span class="stat">${a.d}</span></td><td>💎${a.g}</td></tr>`).join('')}</table>`,{w:480,icon:'🎖️'});},
+ stats(){const s=save.stats;const rows=[['Player level',save.plvl+' ('+save.xp+'/'+xpNeed(save.plvl)+' XP)'],['Matches',s.matches],['Wins / losses',s.wins+' / '+s.losses],['Win rate',s.matches?Math.round(s.wins/s.matches*100)+'%':'—'],
+  ['Rounds won',s.rounds],['Damage dealt',Math.round(s.dmg)],['Abilities used',s.abil],['Crates opened',s.crates],['Bosses defeated',s.bosses],['Survival best',s.survBest+' waves'],['Tournaments won',s.tourWins],
+  ['Online matches / wins',s.online+' / '+s.onlineWins],['Couch matches',s.local],['Upgrades',s.upgrades],['Balls collected',ownedIds().length+'/'+BALLS.length],['Levels cleared',Math.min(NLV,save.unlocked-1)+'/'+NLV],['Daily challenges',s.dch||0]];
+  openWin('stats','Stats',`<table class="t">${rows.map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('')}</table>`,{w:420,icon:'📊'});},
  daily(){const can=save.daily.last!==today();const st=can?(save.daily.last===today(new Date(Date.now()-864e5))?save.daily.streak:0):save.daily.streak-1;const idx=((st%7)+7)%7;
-  openWin('daily','Ежедневные награды',`<p>Заходите каждый день подряд — награды растут! Серия: <b>${save.daily.streak}</b></p><div class="days">${DAILY.map((d,i)=>`<div class="card ${i===idx?'today':''} ${i<idx?'got':''}"><b>День ${i+1}</b><br>${rewTxt(d)}</div>`).join('')}</div>
-  <div class="btns"><button ${can?'':'disabled'} onclick="claimDaily()">${can?'Забрать награду':'Уже получено — приходите завтра'}</button></div>`,{w:560,icon:'📅'});},
- online(){openWin('online','Онлайн-бой',`<div id="onmain"><fieldset><legend>Создать</legend><button onclick="Net.host()">Создать комнату</button></fieldset>
-  <fieldset><legend>Подключиться</legend>Код: <input id="joincode" maxlength="5"> <button onclick="Net.join(document.getElementById('joincode').value)">Войти</button></fieldset></div>
-  <div id="oncode" class="code"></div><div id="onstatus" class="inset" style="min-height:40px">Готов к подключению. Используется P2P (WebRTC, PeerJS).</div>
-  <div class="btns"><button onclick="Net.close();closeWin('online')">Закрыть</button></div>`,{w:420,icon:'🌐'});},
- surv(){openWin('surv','Режим выживания',`<div class="dlg"><div class="ico">💀</div><div>Бесконечные волны ботов, каждая сильнее предыдущей. Один раунд на волну, HP переносится (между волнами +30%).<br><br>Награда: 🪙 за каждую волну, рекорд: <b>${save.stats.survBest}</b></div></div><div class="btns"><button onclick="closeWin('surv');startSurvival()">Начать</button></div>`,{w:440,icon:'💀'});},
- tour(){openWin('tour','Турнир',`<div class="dlg"><div class="ico">🏆</div><div>Сетка на 8 участников: четвертьфинал, полуфинал, финал (до 2 побед).<br>Взнос: 🪙100. Призы: 1 место 🪙700 + 💎15 + Редкий ящик · 2 место 🪙300 + 💎5 · 3–4 🪙120 · 5–8 🪙30.<br>Выиграно турниров: <b>${save.stats.tourWins}</b></div></div><div class="btns"><button ${save.coins<100?'disabled':''} onclick="closeWin('tour');startTour()">Офлайн (боты) — 🪙100</button> <button onclick="closeWin('tour');OTour.open()">🌐 Онлайн-турнир…</button></div>`,{w:480,icon:'🏆'});},
- help(){openWin('help','Справка',`<div class="inset" style="font-size:13px"><b>Управление</b><br>Игрок 1: WASD — движение, Пробел — способность<br>Игрок 2: стрелки — движение, Enter — способность<br>Против бота/онлайн работают обе раскладки.<br>Esc — пауза, Q (в паузе) — выход.<br>Выбор шара: A/D (←/→), Пробел (Enter), R / Правый Shift — переброс.<br><br>
-  <b>Как играть</b><br>Перед каждым матчем вам выпадает 3 случайных шара из коллекции — выберите один (1 переброс). Урон от столкновения зависит от скорости удара и массы. У каждого шара уникальная способность с перезарядкой.<br><br>
-  <b>Прогресс</b><br>Монеты и XP за бои → ящики (редкость: Обычный, Редкий, Эпический, Легендарный, Мифический) → дубликаты дают карточки для улучшения (до ур.10: +8% HP, +6% урона за уровень).<br><br><b>Арены</b><br>${ARENAS.map(a=>a.n).join(', ')}.</div>`,{w:480,icon:'❓'});},
- shutdown(){UI.msg('Завершение работы','Теперь компьютер можно выключить.<br><small>(шутка — прогресс сохранён автоматически)</small>',[['ОК','']],'🖥️');},
+  openWin('daily','Daily Rewards',`<p>Log in every day in a row — rewards keep growing! Streak: <b>${save.daily.streak}</b></p><div class="days">${DAILY.map((d,i)=>`<div class="card ${i===idx?'today':''} ${i<idx?'got':''}"><b>Day ${i+1}</b><br>${rewTxt(d)}</div>`).join('')}</div>
+  <div class="btns"><button ${can?'':'disabled'} onclick="claimDaily()">${can?'Claim reward':'Already claimed — come back tomorrow'}</button></div>`,{w:560,icon:'📅'});},
+ online(){openWin('online','Online Match',`<div id="onmain"><fieldset><legend>Create</legend><button onclick="Net.host()">Create room</button></fieldset>
+  <fieldset><legend>Join</legend>Code: <input id="joincode" maxlength="5"> <button onclick="Net.join(document.getElementById('joincode').value)">Join</button></fieldset></div>
+  <div id="oncode" class="code"></div><div id="onstatus" class="inset" style="min-height:40px">Ready to connect. Uses P2P (WebRTC, PeerJS).</div>
+  <div class="btns"><button onclick="Net.close();closeWin('online')">Close</button></div>`,{w:420,icon:'🌐'});},
+ surv(){openWin('surv','Survival Mode',`<div class="dlg"><div class="ico">💀</div><div>Endless bot waves, each tougher than the last. One round per wave, HP carries over (+30% between waves).<br><br>Reward: 🪙 per wave, best: <b>${save.stats.survBest}</b></div></div><div class="btns"><button onclick="closeWin('surv');startSurvival()">Start</button></div>`,{w:440,icon:'💀'});},
+ tour(){openWin('tour','Tournament',`<div class="dlg"><div class="ico">🏆</div><div>8-player bracket: quarterfinal, semifinal, final (first to 2 wins).<br>Entry: 🪙100. Prizes: 1st 🪙700 + 💎15 + Rare Crate · 2nd 🪙300 + 💎5 · 3–4 🪙120 · 5–8 🪙30.<br>Tournaments won: <b>${save.stats.tourWins}</b></div></div><div class="btns"><button ${save.coins<100?'disabled':''} onclick="closeWin('tour');startTour()">Offline (bots) — 🪙100</button> <button onclick="closeWin('tour');OTour.open()">🌐 Online tournament…</button></div>`,{w:480,icon:'🏆'});},
+ help(){openWin('help','Help',`<div class="inset" style="font-size:13px"><b>Controls</b><br>Player 1: WASD — move, Space — ability<br>Player 2: arrows — move, Enter — ability<br>Both layouts work vs bots / online.<br>Esc — pause, Q (while paused) — quit.<br>Ball pick: A/D (←/→), Space (Enter), R / Right Shift — reroll.<br><br>
+  <b>How to play</b><br>Before every match you get 3 random balls from your collection — pick one (1 reroll). Collision damage depends on hit speed and mass. Every ball has a unique ability with a cooldown.<br><br>
+  <b>Progress</b><br>Coins and XP from fights → crates (rarity: Common, Rare, Epic, Legendary, Mythic) → duplicates give upgrade cards (up to Lv.10: +8% HP, +6% damage per level).<br><br><b>Arenas</b><br>${ARENAS.map(a=>a.n).join(', ')}.</div>`,{w:480,icon:'❓'});},
+ shutdown(){UI.msg('Shut Down','It is now safe to turn off your computer.<br><small>(kidding — progress saves automatically)</small>',[['OK','']],'🖥️');},
 };
 function rewTxt(d){return [d.c?'🪙'+d.c:'',d.g?'💎'+d.g:'',d.crate?CRATES[d.crate].ico+' '+CRATES[d.crate].n:''].filter(Boolean).join('<br>');}
 function claimDaily(){if(save.daily.last===today())return;const y=today(new Date(Date.now()-864e5));save.daily.streak=save.daily.last===y?save.daily.streak+1:1;save.daily.last=today();
  const d=DAILY[(save.daily.streak-1)%7];save.coins+=d.c||0;save.gems+=d.g||0;persist();checkAch();closeWin('daily');
- if(d.crate)openCrate(d.crate,true);else UI.msg('Награда получена!',rewTxt(d),null,'🎁');}
-function buyBall(id,p){if(save.coins<p)return;save.coins-=p;if(save.owned[id])save.owned[id].cards+=3;else save.owned[id]={lvl:1,cards:0};persist();checkAch();toast('Покупка',BY[id].name);UI.shop();}
+ if(d.crate)openCrate(d.crate,true);else UI.msg('Reward claimed!',rewTxt(d),null,'🎁');}
+function buyBall(id,p){if(save.coins<p)return;save.coins-=p;if(save.owned[id])save.owned[id].cards+=3;else save.owned[id]={lvl:1,cards:0};persist();checkAch();toast('Purchase',BY[id].name);UI.shop();}
 function exch(){if(save.gems<10)return;save.gems-=10;save.coins+=500;persist();UI.shop();}
-function upgrade(id){const o=save.owned[id],c=upCost(id);if(o.lvl>=10||save.coins<c.c||o.cards<c.cards)return;save.coins-=c.c;o.cards-=c.cards;o.lvl++;save.stats.upgrades++;persist();checkAch();toast('Улучшено!',BY[id].name+' → ур.'+o.lvl);UI.inv();}
-// ===================== ЯЩИКИ =====================
+function upgrade(id){const o=save.owned[id],c=upCost(id);if(o.lvl>=10||save.coins<c.c||o.cards<c.cards)return;save.coins-=c.c;o.cards-=c.cards;o.lvl++;save.stats.upgrades++;persist();checkAch();toast('Upgraded!',BY[id].name+' → Lv.'+o.lvl);UI.inv();}
+// ===================== CRATES =====================
 function rollCrate(k){const w=CRATES[k].w;let tot=0;RORD.forEach(r=>tot+=w[r]);let x=Math.random()*tot,rar='common';for(const r of RORD){if(w[r]<=0)continue;x-=w[r];if(x<=0){rar=r;break;}}
  const pool=BALLS.filter(b=>b.rar===rar);return pool[Math.random()*pool.length|0];}
 let crateTimer=null;
@@ -534,40 +534,40 @@ function openCrate(k,free){const c=CRATES[k];if(!free){if(c.cur==='c'){if(save.c
  const win=rollCrate(k);const isNew=!save.owned[win.id];if(isNew)save.owned[win.id]={lvl:1,cards:0};else{save.owned[win.id].cards++;save.coins+=Math.round(15*RAR[win.rar].m);}
  save.stats.crates++;persist();
  const items=[];for(let i=0;i<50;i++)items.push(i===42?win:rollCrate(k));
- openWin('crateopen','Открытие: '+c.n,`<div class="strip"><div class="mark"></div><div class="rail" id="rail">${items.map(b=>`<div class="cell" style="border-bottom:6px solid ${RAR[b.rar].c}">${ballIco(b,48)}${b.name}</div>`).join('')}</div></div>
-  <div id="crres" class="inset" style="margin-top:8px;min-height:60px;text-align:center">Крутим...</div><div class="btns" id="crbtn"><button onclick="finishCrate()">Пропустить</button></div>`,{w:560,modal:true,icon:c.ico});
+ openWin('crateopen','Opening: '+c.n,`<div class="strip"><div class="mark"></div><div class="rail" id="rail">${items.map(b=>`<div class="cell" style="border-bottom:6px solid ${RAR[b.rar].c}">${ballIco(b,48)}${b.name}</div>`).join('')}</div></div>
+  <div id="crres" class="inset" style="margin-top:8px;min-height:60px;text-align:center">Rolling...</div><div class="btns" id="crbtn"><button onclick="finishCrate()">Skip</button></div>`,{w:560,modal:true,icon:c.ico});
  const rail=document.getElementById('rail');const sw=rail.parentElement.clientWidth;const off=42*90-sw/2+45+rnd(-35,35);
  rail.style.transform='translateX(0)';requestAnimationFrame(()=>requestAnimationFrame(()=>{rail.style.transition='transform 4.5s cubic-bezier(.08,.6,.12,1)';rail.style.transform=`translateX(${-off}px)`;}));
  window._crate={k,win,isNew,off,done:false};clearTimeout(crateTimer);crateTimer=setTimeout(finishCrate,4700);}
 function finishCrate(){const s=window._crate;if(!s||s.done)return;s.done=true;clearTimeout(crateTimer);const rail=document.getElementById('rail');if(rail){rail.style.transition='none';rail.style.transform=`translateX(${-s.off}px)`;}
- const b=s.win,R=RAR[b.rar];document.getElementById('crres').innerHTML=`<div style="display:flex;gap:10px;align-items:center;justify-content:center">${ballIco(b)}<div style="text-align:left"><b style="font-size:16px">${b.name}</b> — <span style="color:${R.c};font-weight:bold">${R.n}</span><br>${s.isNew?'🆕 Новый шар в коллекции!':'Дубликат: +1 🃏 карточка, +🪙'+Math.round(10*R.m)}<br><small>${b.ab}: ${b.desc}</small></div></div>`;
+ const b=s.win,R=RAR[b.rar];document.getElementById('crres').innerHTML=`<div style="display:flex;gap:10px;align-items:center;justify-content:center">${ballIco(b)}<div style="text-align:left"><b style="font-size:16px">${b.name}</b> — <span style="color:${R.c};font-weight:bold">${R.n}</span><br>${s.isNew?'🆕 New ball unlocked!':'Duplicate: +1 🃏 card, +🪙'+Math.round(10*R.m)}<br><small>${b.ab}: ${b.desc}</small></div></div>`;
  const c=CRATES[s.k];const can=(c.cur==='c'?save.coins:save.gems)>=c.price;
- document.getElementById('crbtn').innerHTML=`<button ${can?'':'disabled'} onclick="openCrate('${s.k}')">Ещё раз ${c.cur==='c'?'🪙':'💎'}${c.price}</button><button onclick="closeWin('crateopen');if(!document.getElementById('w_crates').classList.contains('hide'))UI.crates()">Закрыть</button>`;
- if(b.rar==='legendary'||b.rar==='mythic')toast('НЕВЕРОЯТНО!',R.n+' шар: '+b.name);checkAch();}
-// ===================== ПРОГРЕСС =====================
+ document.getElementById('crbtn').innerHTML=`<button ${can?'':'disabled'} onclick="openCrate('${s.k}')">Again ${c.cur==='c'?'🪙':'💎'}${c.price}</button><button onclick="closeWin('crateopen');if(!document.getElementById('w_crates').classList.contains('hide'))UI.crates()">Close</button>`;
+ if(b.rar==='legendary'||b.rar==='mythic')toast('INSANE!',R.n+' ball: '+b.name);checkAch();}
+// ===================== PROGRESS =====================
 const xpNeed=l=>100+l*60;
-function addXP(n){save.xp+=n;while(save.xp>=xpNeed(save.plvl)){save.xp-=xpNeed(save.plvl);save.plvl++;const c=40*save.plvl;save.coins+=c;save.gems+=2;toast('⭐ Новый уровень игрока: '+save.plvl,'+🪙'+c+' +💎2');}}
+function addXP(n){save.xp+=n;while(save.xp>=xpNeed(save.plvl)){save.xp-=xpNeed(save.plvl);save.plvl++;const c=40*save.plvl;save.coins+=c;save.gems+=2;toast('⭐ Level up: '+save.plvl,'+🪙'+c+' +💎2');}}
 const ACH=[
- {id:'w1',n:'Первая кровь',d:'Выиграйте первый матч',g:3,f:s=>s.stats.wins>=1},{id:'w10',n:'Боец',d:'10 побед',g:5,f:s=>s.stats.wins>=10},{id:'w50',n:'Ветеран',d:'50 побед',g:15,f:s=>s.stats.wins>=50},
- {id:'m25',n:'Завсегдатай',d:'Сыграйте 25 матчей',g:5,f:s=>s.stats.matches>=25},{id:'c1',n:'Распаковка',d:'Откройте ящик',g:2,f:s=>s.stats.crates>=1},{id:'c25',n:'Азартный',d:'Откройте 25 ящиков',g:10,f:s=>s.stats.crates>=25},
- {id:'o10',n:'Коллекционер',d:'Соберите 10 шаров',g:5,f:s=>ownedIds().length>=10},{id:'o20',n:'Музей шаров',d:'Соберите 20 шаров',g:15,f:s=>ownedIds().length>=20},{id:'oall',n:'Полная коллекция',d:'Соберите все шары',g:50,f:s=>ownedIds().length>=BALLS.length},
- {id:'leg',n:'Легенда',d:'Получите легендарный шар',g:5,f:s=>ownedIds().some(i=>BY[i].rar==='legendary')},{id:'myth',n:'Миф',d:'Получите мифический шар',g:10,f:s=>ownedIds().some(i=>BY[i].rar==='mythic')},
- {id:'b1',n:'Охотник на боссов',d:'Победите босса',g:5,f:s=>s.stats.bosses>=1},{id:'camp',n:'Покоритель куба',d:'Пройдите все 60 уровней',g:30,f:s=>s.unlocked>60},
- {id:'s5',n:'Выживший',d:'Переживите 5 волн',g:5,f:s=>s.stats.survBest>=5},{id:'s15',n:'Неубиваемый',d:'Переживите 15 волн',g:20,f:s=>s.stats.survBest>=15},
- {id:'t1',n:'Чемпион',d:'Выиграйте турнир',g:10,f:s=>s.stats.tourWins>=1},{id:'up',n:'Кузнец',d:'Улучшите шар 5 раз',g:5,f:s=>s.stats.upgrades>=5},{id:'max',n:'Абсолют',d:'Шар 10 уровня',g:25,f:s=>ownedIds().some(i=>s.owned[i].lvl>=10)},
- {id:'dmg',n:'Разрушитель',d:'Нанесите 10 000 урона',g:10,f:s=>s.stats.dmg>=10000},{id:'pl10',n:'Опытный',d:'10 уровень игрока',g:10,f:s=>s.plvl>=10},
- {id:'on',n:'Сетевой игрок',d:'Победите в онлайне',g:5,f:s=>s.stats.onlineWins>=1},{id:'d7',n:'Постоянство',d:'Серия ежедневных наград 7 дней',g:10,f:s=>s.daily.streak>=7}];
-function checkAch(){let ch=false;ACH.forEach(a=>{if(!save.ach[a.id]&&a.f(save)){save.ach[a.id]=1;save.gems+=a.g;ch=true;toast('🎖️ Достижение: '+a.n,a.d+' (+💎'+a.g+')');}});if(ch)persist();else updTray();}
+ {id:'w1',n:'First Blood',d:'Win your first match',g:3,f:s=>s.stats.wins>=1},{id:'w10',n:'Brawler',d:'10 wins',g:5,f:s=>s.stats.wins>=10},{id:'w50',n:'Veteran',d:'50 wins',g:15,f:s=>s.stats.wins>=50},
+ {id:'m25',n:'Regular',d:'Play 25 matches',g:5,f:s=>s.stats.matches>=25},{id:'c1',n:'Unboxed',d:'Open a crate',g:2,f:s=>s.stats.crates>=1},{id:'c25',n:'High Roller',d:'Open 25 crates',g:10,f:s=>s.stats.crates>=25},
+ {id:'o10',n:'Collector',d:'Collect 10 balls',g:5,f:s=>ownedIds().length>=10},{id:'o20',n:'Ball Museum',d:'Collect 20 balls',g:15,f:s=>ownedIds().length>=20},{id:'oall',n:'Complete Set',d:'Collect every ball',g:50,f:s=>ownedIds().length>=BALLS.length},
+ {id:'leg',n:'Legend',d:'Get a Legendary ball',g:5,f:s=>ownedIds().some(i=>BY[i].rar==='legendary')},{id:'myth',n:'Myth',d:'Get a Mythic ball',g:10,f:s=>ownedIds().some(i=>BY[i].rar==='mythic')},
+ {id:'b1',n:'Boss Hunter',d:'Defeat a boss',g:5,f:s=>s.stats.bosses>=1},{id:'camp',n:'Cube Conqueror',d:'Clear all 60 levels',g:30,f:s=>s.unlocked>60},
+ {id:'s5',n:'Survivor',d:'Survive 5 waves',g:5,f:s=>s.stats.survBest>=5},{id:'s15',n:'Unkillable',d:'Survive 15 waves',g:20,f:s=>s.stats.survBest>=15},
+ {id:'t1',n:'Champion',d:'Win a tournament',g:10,f:s=>s.stats.tourWins>=1},{id:'up',n:'Smith',d:'Upgrade a ball 5 times',g:5,f:s=>s.stats.upgrades>=5},{id:'max',n:'Maxed Out',d:'Get a ball to Lv.10',g:25,f:s=>ownedIds().some(i=>s.owned[i].lvl>=10)},
+ {id:'dmg',n:'Wrecker',d:'Deal 10,000 damage',g:10,f:s=>s.stats.dmg>=10000},{id:'pl10',n:'Seasoned',d:'Reach player Lv.10',g:10,f:s=>s.plvl>=10},
+ {id:'on',n:'Netplayer',d:'Win online',g:5,f:s=>s.stats.onlineWins>=1},{id:'d7',n:'Dedicated',d:'7-day daily reward streak',g:10,f:s=>s.daily.streak>=7}];
+function checkAch(){let ch=false;ACH.forEach(a=>{if(!save.ach[a.id]&&a.f(save)){save.ach[a.id]=1;save.gems+=a.g;ch=true;toast('🎖️ Achievement: '+a.n,a.d+' (+💎'+a.g+')');}});if(ch)persist();else updTray();}
 function recordMatch(won,xp){const s=save.stats;s.matches++;if(won)s.wins++;else s.losses++;s.rounds+=G.score[G.me];s.dmg+=Math.round(G.dmg[G.me]);addXP(xp);persist();checkAch();}
-// ===================== ВЫБОР ШАРА =====================
+// ===================== BALL PICK =====================
 let pickState=null;
 const KS1=['KeyA','KeyD','Space','KeyR'],KS2=['ArrowLeft','ArrowRight','Enter','ShiftRight'];
 function showPick(panels,cb,title){pickState={panels,cb,choice:panels.map(()=>null),cur:panels.map(()=>0),wait:''};mode='pick';drawPick(title);}
 function drawPick(title){const s=pickState;if(!s)return;if(title)s.title=title;
- openWin('pick',s.title||'Выбор шара',`<div class="picks">${s.panels.map((p,pi)=>`<div class="pk"><h3>${p.label}${s.choice[pi]?' — выбрано ✅':''}</h3><div class="row">${
+ openWin('pick',s.title||'Pick Your Ball',`<div class="picks">${s.panels.map((p,pi)=>`<div class="pk"><h3>${p.label}${s.choice[pi]?' — picked ✅':''}</h3><div class="row">${
   p.opts.map((id,k)=>`<div class="card ${(s.choice[pi]===id||(!s.choice[pi]&&s.cur[pi]===k))?'sel':''}" onclick="pickChoose(${pi},${k})">${card(BY[id],'',{lvl:p.lvls?p.lvls[id]:undefined,showLvl:1})}</div>`).join('')}</div>
-  <div class="btns"><button ${p.rerolled||s.choice[pi]?'disabled':''} onclick="pickReroll(${pi})">🎲 Переброс (1)</button></div><div class="hint" style="text-align:center">${p.keys||'Кликните по шару'}</div></div>`).join('')}</div>
-  <div class="inset hint" style="margin-top:8px;text-align:center">${s.wait||'Каждому выпадает 3 случайных шара из своей коллекции.'}</div>`,{w:Math.min(560*s.panels.length,1180),modal:true,icon:'🎯'});}
+  <div class="btns"><button ${p.rerolled||s.choice[pi]?'disabled':''} onclick="pickReroll(${pi})">🎲 Reroll (1)</button></div><div class="hint" style="text-align:center">${p.keys||'Click a ball'}</div></div>`).join('')}</div>
+  <div class="inset hint" style="margin-top:8px;text-align:center">${s.wait||'Everyone gets 3 random balls from their own collection.'}</div>`,{w:Math.min(560*s.panels.length,1180),modal:true,icon:'🎯'});}
 function pickReroll(pi){const s=pickState;const p=s.panels[pi];if(!s||p.rerolled||s.choice[pi])return;p.rerolled=true;p.opts=pickN(p.pool,3);drawPick();}
 function pickChoose(pi,k){const s=pickState;if(!s||s.choice[pi])return;s.choice[pi]=s.panels[pi].opts[k];drawPick();if(s.choice.every(x=>x)){const c=s.choice;s.cb(c);}}
 function closePick(){pickState=null;closeWin('pick');}
@@ -576,33 +576,33 @@ function onKey(code){
    if(code===ks[0])pickState.cur[pi]=(pickState.cur[pi]+p.opts.length-1)%p.opts.length,drawPick();if(code===ks[1])pickState.cur[pi]=(pickState.cur[pi]+1)%p.opts.length,drawPick();
    if(code===ks[2])pickChoose(pi,pickState.cur[pi]);if(code===ks[3])pickReroll(pi);});}
  if(mode==='game'&&G){if(code==='Escape'){if(G.kind==='online')leaveGame();else paused=!paused;}if(paused&&code==='KeyQ'){paused=false;forfeit();}}}
-const myPanel=(label)=>{const pool=ownedIds();const lv={};pool.forEach(i=>lv[i]=save.owned[i].lvl);return {label,pool,opts:pickN(pool,3),lvls:lv,keys:'A/D — выбор · Пробел — ок · R — переброс',keyset:KS1};};
+const myPanel=(label)=>{const pool=ownedIds();const lv={};pool.forEach(i=>lv[i]=save.owned[i].lvl);return {label,pool,opts:pickN(pool,3),lvls:lv,keys:'A/D — choose · Space — OK · R — reroll',keyset:KS1};};
 const myMods=id=>{const l=save.owned[id]?save.owned[id].lvl:1;return Object.assign(applyUp(lvlMods(l),upgMods(id)),{lvl:l});};
-// ===================== РЕЖИМЫ =====================
+// ===================== MODES =====================
 function levelInfo(l){const boss=l%5===0;return {d:(l-1)/(NLV-1),boss,arena:l<5?0:boss?(l/5)%ARENAS.length:(l-1)%ARENAS.length,bossId:BOSSES[l/5-1],bossName:BOSSNAMES[l/5-1]};}
 const BOSSK={hp:1.15,dmg:.72,size:1.45};
 function botPool(d){const cap=d<.2?1:d<.5?2:d<.8?3:4;return BALLS.filter(b=>RORD.indexOf(b.rar)<=cap).map(b=>b.id);}
 function botSkill(d){return .15+.75*d;}
 const BOSSADJ={shackles:.72,ice:.75,dice:.75};function botMods(d,boss,ph,id){const bl=1+Math.round(d*5);const m=lvlMods(bl);const r={hp:(.75+d*.3)*m.hp*(boss?1.12:1),spd:.85+d*.15,dmg:(.75+d*.25)*m.dmg*(boss?.92:1),size:boss?1.05:1,lvl:bl};if(ph){r.hp*=BOSSK.hp*(BOSSADJ[id]||1);r.dmg*=BOSSK.dmg;r.size=BOSSK.size;}return r;}
 function startBot(l){const I=levelInfo(l);closeWin('levels');
- showPick([myPanel('Вы')],c=>{closePick();beginLevel(l,c[0]);},
-  `Уровень ${l}${I.boss?' — БОСС: '+I.bossName:''} · ${ARENAS[I.arena].n}`);}
+ showPick([myPanel('You')],c=>{closePick();beginLevel(l,c[0]);},
+  `Level ${l}${I.boss?' — BOSS: '+I.bossName:''} · ${ARENAS[I.arena].n}`);}
 function levelOpts(l){const I=levelInfo(l),F=levelFeat(l);const pers=!I.boss&&F.pers?rollPers(F.sniper):null;
  const opp=I.boss?I.bossId:pickN(pers?persPool(botPool(I.d),pers):botPool(I.d),3).sort((a,b)=>Math.random()<I.d?BY[b].hp*BY[b].mass-BY[a].hp*BY[a].mass:0)[0];
  const mods=F.mods?rollMods(I.boss?1:F.mods,F.wild):[];if(I.boss){const k=mods.indexOf('onehp');if(k>=0)mods.splice(k,1);}
  return {opp,o:{level:l,d:I.d,sk:botSkill(I.d),boss:I.boss,phases:I.boss,needs:I.boss?[1,2]:null,arena:I.arena,pers1:pers,mods,obs:I.boss?0:F.obs,pk:F.pk,aev:aevFor(l),pkTypes:l>=26?['shield','speed','dmg','heal','bomb']:null,
-  names:['Вы',I.boss?'☠ '+I.bossName:'Бот ур.'+l],mods1:botMods(I.d,I.boss,I.boss,I.bossId)}};}
+  names:['You',I.boss?'☠ '+I.bossName:'Bot Lv.'+l],mods1:botMods(I.d,I.boss,I.boss,I.bossId)}};}
 function beginLevel(l,myId,m0){const L=levelOpts(l);L.o.mods0=m0||myMods(myId);Bot.t=0;newMatch('bot',[myId,L.opp],L.o);}
-function startLocal(){const p1=myPanel('Игрок 1 (WASD)'),p2=myPanel('Игрок 2 (стрелки)');p2.keys='←/→ — выбор · Enter — ок · Пр.Shift — переброс';p2.keyset=KS2;
- showPick([p1,p2],c=>{closePick();newMatch('local',c,{names:['Игрок 1','Игрок 2'],arena:Math.random()*ARENAS.length|0,mods0:myMods(c[0]),mods1:myMods(c[1])});},'Вдвоём: каждый выбирает из 3 случайных');}
+function startLocal(){const p1=myPanel('Player 1 (WASD)'),p2=myPanel('Player 2 (arrows)');p2.keys='←/→ — choose · Enter — OK · R.Shift — reroll';p2.keyset=KS2;
+ showPick([p1,p2],c=>{closePick();newMatch('local',c,{names:['Player 1','Player 2'],arena:Math.random()*ARENAS.length|0,mods0:myMods(c[0]),mods1:myMods(c[1])});},'Couch 1v1: each picks from 3 random');}
 const Surv={wave:0,ball:null,hp:1,earned:0,up:{}};
-function startSurvival(){showPick([myPanel('Ваш шар на весь забег')],c=>{closePick();Surv.wave=0;Surv.ball=c[0];Surv.hp=1;Surv.earned=0;Surv.up={};nextWave();},'Выживание: выберите шар');}
+function startSurvival(){showPick([myPanel('Your ball for the whole run')],c=>{closePick();Surv.wave=0;Surv.ball=c[0];Surv.hp=1;Surv.earned=0;Surv.up={};nextWave();},'Survival: pick a ball');}
 function nextWave(){Surv.wave++;const d=Math.min(1,(Surv.wave-1)/20);const boss=Surv.wave%5===0;Bot.t=0;
  const w=Surv.wave,pers=!boss&&w>=3?rollPers(w>=10):null;
- newMatch('surv',[Surv.ball,boss?BOSSES[(Surv.wave/5-1)%BOSSES.length]:pickN(pers?persPool(botPool(d),pers):botPool(d),1)[0]],{d,sk:botSkill(d),need:1,arena:Math.random()*ARENAS.length|0,hp0Frac:Surv.hp,names:['Вы',(boss?'☠ Босс':'Волна')+' '+Surv.wave],
+ newMatch('surv',[Surv.ball,boss?BOSSES[(Surv.wave/5-1)%BOSSES.length]:pickN(pers?persPool(botPool(d),pers):botPool(d),1)[0]],{d,sk:botSkill(d),need:1,arena:Math.random()*ARENAS.length|0,hp0Frac:Surv.hp,names:['You',(boss?'☠ Boss':'Wave')+' '+Surv.wave],
   mods0:survMods(),mods1:survFoe(botMods(d*.7,boss),w),pers1:pers,phases:boss,pk:w>=4,aev:aevFor(w*3+2),obs:boss?0:w>=12?2:w>=7?1:0,mods:!boss&&w>=10&&w%2===0?rollMods(1,false):[]});}
-const Tour={stage:0,names:[],P:[],R:[],on:null};const STAGES=['Четвертьфинал','Полуфинал','Финал'];
-const TPRIZE=[{c:700,g:15,crate:'rare',n:'1 место'},{c:300,g:5,n:'2 место'},{c:120,g:0,n:'3–4 место'},{c:30,g:0,n:'5–8 место'}];
+const Tour={stage:0,names:[],P:[],R:[],on:null};const STAGES=['Quarterfinal','Semifinal','Final'];
+const TPRIZE=[{c:700,g:15,crate:'rare',n:'1st place'},{c:300,g:5,n:'2nd place'},{c:120,g:0,n:'3rd–4th place'},{c:30,g:0,n:'5th–8th place'}];
 function tourBots(n){const nm=shuffle(BOTNAMES.slice());return Array.from({length:n},(_,i)=>{const d=.2+Math.random()*.6;return {nm:nm[i%nm.length],d,ball:pickN(botPool(d),1)[0],bot:1};});}
 function tourInit(P){Tour.P=P;const o=shuffle(P.map((_,i)=>i));Tour.R=[o,[],[],[]];Tour.stage=0;}
 function tourPair(r){const a=Tour.R[r],out=[];for(let k=0;k<a.length;k+=2)out.push([a[k],a[k+1]]);return out;}
@@ -610,46 +610,46 @@ function tourSimOthers(r){tourPair(r).forEach(([x,y],k)=>{if(Tour.R[r+1][k]!=nul
 function tourMe(){return Tour.P.findIndex(p=>p.me);}
 function tourPlace(i){for(let r=3;r>=0;r--)if(Tour.R[r].includes(i))return r===3?0:r===2?1:r===1?2:3;return 3;}
 function tourHtml(){const col=r=>Tour.R[r].map(i=>i==null?'<div class="tb">—</div>':`<div class="tb" style="${Tour.P[i].me?'background:#ffffc0;font-weight:bold':''}${r<3&&Tour.R[r+1].length&&Tour.R[r+1].includes(i)?';color:#060':''}">${ballIco(BY[Tour.P[i].ball]||BY.dash,16)} ${Tour.P[i].nm}</div>`).join('');
- const full=r=>{const a=Tour.R[r].slice();while(a.length<[8,4,2,1][r])a.push(null);return a;};const bak=Tour.R;Tour.R=[0,1,2,3].map(full);const h=`<div style="display:flex;gap:6px;align-items:stretch;font-size:11px">${[0,1,2,3].map(r=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:space-around"><div style="text-align:center;font-weight:bold">${['1/4','1/2','Финал','Чемпион'][r]}</div>${col(r)}</div>`).join('')}</div>`;Tour.R=bak;return h;}
-function tourShow(msg,btns){openWin('tourbr','Турнирная сетка — 8 участников',`<style>.tb{border:1px solid #808080;background:#fff;padding:2px 3px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset -1px -1px #c0c0c0}</style>${tourHtml()}<div style="margin-top:8px;font-size:12px">${msg||''}</div><div class="btns" style="margin-top:6px">${(btns||[]).map(([t,f])=>`<button onclick="${f}">${t}</button>`).join(' ')}</div>`,{w:560,icon:'🏆'});}
-function startTour(){if(save.coins<100)return;save.coins-=100;persist();const me={nm:'Вы',me:1,ball:save.sel||ownedIds()[0],d:.5};tourInit([me].concat(tourBots(7)));Tour.on=null;Tour.names=[];
- tourShow('Взнос 🪙100 оплачен. Ваш соперник в четвертьфинале: <b>'+tourOpp().nm+'</b>.',[['В бой ▶',"closeWin('tourbr');tourMatch()"]]);}
+ const full=r=>{const a=Tour.R[r].slice();while(a.length<[8,4,2,1][r])a.push(null);return a;};const bak=Tour.R;Tour.R=[0,1,2,3].map(full);const h=`<div style="display:flex;gap:6px;align-items:stretch;font-size:11px">${[0,1,2,3].map(r=>`<div style="flex:1;display:flex;flex-direction:column;justify-content:space-around"><div style="text-align:center;font-weight:bold">${['1/4','1/2','Final','Champion'][r]}</div>${col(r)}</div>`).join('')}</div>`;Tour.R=bak;return h;}
+function tourShow(msg,btns){openWin('tourbr','Tournament Bracket — 8 players',`<style>.tb{border:1px solid #808080;background:#fff;padding:2px 3px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:inset -1px -1px #c0c0c0}</style>${tourHtml()}<div style="margin-top:8px;font-size:12px">${msg||''}</div><div class="btns" style="margin-top:6px">${(btns||[]).map(([t,f])=>`<button onclick="${f}">${t}</button>`).join(' ')}</div>`,{w:560,icon:'🏆'});}
+function startTour(){if(save.coins<100)return;save.coins-=100;persist();const me={nm:'You',me:1,ball:save.sel||ownedIds()[0],d:.5};tourInit([me].concat(tourBots(7)));Tour.on=null;Tour.names=[];
+ tourShow('Entry 🪙100 paid. Your quarterfinal opponent: <b>'+tourOpp().nm+'</b>.',[['Fight ▶',"closeWin('tourbr');tourMatch()"]]);}
 function tourOpp(){const me=tourMe(),r=Tour.stage;const pr=tourPair(r).find(p=>p.includes(me));return Tour.P[pr[0]===me?pr[1]:pr[0]];}
-function tourMatch(){const d=[.3,.55,.8][Tour.stage],o=tourOpp();showPick([myPanel('Вы')],c=>{closePick();Bot.t=0;const bd=Math.max(d,o.d*.9);
- newMatch('tour',[c[0],o.ball||pickN(botPool(bd),1)[0]],{d:bd,sk:botSkill(bd),arena:Math.random()*ARENAS.length|0,names:['Вы',o.nm],mods0:myMods(c[0]),mods1:botMods(bd,false)});},`Турнир: ${STAGES[Tour.stage]} против ${o.nm}`);}
+function tourMatch(){const d=[.3,.55,.8][Tour.stage],o=tourOpp();showPick([myPanel('You')],c=>{closePick();Bot.t=0;const bd=Math.max(d,o.d*.9);
+ newMatch('tour',[c[0],o.ball||pickN(botPool(bd),1)[0]],{d:bd,sk:botSkill(bd),arena:Math.random()*ARENAS.length|0,names:['You',o.nm],mods0:myMods(c[0]),mods1:botMods(bd,false)});},`Tournament: ${STAGES[Tour.stage]} vs ${o.nm}`);}
 function tourAdvance(won){const r=Tour.stage,me=tourMe();const k=tourPair(r).findIndex(p=>p.includes(me));const pr=tourPair(r)[k];Tour.R[r+1][k]=won?me:(pr[0]===me?pr[1]:pr[0]);tourSimOthers(r);
  if(!won)for(let q=r+1;q<3;q++)tourSimOthers(q);}
-function tourGiveUp(){for(let q=Tour.stage;q<3;q++){if(q>Tour.stage||!Tour.R[q+1].length)tourSimOthers(q);}const me=tourMe();const k=tourPair(Tour.stage).findIndex(p=>p.includes(me));const pr=tourPair(Tour.stage)[k];Tour.R[Tour.stage+1][k]=pr[0]===me?pr[1]:pr[0];for(let q=Tour.stage+1;q<3;q++)tourSimOthers(q);const p=tourPrize(tourPlace(me));persist();toast('Турнир','Вы сдались. Приз: 🪙'+p.c);}
+function tourGiveUp(){for(let q=Tour.stage;q<3;q++){if(q>Tour.stage||!Tour.R[q+1].length)tourSimOthers(q);}const me=tourMe();const k=tourPair(Tour.stage).findIndex(p=>p.includes(me));const pr=tourPair(Tour.stage)[k];Tour.R[Tour.stage+1][k]=pr[0]===me?pr[1]:pr[0];for(let q=Tour.stage+1;q<3;q++)tourSimOthers(q);const p=tourPrize(tourPlace(me));persist();toast('Tournament','You forfeited. Prize: 🪙'+p.c);}
 function tourPrize(pl){const p=TPRIZE[pl];save.coins+=p.c;save.gems+=p.g;save.stats.tourBest=Math.min(save.stats.tourBest??9,pl);return p;}
-function onMatchOver(){const w=G.winner,me=G.me,won=w===me,sc=`Счёт ${G.score[0]}:${G.score[1]} · Урон: ${Math.round(G.dmg[me])}`;
+function onMatchOver(){const w=G.winner,me=G.me,won=w===me,sc=`Score ${G.score[0]}:${G.score[1]} · Damage: ${Math.round(G.dmg[me])}`;
  if(G.kind==='bot'){const l=G.opts.level,I=levelInfo(l);
   if(won){const first=l===save.unlocked,r=Math.round((30+l*4)*(I.boss?2.5:1)*(first?1:.4)),g=I.boss&&first?4:0;save.coins+=r;save.gems+=g;if(I.boss)save.stats.bosses++;if(l===save.unlocked&&l<=NLV)save.unlocked++;recordMatch(true,40+l*2);
-   UI.msg(I.boss?'☠ БОСС ПОВЕРЖЕН!':'🏆 ПОБЕДА!',`${sc}<br>Награда: 🪙${r}${g?' 💎'+g:''} · XP +${40+l*2}`+(l<NLV?'':'<br><b>Кампания пройдена!</b>')+featNotice(),[[l<NLV?'Следующий уровень ▶':'Ещё раз',`startBot(${Math.min(NLV,l+1)})`],['Меню','UI.home()']],'🏆');}
-  else{save.coins+=5+l;recordMatch(false,15);UI.msg('💀 ПОРАЖЕНИЕ',`${sc}<br>Утешительный приз: 🪙${5+l} · XP +15<br><small>Совет: улучшайте шары в Инвентаре.</small>`,[['Повторить',`startBot(${l})`],['Меню','UI.home()']],'💀');}}
- else if(G.kind==='local'){save.stats.local++;persist();checkAch();UI.msg('🏆 Победил '+G.names[w]+'!',sc.split(' · ')[0],[['Реванш','startLocal()'],['Меню','UI.home()']],'🏆');}
+   UI.msg(I.boss?'☠ BOSS DOWN!':'🏆 VICTORY!',`${sc}<br>Reward: 🪙${r}${g?' 💎'+g:''} · XP +${40+l*2}`+(l<NLV?'':'<br><b>Campaign complete!</b>')+featNotice(),[[l<NLV?'Next level ▶':'Again',`startBot(${Math.min(NLV,l+1)})`],['Menu','UI.home()']],'🏆');}
+  else{save.coins+=5+l;recordMatch(false,15);UI.msg('💀 DEFEAT',`${sc}<br>Consolation prize: 🪙${5+l} · XP +15<br><small>Tip: upgrade your balls in Inventory.</small>`,[['Retry',`startBot(${l})`],['Menu','UI.home()']],'💀');}}
+ else if(G.kind==='local'){save.stats.local++;persist();checkAch();UI.msg('🏆 Winner '+G.names[w]+'!',sc.split(' · ')[0],[['Rematch','startLocal()'],['Menu','UI.home()']],'🏆');}
  else if(G.kind==='surv'){const b=G.balls[0];
   if(won){const r=10+Surv.wave*5;Surv.earned+=r;save.coins+=r;save.stats.survBest=Math.max(save.stats.survBest,Surv.wave);Surv.hp=Math.min(1,b.hp/b.maxHp+.3);recordMatch(true,20+Surv.wave*3);const of=survOffer();
-   UI.msg('Волна '+Surv.wave+' пройдена!',`+🪙${r} (всего 🪙${Surv.earned})<br>HP на следующую волну: ${Math.round(Surv.hp*100)}%<br><br><b>Выберите улучшение:</b><br>`+of.map(u=>'<b>'+u.n+'</b> — '+u.d+((Surv.up[u.id]||0)?' (есть '+Surv.up[u.id]+')':'')).join('<br>'),of.map(u=>[u.n,`survTake('${u.id}')`]).concat([['Забрать и выйти','UI.home()']]),'💀');}
-  else{recordMatch(false,10);UI.msg('Забег окончен',`Вы пали на волне ${Surv.wave}.<br>Заработано: 🪙${Surv.earned}<br>Рекорд: ${save.stats.survBest} волн`,[['Ещё забег','startSurvival()'],['Меню','UI.home()']],'💀');}}
+   UI.msg('Wave '+Surv.wave+' cleared!',`+🪙${r} (total 🪙${Surv.earned})<br>HP for next wave: ${Math.round(Surv.hp*100)}%<br><br><b>Pick an upgrade:</b><br>`+of.map(u=>'<b>'+u.n+'</b> — '+u.d+((Surv.up[u.id]||0)?' (have '+Surv.up[u.id]+')':'')).join('<br>'),of.map(u=>[u.n,`survTake('${u.id}')`]).concat([['Cash out','UI.home()']]),'💀');}
+  else{recordMatch(false,10);UI.msg('Run over',`You fell on wave ${Surv.wave}.<br>Earned: 🪙${Surv.earned}<br>Best: ${save.stats.survBest} waves`,[['New run','startSurvival()'],['Menu','UI.home()']],'💀');}}
  else if(G.kind==='tour'){if(window.OTour&&Tour.online){OTour.result(won,sc);}else{tourAdvance(won);
-  if(won&&Tour.stage<2){recordMatch(true,40);Tour.stage++;tourShow(`<b>${STAGES[Tour.stage-1]} пройден!</b> ${sc}<br>Далее: ${STAGES[Tour.stage]} против <b>${tourOpp().nm}</b>`,[['Продолжить ▶',"closeWin('tourbr');tourMatch()"],['Сдаться',"closeWin('tourbr');tourGiveUp()"]]);UI.home();}
-  else if(won){tourPrize(0);save.stats.tourWins++;recordMatch(true,150);tourShow(`<b>🏆 ЧЕМПИОН ТУРНИРА!</b> ${sc}<br>Приз: 🪙700 + 💎15 + Редкий ящик`,[['Открыть ящик',"closeWin('tourbr');openCrate('rare',true)"]]);UI.home();}
-  else{const pl=tourPlace(tourMe());const p=tourPrize(pl);recordMatch(false,20);tourShow(`Выбыли: ${STAGES[Tour.stage]}. ${sc}<br>Итог: <b>${p.n}</b>. Приз: 🪙${p.c}${p.g?' 💎'+p.g:''}<br>Победитель турнира: <b>${Tour.P[Tour.R[3][0]].nm}</b>`,[['OK',"closeWin('tourbr')"]]);UI.home();}}}
+  if(won&&Tour.stage<2){recordMatch(true,40);Tour.stage++;tourShow(`<b>${STAGES[Tour.stage-1]} cleared!</b> ${sc}<br>Next: ${STAGES[Tour.stage]} vs <b>${tourOpp().nm}</b>`,[['Continue ▶',"closeWin('tourbr');tourMatch()"],['Forfeit',"closeWin('tourbr');tourGiveUp()"]]);UI.home();}
+  else if(won){tourPrize(0);save.stats.tourWins++;recordMatch(true,150);tourShow(`<b>🏆 TOURNAMENT CHAMPION!</b> ${sc}<br>Prize: 🪙700 + 💎15 + Rare Crate`,[['Open crate',"closeWin('tourbr');openCrate('rare',true)"]]);UI.home();}
+  else{const pl=tourPlace(tourMe());const p=tourPrize(pl);recordMatch(false,20);tourShow(`Out: ${STAGES[Tour.stage]}. ${sc}<br>Result: <b>${p.n}</b>. Prize: 🪙${p.c}${p.g?' 💎'+p.g:''}<br>Tournament winner: <b>${Tour.P[Tour.R[3][0]].nm}</b>`,[['OK',"closeWin('tourbr')"]]);UI.home();}}}
  else if(G.kind==='raid'){const l=G.opts.level;if(won){const g=save.raid.last!==today()?1:0;if(g){save.raid.last=today();save.gems+=1;}const r=40+l*2;save.coins+=r;save.stats.bosses++;recordMatch(true,40+l);
-   UI.msg('☠ РЕЙД УСПЕШЕН!',`${G.names[1]} повержен!<br>Награда: 🪙${r}${g?' 💎1':''}`,[['Ещё рейд','UI.modes()'],['Меню','UI.home()']],'🏆');}
-  else{save.coins+=5;recordMatch(false,10);UI.msg('💀 Рейд провален',`${G.names[1]} оказался сильнее.<br>Утешительный приз: 🪙5`,[['Повторить',`startRaid(${l})`],['Меню','UI.home()']],'💀');}}
+   UI.msg('☠ RAID CLEARED!',`${G.names[1]} defeated!<br>Reward: 🪙${r}${g?' 💎1':''}`,[['Raid again','UI.modes()'],['Menu','UI.home()']],'🏆');}
+  else{save.coins+=5;recordMatch(false,10);UI.msg('💀 Raid failed',`${G.names[1]} was too strong.<br>Consolation prize: 🪙5`,[['Retry',`startRaid(${l})`],['Menu','UI.home()']],'💀');}}
  else if(G.kind==='daily'){if(won){const f=save.dch.last!==today();if(f){save.dch.last=today();save.coins+=150;save.gems+=3;save.stats.dch=(save.stats.dch||0)+1;}recordMatch(true,f?80:20);
-   UI.msg('🏆 ИСПЫТАНИЕ ДНЯ ПРОЙДЕНО!',sc+(f?'<br>Награда: 🪙150 💎3':'<br>Награда за сегодня уже получена.'),[['Меню','UI.home()']],'🏆');}
-  else{recordMatch(false,10);UI.msg('💀 Испытание не пройдено',sc+'<br>Попробуйте ещё раз — условия те же до конца дня.',[['Повторить','beginDaily()'],['Меню','UI.home()']],'💀');}}
- else if(G.multi){const md=MODEDEF[G.mode],u=save.unlocked,r=won?Math.round(35+u*1.5):5,tsc=G.mode==='foot'||G.score.length===2?G.score.map(Math.floor).join(':'):'ваши очки: '+Math.floor(G.score[0]);save.coins+=r;recordMatch(won,won?50:15);
-   UI.msg(won?'🏆 ПОБЕДА!':w<0?'Ничья':'💀 ПОРАЖЕНИЕ',`${md.n} · ${tsc}${w>=0&&!won?'<br>Победитель: '+G.names[w]:''}<br>Награда: 🪙${r}`,[['Ещё раз',`startMode('${G.mode}')`],['Режимы','UI.modes()'],['Меню','UI.home()']],won?'🏆':'💀');}
+   UI.msg('🏆 DAILY CHALLENGE CLEARED!',sc+(f?'<br>Reward: 🪙150 💎3':'<br>Today’s reward already claimed.'),[['Menu','UI.home()']],'🏆');}
+  else{recordMatch(false,10);UI.msg('💀 Challenge failed',sc+'<br>Try again — same rules until the end of the day.',[['Retry','beginDaily()'],['Menu','UI.home()']],'💀');}}
+ else if(G.multi){const md=MODEDEF[G.mode],u=save.unlocked,r=won?Math.round(35+u*1.5):5,tsc=G.mode==='foot'||G.score.length===2?G.score.map(Math.floor).join(':'):'your score: '+Math.floor(G.score[0]);save.coins+=r;recordMatch(won,won?50:15);
+   UI.msg(won?'🏆 VICTORY!':w<0?'Draw':'💀 DEFEAT',`${md.n} · ${tsc}${w>=0&&!won?'<br>Winner: '+G.names[w]:''}<br>Reward: 🪙${r}`,[['Again',`startMode('${G.mode}')`],['Modes','UI.modes()'],['Menu','UI.home()']],won?'🏆':'💀');}
  else if(G.kind==='online')Net.over(w);}
-// ===================== РАЗНООБРАЗИЕ: ХАРАКТЕРЫ, МОДИФИКАТОРЫ, ЛОВУШКИ, БОНУСЫ =====================
+// ===================== VARIETY: PERSONALITIES, MODIFIERS, TRAPS, PICKUPS =====================
 const ENV={dmgMul:1,x:400,y:400,tm:-1};
-const PERS={aggr:{n:'Агрессор',c:'#ff6b6b',d:'всегда идёт в атаку'},coward:{n:'Трус',c:'#90caf9',d:'держит дистанцию и убегает'},trick:{n:'Хитрец',c:'#ce93d8',d:'копит способность для комбо'},hunter:{n:'Охотник',c:'#ffb74d',d:'дожимает, когда у вас мало HP'},sniper:{n:'Снайпер',c:'#a5d6a7',d:'держится как можно дальше и метко стреляет'}};
+const PERS={aggr:{n:'Rusher',c:'#ff6b6b',d:'always attacks'},coward:{n:'Chicken',c:'#90caf9',d:'keeps distance and runs'},trick:{n:'Trickster',c:'#ce93d8',d:'saves its ability for combos'},hunter:{n:'Stalker',c:'#ffb74d',d:'goes for the kill when your HP is low'},sniper:{n:'Sniper',c:'#a5d6a7',d:'stays as far away as possible and shoots precisely'}};
 const PERSK=Object.keys(PERS);
-// ----- арена-события (не бонусы): метеоры, шквал, заморозки, ускорение, рокировка -----
-const AEV=[{k:'meteor',lvl:14,n:'☄ Метеоритный дождь!',d:5.5},{k:'gust',lvl:19,n:'🌬 Шквальный ветер!',d:5},{k:'frost',lvl:24,n:'❄ Заморозки — скользко!',d:6},{k:'rush',lvl:30,n:'⚡ Ускорение для всех!',d:5},{k:'swap',lvl:38,n:'🔄 Рокировка!',d:1.3}];
+// ----- arena events (not pickups): meteors, gale, freeze, speed-up, swap -----
+const AEV=[{k:'meteor',lvl:14,n:'☄ Meteor shower!',d:5.5},{k:'gust',lvl:19,n:'🌬 Gale!',d:5},{k:'frost',lvl:24,n:'❄ Deep freeze — slippery!',d:6},{k:'rush',lvl:30,n:'⚡ Speed rush for everyone!',d:5},{k:'swap',lvl:38,n:'🔄 Swap!',d:1.3}];
 function aevFor(l){return AEV.filter(e=>l>=e.lvl).map(e=>e.k);}
 function aevStart(k){const E=AEV.find(e=>e.k===k);G.ae={k,t:E.d,mt:0};G.aeMsg={s:E.n,t:2};
  if(k==='gust'){const a=rnd(0,6.283);G.ae.wx=Math.cos(a);G.ae.wy=Math.sin(a);}
@@ -671,29 +671,29 @@ function drawAevFloor(st){const A=st.ae,t=G_t;
  if(A&&A.k==='swap'&&st.balls[A.a]&&st.balls[A.b]){const a=P(st.balls[A.a].x,st.balls[A.a].y),b=P(st.balls[A.b].x,st.balls[A.b].y);ctx.setLineDash([8,6]);ctx.strokeStyle='#b388ff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);ctx.lineWidth=1;}
  (st.met||[]).forEach(m=>{if(m.w>0)floorEllipse(m.x,m.y,m.R*(1-m.w/1.4*.25),Math.sin(t*18)>0?'rgba(255,60,0,.22)':'rgba(255,60,0,.1)','#ff3d00',2);else floorEllipse(m.x,m.y,m.R,'rgba(255,140,0,.45)',null,0);});}
 window.AEVforce=k=>{if(G){G.aeForce=k;G.ae=null;G.aeT=0;}};
-const MODS={lowgrav:'Низкая гравитация',ice:'Гололёд',shrink:'Сжимающийся куб',lava:'Лавовый пол',fog:'Туман',fast:'Двойная скорость',onehp:'Всем 1 HP',giant:'Гигантские шары'};
-const PKT={shield:{n:'Щит',c:'#4cc9f0',s:'◘'},speed:{n:'Скорость',c:'#ffd166',s:'»'},dmg:{n:'Урон x2',c:'#ff5252',s:'2'},heal:{n:'Лечение',c:'#4ade80',s:'+'},bomb:{n:'Бомба',c:'#37474f',s:'●'}};
+const MODS={lowgrav:'Low Gravity',ice:'Black Ice',shrink:'Shrinking Cube',lava:'Floor Is Lava',fog:'Fog',fast:'Double Speed',onehp:'Everyone 1 HP',giant:'Giant Balls'};
+const PKT={shield:{n:'Shield',c:'#4cc9f0',s:'◘'},speed:{n:'Speed',c:'#ffd166',s:'»'},dmg:{n:'Dmg x2',c:'#ff5252',s:'2'},heal:{n:'Heal',c:'#4ade80',s:'+'},bomb:{n:'Bomb',c:'#37474f',s:'●'}};
 const FEAT=[
- {id:'pers',lvl:6,n:'Характеры ботов',d:'Боты получают характер: Агрессор, Трус, Хитрец или Охотник. Он подписан под шаром.'},
- {id:'raid',lvl:6,n:'Рейд на босса',d:'В окне «Режимы» можно снова сразиться с любым побеждённым боссом.'},
- {id:'daily',lvl:8,n:'Испытание дня',d:'Раз в день — бой с особыми условиями и наградой (окно «Режимы»).'},
- {id:'pk',lvl:11,n:'Бонусы на поле',d:'Изредка на арене появляются Щит, Скорость, Урон x2 и Лечение. Боты тоже за ними охотятся!'},
- {id:'aev1',lvl:14,n:'Событие «Метеоритный дождь»',d:'Иногда с неба падают метеоры: уходите из красных кругов!'},
- {id:'ffa',lvl:13,n:'Режим «Все против всех»',d:'Вы против 4–6 ботов, раунд выигрывает последний выживший.'},
- {id:'obs',lvl:16,n:'Препятствия',d:'В кубе появляются шипы и прыжковые площадки.'},
- {id:'sniper',lvl:17,n:'Характер «Снайпер»',d:'Держится как можно дальше и метко стреляет.'},
- {id:'team2',lvl:18,n:'Режим «2 на 2»',d:'Вы и бот-напарник против двух ботов.'},
- {id:'aev2',lvl:19,n:'Событие «Шквальный ветер»',d:'Порыв ветра на несколько секунд сносит все шары в одну сторону.'},
- {id:'mods',lvl:21,n:'Модификаторы арены',d:'Низкая гравитация, гололёд, туман, лавовый пол, сжимающийся куб, двойная скорость.'},
- {id:'koth',lvl:23,n:'Режим «Царь горы»',d:'Удерживайте зону дольше соперников.'},
- {id:'aev3',lvl:24,n:'Событие «Заморозки»',d:'Пол на 6 секунд становится скользким для всех.'},
- {id:'obs2',lvl:26,n:'Ловушки и бонус «Бомба»',d:'Порталы, движущиеся стены и взрывные бочки. На поле появляется бонус «Бомба».'},
- {id:'foot',lvl:28,n:'Режим «Шаробол»',d:'Футбол 2 на 2: закатите мяч в ворота соперника.'},
- {id:'aev4',lvl:30,n:'Событие «Ускорение»',d:'Все шары 5 секунд двигаются на 30% быстрее.'},
- {id:'team3',lvl:33,n:'Режим «3 на 3»',d:'Командный бой: вы и два бота-напарника.'},
- {id:'mods2',lvl:36,n:'Безумные модификаторы',d:'«Всем 1 HP» и «Гигантские шары».'},
- {id:'aev5',lvl:38,n:'Событие «Рокировка»',d:'Два соперника меняются местами (пунктир предупреждает заранее).'},
- {id:'mods3',lvl:46,n:'Двойные модификаторы',d:'Теперь на уровнях действуют сразу два модификатора.'},
+ {id:'pers',lvl:6,n:'Bot Personalities',d:'Bots get a personality: Rusher, Chicken, Trickster or Stalker. It’s shown under the ball.'},
+ {id:'raid',lvl:6,n:'Boss Raid',d:'Rematch any boss you’ve beaten from the Modes window.'},
+ {id:'daily',lvl:8,n:'Daily Challenge',d:'Once a day — a fight with special rules and a reward (Modes window).'},
+ {id:'pk',lvl:11,n:'Arena Pickups',d:'Shield, Speed, Dmg x2 and Heal sometimes spawn in the arena. Bots go for them too!'},
+ {id:'aev1',lvl:14,n:'“Meteor Shower” event',d:'Meteors sometimes fall from the sky: get out of the red circles!'},
+ {id:'ffa',lvl:13,n:'“Free-for-All” mode',d:'You vs 4–6 bots, last ball standing wins the round.'},
+ {id:'obs',lvl:16,n:'Obstacles',d:'Spikes and jump pads appear in the cube.'},
+ {id:'sniper',lvl:17,n:'“Sniper” personality',d:'Stays as far away as possible and shoots precisely.'},
+ {id:'team2',lvl:18,n:'“2v2” mode',d:'You and a bot buddy vs two bots.'},
+ {id:'aev2',lvl:19,n:'“Gale” event',d:'A gust of wind blows every ball one way for a few seconds.'},
+ {id:'mods',lvl:21,n:'Arena Modifiers',d:'Low gravity, black ice, fog, floor is lava, shrinking cube, double speed.'},
+ {id:'koth',lvl:23,n:'“King of the Hill” mode',d:'Hold the zone longer than your rivals.'},
+ {id:'aev3',lvl:24,n:'“Deep Freeze” event',d:'The floor gets slippery for everyone for 6 seconds.'},
+ {id:'obs2',lvl:26,n:'Traps + “Bomb” pickup',d:'Portals, moving walls and explosive barrels. A “Bomb” pickup appears on the field.'},
+ {id:'foot',lvl:28,n:'“Goal Rush” mode',d:'2v2 soccer: roll the ball into the enemy goal.'},
+ {id:'aev4',lvl:30,n:'“Speed Rush” event',d:'Every ball moves 30% faster for 5 seconds.'},
+ {id:'team3',lvl:33,n:'“3v3” mode',d:'Team fight: you and two bot buddies.'},
+ {id:'mods2',lvl:36,n:'Wild Modifiers',d:'“Everyone 1 HP” and “Giant Balls”.'},
+ {id:'aev5',lvl:38,n:'“Swap” event',d:'Two rivals swap places (a dotted line warns you first).'},
+ {id:'mods3',lvl:46,n:'Double Modifiers',d:'Levels now have two modifiers at once.'},
 ];
 const NLV=60;
 const has=f=>{const F=FEAT.find(x=>x.id===f);return !F||save.unlocked>=F.lvl;};
@@ -721,7 +721,7 @@ function genObs(n){const L=[];const free=(x,y,R)=>Math.hypot(x-200,y-400)>R+90&&
   put('barrel',20,{rt:0});if(Math.random()<.6)put('barrel',20,{rt:0});}
  return L;}
 function extrasPre(dt,fight){const M=G.mset;
- if(fight&&G.mode!=='koth'&&G.mode!=='foot'){G.rft+=dt;if(G.rft>60){if(!G.sdOn){G.sdOn=1;G.sdT=0;G.banner='ВНЕЗАПНАЯ СМЕРТЬ!';}G.sdT+=dt;if(G.banner==='ВНЕЗАПНАЯ СМЕРТЬ!'){G.bA=Math.max(0,Math.min(1,(2.6-G.sdT)/0.6));if(G.sdT>=2.6){G.banner='';G.bA=1;}}if(G.sdT===dt){emit({k:'ko',x:400,y:400,c:'#ff5252'});}G.lo=Math.min(250,G.lo+dt*9);}}
+ if(fight&&G.mode!=='koth'&&G.mode!=='foot'){G.rft+=dt;if(G.rft>60){if(!G.sdOn){G.sdOn=1;G.sdT=0;G.banner='SUDDEN DEATH!';}G.sdT+=dt;if(G.banner==='SUDDEN DEATH!'){G.bA=Math.max(0,Math.min(1,(2.6-G.sdT)/0.6));if(G.sdT>=2.6){G.banner='';G.bA=1;}}if(G.sdT===dt){emit({k:'ko',x:400,y:400,c:'#ff5252'});}G.lo=Math.min(250,G.lo+dt*9);}}
  if(M.shrink&&fight)G.lo=Math.min(220,G.lo+dt*4);
  if(M.lava&&fight){G.ltT-=dt;if(G.ltT<=0){G.ltT=5;const n=3+(Math.random()*2|0);for(let k=0;k<n;k++)G.lt.push({x:(Math.random()*5|0)*160,y:(Math.random()*5|0)*160,t:4.3,w:1.3});}
   G.lt.forEach(t=>{t.t-=dt;t.w-=dt;});G.lt=G.lt.filter(t=>t.t>0);}
@@ -751,11 +751,11 @@ function extrasPost(dt,fight){
   if(G.pk)for(let k=G.pk.length-1;k>=0;k--){const p=G.pk[k];if(Math.hypot(b.x-p.x,b.y-p.y)<b.r+16&&fight){if(p.k==='candy'){if(i===G.me&&window.EVENTS&&EVENTS.candyGet)EVENTS.candyGet(p);}else applyPk(b,i,p);G.pk.splice(k,1);}}
  });
  if(G.multi)modeUpdate(dt,fight);}
-// ----- боссы с фазами -----
+// ----- bosses with phases -----
 const BSPEC=[['slam','charge'],['spiral','summon'],['slam','spiral'],['charge','slam'],['summon','charge'],['spiral','slam']];
 function setPhase(ph){const b=G.balls[G.bi];G.bph=ph;b.bspd=1+.1*(ph-1);b.cdMul=[1,.75,.6][ph-1];}
 function bossAI(dt){const b=G.balls[G.bi];if(!b||b.dead)return;const f=b.hp/b.maxHp,ph=f>.66?1:f>.33?2:3;
- if(ph>G.bph){setPhase(ph);b.fx.shield=Math.max(b.fx.shield,1);G.bsT=1.5;emit({k:'float',x:b.x,y:b.y-40,s:'ФАЗА '+ph+'!',c:'#ff1744'});emit({k:'ring',x:b.x,y:b.y,c:'#ff1744'});}
+ if(ph>G.bph){setPhase(ph);b.fx.shield=Math.max(b.fx.shield,1);G.bsT=1.5;emit({k:'float',x:b.x,y:b.y-40,s:'PHASE '+ph+'!',c:'#ff1744'});emit({k:'ring',x:b.x,y:b.y,c:'#ff1744'});}
  if(G.bph<2)return;G.bsT-=dt;if(G.bsT<=0){const sp=BSPEC[(BOSSES.indexOf(b.id)+12)%BSPEC.length];G.bsT=G.bph===2?7:5;bossSpecial(G.bph===2?sp[0]:sp[(G.time*7|0)%2]);}}
 function bossSpecial(k){const i=G.bi,b=G.balls[i],e=foe(i);if(!e)return;
  switch(k){case 'slam':G.zones.push({k:'slam',x:b.x,y:b.y,R:220,t:1.1,o:i});break;
@@ -763,14 +763,14 @@ function bossSpecial(k){const i=G.bi,b=G.balls[i],e=foe(i);if(!e)return;
   case 'charge':{const dx=e.x-b.x,dy=e.y-b.y,l=Math.hypot(dx,dy)||1;b.vx=dx/l*900;b.vy=dy/l*900;b.fx.strike=.5;b.fx.pad=.6;break;}
   case 'summon':for(let q=0;q<2;q++)G.clones.push({x:clamp(b.x+rnd(-70,70),20,W-20),y:clamp(b.y+rnd(-70,70),20,H-20),vx:rnd(-200,200),vy:rnd(-200,200),r:18,o:i,t:4,c:BY[b.id].color});break;}
  emit({k:'ring',x:b.x,y:b.y,c:'#ff1744'});}
-// ----- многошаровые режимы -----
+// ----- multi-ball modes -----
 function spawnPos(i){const b=G.balls[i],nt=G.score.length;if(nt===2){const mem=G.balls.filter(x=>x.tm===b.tm);const k=mem.indexOf(b),n=mem.length;return {x:b.tm?600:200,y:400+(k-(n-1)/2)*170};}
  const a=b.tm/nt*6.283+3.1416;return {x:400+Math.cos(a)*290,y:400+Math.sin(a)*290};}
 function placeBalls(){G.balls.forEach((b,i)=>{const p=spawnPos(i);b.x=p.x;b.y=p.y;b.vx=b.vy=0;});}
 function respawn(b,i){const nb=makeBall(b.id,0,b.mods);const p=spawnPos(i);Object.assign(b,{x:p.x,y:p.y,vx:0,vy:0,hp:nb.maxHp,maxHp:nb.maxHp,r:b.br,cd:1,fx:nb.fx,dead:false,burst:0});if(G.mset.onehp)b.hp=b.maxHp=1;b.fx.shield=1.5;}
 function matchOver(w){G.phase='over';G.winner=w;onMatchOver();}
 function modeUpdate(dt,fight){const resp=G.mode==='koth'||G.mode==='foot';
- G.balls.forEach((b,i)=>{if(!b.dead&&b.hp<=0&&fight){b.dead=true;b.rsp=3;emit({k:'ko',x:b.x,y:b.y,c:BY[b.id].color});if(i===G.me)emit({k:'float',x:b.x,y:b.y,s:resp?'Возрождение...':'Вы выбыли',c:'#fff'});}});
+ G.balls.forEach((b,i)=>{if(!b.dead&&b.hp<=0&&fight){b.dead=true;b.rsp=3;emit({k:'ko',x:b.x,y:b.y,c:BY[b.id].color});if(i===G.me)emit({k:'float',x:b.x,y:b.y,s:resp?'Respawning...':'You’re out',c:'#fff'});}});
  if(!fight)return;G.mtime+=dt;
  if(resp){G.balls.forEach((b,i)=>{if(b.dead){b.rsp-=dt;if(b.rsp<=0)respawn(b,i);}});
   if(G.mode==='koth'){const h=G.hill;h.t-=dt;if(h.t<=0){h.t=15;const S=[[400,400],[220,220],[580,580],[580,220],[220,580]].filter(s=>s[0]!==h.x||s[1]!==h.y);const s=rpick(S);h.x=s[0];h.y=s[1];}
@@ -778,7 +778,7 @@ function modeUpdate(dt,fight){const resp=G.mode==='koth'||G.mode==='foot';
   if(G.mode==='foot')puckStep(dt);
   if(G.tlim&&G.mtime>=G.tlim){const mx=Math.max(...G.score);const ws=G.score.map((s,k)=>s===mx?k:-1).filter(k=>k>=0);return matchOver(ws.length===1?ws[0]:-1);}}
  else{const me=G.balls[G.me];G.ts=me.dead?Math.max(G.ts0,2.5):G.ts0;const alive=[...new Set(G.balls.filter(b=>!b.dead).map(b=>b.tm))];
-  if(alive.length<=1){const w=alive.length?alive[0]:-1;if(w>=0)G.score[w]++;G.phase='roundEnd';G.timer=2.5;G.ts=G.ts0;G.banner=w<0?'Ничья!':G.names[w]+' берёт раунд!';}}}
+  if(alive.length<=1){const w=alive.length?alive[0]:-1;if(w>=0)G.score[w]++;G.phase='roundEnd';G.timer=2.5;G.ts=G.ts0;G.banner=w<0?'Draw!':G.names[w]+' takes the round!';}}}
 function puckStep(dt){const p=G.puck;const lo=G.lo||0;p.x+=p.vx*dt;p.y+=p.vy*dt;const f=Math.pow(.55,dt);p.vx*=f;p.vy*=f;const sp=Math.hypot(p.vx,p.vy);if(sp>900){p.vx*=900/sp;p.vy*=900/sp;}
  G.balls.forEach(b=>{if(b.dead)return;const dx=p.x-b.x,dy=p.y-b.y,d=Math.hypot(dx,dy)||1;if(d<p.r+b.r){const nx=dx/d,ny=dy/d;p.x=b.x+nx*(p.r+b.r);p.y=b.y+ny*(p.r+b.r);
   const rv=(p.vx-b.vx)*nx+(p.vy-b.vy)*ny;if(rv<0){const k=1.7*b.m/(b.m+.45);p.vx-=k*rv*nx;p.vy-=k*rv*ny;b.vx+=.3*rv*nx*.45/b.m;b.vy+=.3*rv*ny*.45/b.m;}p.vx+=nx*60;p.vy+=ny*60;}});
@@ -790,8 +790,8 @@ function puckStep(dt){const p=G.puck;const lo=G.lo||0;p.x+=p.vx*dt;p.y+=p.vy*dt;
  if(p.y<lo+p.r){p.y=lo+p.r;p.vy=Math.abs(p.vy)*.9;}if(p.y>H-lo-p.r){p.y=H-lo-p.r;p.vy=-Math.abs(p.vy)*.9;}}
 function goal(t){G.score[t]++;emit({k:'ko',x:G.puck.x,y:G.puck.y,c:t?'#ff5252':'#00c853'});if(G.score[t]>=G.need)return matchOver(t);
  G.balls.forEach((b,i)=>{if(b.dead)respawn(b,i);const s=spawnPos(i);b.x=s.x;b.y=s.y;b.vx=b.vy=0;});G.puck={x:400,y:400,vx:0,vy:0,r:24};G.clones=[];G.proj=[];G.zones=[];G.fires=[];
- G.phase='count';G.timer=2;G.banner='ГОЛ! '+G.names[t];}
-// ----- ИИ ботов -----
+ G.phase='count';G.timer=2;G.banner='GOAL! '+G.names[t];}
+// ----- bot AI -----
 function botInput(dt,d,side,S){side=side==null?1:side;S=S||Bot;const me=G.balls[side];if(!me||me.dead)return {x:0,y:0,a:false};S.t-=dt;const pers=me.pers;
  let ei=foeIdx(side);if(pers==='hunter'&&G.balls.length>2){let lw=2;foeList(side).forEach(j=>{const f=G.balls[j].hp/G.balls[j].maxHp;if(f<lw&&Math.hypot(G.balls[j].x-me.x,G.balls[j].y-me.y)<500){lw=f;ei=j;}});}
  const e=G.balls[ei];if(!e)return {x:0,y:0,a:false};
@@ -827,7 +827,7 @@ function botInput(dt,d,side,S){side=side==null?1:side;S=S||Bot;const me=G.balls[
   if(G.mode==='foot'&&dl>260)want=false;
   S.a=want&&Math.random()<p;}
  return {x:S.dir.x,y:S.dir.y,a:S.a};}
-// ----- отрисовка доп. объектов -----
+// ----- drawing extra objects -----
 const TCOL=['#00c853','#ff5252','#ffd600','#40c4ff','#e040fb','#ff9100','#eeeeee'];
 function quad(x,y,w,h,fill,stroke){poly([P(x,y),P(x+w,y),P(x+w,y+h),P(x,y+h)],fill,stroke);}
 function drawFloorX(st){const t=G_t;drawAevFloor(st);
@@ -847,107 +847,107 @@ function extraEnts(st,ents){
  (st.pk||[]).forEach(p=>ents.push({y:p.y,f:()=>{const T=PKT[p.k];const s=drawSphere(p.x,p.y,15,T.c,p.t<2&&Math.sin(G_t*20)>0?.4:1,14+Math.sin(G_t*4)*5);ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,s.R+2,0,7);ctx.stroke();ctx.lineWidth=1;ctx.fillStyle='#fff';ctx.font='bold 13px Tahoma,Verdana,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(T.s,s.x,s.y+1);ctx.textBaseline='alphabetic';}}));
  if(st.puck){const p=st.puck;ents.push({y:p.y,f:()=>{const s=drawSphere(p.x,p.y,p.r,'#fafafa');ctx.fillStyle='#212121';for(let k=0;k<5;k++){const a=k/5*6.283+p.x*.02;ctx.beginPath();ctx.arc(s.x+Math.cos(a)*s.R*.55,s.y+Math.sin(a)*s.R*.55,s.R*.2,0,7);ctx.fill();}}});}}
 function drawFog(st,me){const b=st.balls[me<0?0:me];if(!b)return;const p=P(b.x,b.y);const g=ctx.createRadialGradient(p.x,p.y-30,70,p.x,p.y-30,250);g.addColorStop(0,'rgba(25,25,35,0)');g.addColorStop(1,'rgba(25,25,35,.94)');ctx.fillStyle=g;ctx.fillRect(-20,-20,1040,740);}
-function ballLabel(b,i,me,st){const ml=b.ml>1?' ★'+b.ml:'';if(me===i)return 'ВЫ'+(window.PROG&&PROG.tline?PROG.tline():'')+ml;if(st.kind==='online'&&st.names)return (st.names[i]||'Соперник')+ml;if(st.multi)return b.nm||'Бот';if(st.bi===i)return 'БОСС · Фаза '+(st.bph||1);return i?'P2':'P1';}
-function hudBox(t,sz){ctx.textAlign='center';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Сообщение',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;ctx.fillText(t,500,362);}
+function ballLabel(b,i,me,st){const ml=b.ml>1?' ★'+b.ml:'';if(me===i)return 'YOU'+(window.PROG&&PROG.tline?PROG.tline():'')+ml;if(st.kind==='online'&&st.names)return (st.names[i]||'Rival')+ml;if(st.multi)return b.nm||'Bot';if(st.bi===i)return 'BOSS · Phase '+(st.bph||1);return i?'P2':'P1';}
+function hudBox(t,sz){ctx.textAlign='center';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;const w=Math.max(260,ctx.measureText(t).width+60);bevel(500-w/2,300,w,80);const g=ctx.createLinearGradient(500-w/2,0,500+w/2,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(500-w/2+3,303,w-6,18);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Message',500,316);ctx.fillStyle='#000';ctx.font=`bold ${sz}px Tahoma,Verdana,sans-serif`;ctx.fillText(t,500,362);}
 function modLine(st){return [ARENAS[st.arena].n].concat(Object.keys(st.mset||{}).map(m=>MODS[m])).join(' · ');}
 function drawHUDMulti(st,me){ctx.textAlign='left';const meb=st.balls[me]||st.balls[0],d=BY[meb.id];
- const h=26+st.balls.length*17;bevel(8,8,290,h);let g=ctx.createLinearGradient(8,0,298,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(11,11,284,16);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Участники',16,23);
- st.balls.forEach((b,i)=>{const y=31+i*17;ctx.fillStyle=TCOL[b.tm%TCOL.length];ctx.fillRect(14,y+2,9,9);ctx.fillStyle=b.dead?'#808080':'#000';ctx.font=(i===me?'bold ':'')+'11px Tahoma,Verdana,sans-serif';ctx.fillText(((i===me?'ВЫ':b.nm||'Бот')+' · '+BY[b.id].name).slice(0,24),28,y+11);prog(190,y,100,13,b.dead?0:b.hp/b.maxHp,b.tm===meb.tm?'#008000':'#c00000');});
- bevel(702,8,290,70);ctx.fillStyle='#000';ctx.font='bold 12px Tahoma,Verdana,sans-serif';ctx.fillText(d.name+' (ур.'+(meb.lvl||1)+')',712,26);const cdf=meb.cd/d.cd;prog(712,32,270,14,1-cdf,cdf<=0?'#008000':'#808080');ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText(d.ab+(cdf<=0?' — ГОТОВО':' '+meb.cd.toFixed(1)+'с'),712,64);
+ const h=26+st.balls.length*17;bevel(8,8,290,h);let g=ctx.createLinearGradient(8,0,298,0);g.addColorStop(0,'#000080');g.addColorStop(1,'#1084d0');ctx.fillStyle=g;ctx.fillRect(11,11,284,16);ctx.fillStyle='#fff';ctx.font='bold 11px Tahoma,Verdana,sans-serif';ctx.fillText('Players',16,23);
+ st.balls.forEach((b,i)=>{const y=31+i*17;ctx.fillStyle=TCOL[b.tm%TCOL.length];ctx.fillRect(14,y+2,9,9);ctx.fillStyle=b.dead?'#808080':'#000';ctx.font=(i===me?'bold ':'')+'11px Tahoma,Verdana,sans-serif';ctx.fillText(((i===me?'YOU':b.nm||'Bot')+' · '+BY[b.id].name).slice(0,24),28,y+11);prog(190,y,100,13,b.dead?0:b.hp/b.maxHp,b.tm===meb.tm?'#008000':'#c00000');});
+ bevel(702,8,290,70);ctx.fillStyle='#000';ctx.font='bold 12px Tahoma,Verdana,sans-serif';ctx.fillText(d.name+' (Lv.'+(meb.lvl||1)+')',712,26);const cdf=meb.cd/d.cd;prog(712,32,270,14,1-cdf,cdf<=0?'#008000':'#808080');ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText(d.ab+(cdf<=0?' — READY':' '+meb.cd.toFixed(1)+'s'),712,64);
  ctx.textAlign='center';bevel(380,8,240,62);ctx.fillStyle='#000';let s1='',s2='';
- if(st.mode==='koth'){const mx=Math.max(...st.score);s1='Вы '+Math.floor(st.score[meb.tm])+' / лидер '+Math.floor(mx);s2='Царь горы · до '+st.need+' · '+Math.max(0,Math.ceil(st.tlim-st.mtime))+'с';}
- else if(st.mode==='foot'){s1=st.score[0]+' : '+st.score[1];s2='Шаробол · до '+st.need+' голов · '+Math.max(0,Math.ceil(st.tlim-st.mtime))+'с';}
- else if(st.score.length===2){s1=st.score[0]+' : '+st.score[1];s2='Раунд '+st.round+' · до '+st.need+' поб.';}
- else{s1='Ваши победы: '+st.score[meb.tm];s2='Раунд '+st.round+' · до '+st.need+' · лидер '+Math.max(...st.score);}
+ if(st.mode==='koth'){const mx=Math.max(...st.score);s1='You '+Math.floor(st.score[meb.tm])+' / leader '+Math.floor(mx);s2='King of the Hill · first to '+st.need+' · '+Math.max(0,Math.ceil(st.tlim-st.mtime))+'s';}
+ else if(st.mode==='foot'){s1=st.score[0]+' : '+st.score[1];s2='Goal Rush · first to '+st.need+' goals · '+Math.max(0,Math.ceil(st.tlim-st.mtime))+'s';}
+ else if(st.score.length===2){s1=st.score[0]+' : '+st.score[1];s2='Round '+st.round+' · first to '+st.need+' wins';}
+ else{s1='Your wins: '+st.score[meb.tm];s2='Round '+st.round+' · first to '+st.need+' · leader '+Math.max(...st.score);}
  ctx.font='bold 20px "Courier New",monospace';ctx.fillText(s1,500,36);ctx.font='11px Tahoma,Verdana,sans-serif';ctx.fillText(s2,500,58);
  ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillText(modLine(st),500,88);drawAevMsg(st,96);
  if(st.phase==='count')hudBox(st.banner+' — '+Math.ceil(st.timer),26);else if(st.banner){ctx.save();ctx.globalAlpha=st.bA??1;hudBox(st.banner,24);ctx.restore();}
- if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);hudBox('Пауза: Esc — продолжить, Q — выход',20);}}
-// ----- запуск режимов -----
+ if(paused){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,1000,700);hudBox('Paused: Esc — resume, Q — quit',20);}}
+// ----- mode launchers -----
 function modeD(){return clamp(.12+(save.unlocked-1)/(NLV-1)*.7,.12,.82);}
 function mkBot(d,tm,o){o=o||{};const pers=o.pers||rollPers(save.unlocked>=17);const id=o.id||pickN(persPool(botPool(d),pers),1)[0];return {id,tm,pers,nm:o.nm||rpick(BOTNAMES),sk:botSkill(d),mods:botMods(d,false)};}
 function modeFeat(){const u=save.unlocked;return {aev:aevFor(u),pk:u>=11,obs:u>=26?2:u>=16?1:0,pkTypes:u>=26?['shield','speed','dmg','heal','bomb']:null};}
 const MODEDEF={
- ffa:{n:'Все против всех',lvl:13,d:'Вы против 4–6 ботов. Раунд выигрывает последний выживший, до 2 побед.'},
- team2:{n:'2 на 2',lvl:18,d:'Вы и бот-напарник против двух ботов. До 2 побед.'},
- koth:{n:'Царь горы',lvl:23,d:'Вы и 3 бота. Стойте в зоне один — получайте очки. Первый до 25 очков (или лидер через 150 с).'},
- foot:{n:'Шаробол',lvl:28,d:'Футбол 2 на 2 с ботом-напарником. Первые 3 гола (или лидер через 150 с).'},
- team3:{n:'3 на 3',lvl:33,d:'Вы и два бота-напарника против трёх ботов. До 2 побед.'},
+ ffa:{n:'Free-for-All',lvl:13,d:'You vs 4–6 bots. Last ball standing wins the round, first to 2 wins.'},
+ team2:{n:'2v2',lvl:18,d:'You and a bot buddy vs two bots. First to 2 wins.'},
+ koth:{n:'King of the Hill',lvl:23,d:'You and 3 bots. Stand alone in the zone to score. First to 25 points (or the leader after 150s).'},
+ foot:{n:'Goal Rush',lvl:28,d:'2v2 soccer with a bot buddy. First to 3 goals (or the leader after 150s).'},
+ team3:{n:'3v3',lvl:33,d:'You and two bot buddies vs three bots. First to 2 wins.'},
 };
-function beginMode(mode,myId,o){o=o||{};const d=o.d!=null?o.d:modeD(),F=modeFeat();const me={id:myId,tm:0,nm:'Вы',mods:o.mods0||myMods(myId)};let roster=[me],teamNames,need=2,tlim=0;
+function beginMode(mode,myId,o){o=o||{};const d=o.d!=null?o.d:modeD(),F=modeFeat();const me={id:myId,tm:0,nm:'You',mods:o.mods0||myMods(myId)};let roster=[me],teamNames,need=2,tlim=0;
  const dn=BOTNAMES.slice();shuffle(dn);let k=0;const nb=(tm,dd)=>mkBot(dd,tm,{nm:dn[k++%dn.length]});
  if(mode==='ffa'){const n=o.n||4+(Math.random()*3|0);for(let i=1;i<=n;i++){const b=nb(i,d*.85);roster.push(b);}teamNames=roster.map(r=>r.nm);}
- else if(mode==='team2'||mode==='team3'||mode==='foot'){const n=mode==='team3'?3:2;for(let i=1;i<n;i++){const b=nb(0,d);b.nm='Напарник '+b.nm;roster.push(b);}for(let i=0;i<n;i++)roster.push(nb(1,d));teamNames=['Ваша команда','Соперники'];if(mode==='foot'){need=3;tlim=150;}}
+ else if(mode==='team2'||mode==='team3'||mode==='foot'){const n=mode==='team3'?3:2;for(let i=1;i<n;i++){const b=nb(0,d);b.nm='Buddy '+b.nm;roster.push(b);}for(let i=0;i<n;i++)roster.push(nb(1,d));teamNames=['Your team','Rivals'];if(mode==='foot'){need=3;tlim=150;}}
  else if(mode==='koth'){for(let i=1;i<=3;i++)roster.push(nb(i,d*.9));teamNames=roster.map(r=>r.nm);need=25;tlim=150;}
  if(mode==='foot')roster.forEach(r=>{if(r!==me&&RANGED.includes(r.id))r.id=rpick(['dash','shield','heal','giant','spikes','wave','tele']);});
  Bot.t=0;newMatch(mode,roster.map(r=>r.id),{multi:1,mode,roster,teamNames,need,tlim,d,arena:mode==='foot'?0:Math.random()*ARENAS.length|0,pk:F.pk&&mode!=='foot',aev:mode==='foot'?[]:F.aev,pkTypes:F.pkTypes,obs:mode==='foot'?0:F.obs,mods:o.mods||[],names:teamNames});}
-function startMode(mode){if(!has(mode)&&MODEDEF[mode]&&save.unlocked<MODEDEF[mode].lvl)return;closeWin('modes');showPick([myPanel('Вы')],c=>{closePick();beginMode(mode,c[0]);},'Режим «'+MODEDEF[mode].n+'»: выберите шар');}
+function startMode(mode){if(!has(mode)&&MODEDEF[mode]&&save.unlocked<MODEDEF[mode].lvl)return;closeWin('modes');showPick([myPanel('You')],c=>{closePick();beginMode(mode,c[0]);},'“'+MODEDEF[mode].n+'”: pick a ball');}
 function raidBosses(){const r=[];for(let l=5;l<=NLV;l+=5)if(save.unlocked>l)r.push(l);return r;}
-function startRaid(l){closeWin('modes');const I=levelInfo(l);showPick([myPanel('Вы')],c=>{closePick();beginRaid(l,c[0]);},'Рейд: '+I.bossName);}
+function startRaid(l){closeWin('modes');const I=levelInfo(l);showPick([myPanel('You')],c=>{closePick();beginRaid(l,c[0]);},'Raid: '+I.bossName);}
 function beginRaid(l,myId,mods0){const I=levelInfo(l);const d=Math.min(1,I.d+.05);Bot.t=0;
- newMatch('raid',[myId,I.bossId],{level:l,d,sk:botSkill(d),boss:true,phases:true,needs:[1,2],arena:I.arena,pk:l>=11,obs:0,names:['Вы','☠ '+I.bossName],mods0:mods0||myMods(myId),mods1:botMods(d,true,true,I.bossId)});}
+ newMatch('raid',[myId,I.bossId],{level:l,d,sk:botSkill(d),boss:true,phases:true,needs:[1,2],arena:I.arena,pk:l>=11,obs:0,names:['You','☠ '+I.bossName],mods0:mods0||myMods(myId),mods1:botMods(d,true,true,I.bossId)});}
 function dailyCfg(day){const r=seeded('dch'+(day||today()));const me=rpick(BALLS,r).id;let opp=rpick(BALLS,r).id;if(opp===me)opp=BALLS[(BALLS.findIndex(b=>b.id===me)+7)%BALLS.length].id;
  const mods=rollMods(1,false,r);if(r()<.35){const w=rpick(['giant','onehp'],r);mods.push(w);}const pers=rpick(PERSK,r);return {me,opp,mods,pers,arena:Math.floor(r()*ARENAS.length),obs:r()<.5?2:1,pk:r()<.7};}
 function beginDaily(){const c=dailyCfg();const m=Object.assign(lvlMods(5),{lvl:5});Bot.t=0;closeWin('modes');
- newMatch('daily',[c.me,c.opp],{d:.55,sk:botSkill(.55),arena:c.arena,mods:c.mods,obs:c.obs,pk:c.pk,pkTypes:['shield','speed','dmg','heal','bomb'],pers1:c.pers,need:c.mods.includes('onehp')?3:2,names:['Вы','Испытатель'],mods0:m,mods1:Object.assign(lvlMods(5),{lvl:5,hp:lvlMods(5).hp*.95})});}
-UI.modes=function(){const u=save.unlocked;const row=(n,d,lv,btn)=>`<tr><td><b>${n}</b><br><span class="stat">${d}</span></td><td style="text-align:right;white-space:nowrap">${u>=lv?btn:'<span class="stat">Откроется на ур. '+lv+'</span>'}</td></tr>`;
+ newMatch('daily',[c.me,c.opp],{d:.55,sk:botSkill(.55),arena:c.arena,mods:c.mods,obs:c.obs,pk:c.pk,pkTypes:['shield','speed','dmg','heal','bomb'],pers1:c.pers,need:c.mods.includes('onehp')?3:2,names:['You','Challenger'],mods0:m,mods1:Object.assign(lvlMods(5),{lvl:5,hp:lvlMods(5).hp*.95})});}
+UI.modes=function(){const u=save.unlocked;const row=(n,d,lv,btn)=>`<tr><td><b>${n}</b><br><span class="stat">${d}</span></td><td style="text-align:right;white-space:nowrap">${u>=lv?btn:'<span class="stat">Unlocks at Lv. '+lv+'</span>'}</td></tr>`;
  const c=dailyCfg(),done=save.dch.last===today();const rb=raidBosses();
- let h=row('Испытание дня','Сегодня: '+BY[c.me].name+' против '+BY[c.opp].name+' ('+PERS[c.pers].n+'), '+ARENAS[c.arena].n+', '+c.mods.map(m=>MODS[m]).join(', ')+'. Шар выдаётся (ур.5). Награда: 150 монет + 3 кристалла'+(done?' — <b>уже получена</b>':''),8,`<button onclick="beginDaily()">${done?'Ещё раз':'В бой'}</button>`);
- h+=row('Рейд на босса','Бой с побеждённым боссом (3 фазы, у вас 2 жизни). Награда за победу, +1 кристалл раз в день.',6,rb.length?`<select id="raidsel">${rb.map(l=>`<option value="${l}">${levelInfo(l).bossName} (ур.${l})</option>`).join('')}</select> <button onclick="startRaid(+document.getElementById('raidsel').value)">В бой</button>`:'<span class="stat">Победите босса</span>');
- for(const k in MODEDEF)h+=row(MODEDEF[k].n,MODEDEF[k].d,MODEDEF[k].lvl,`<button onclick="startMode('${k}')">Играть</button>`);
- h+=row('Выживание','Волны ботов, между волнами — выбор 1 из 3 улучшений.',1,`<button onclick="closeWin('modes');UI.surv()">Открыть</button>`);
- openWin('modes','Режимы',`<p>Новые режимы открываются по мере прохождения кампании (пройдено ${u-1}/${NLV}).</p><table class="t">${h}</table>`,{w:600,icon:'🏁'});};
+ let h=row('Daily Challenge','Today: '+BY[c.me].name+' vs '+BY[c.opp].name+' ('+PERS[c.pers].n+'), '+ARENAS[c.arena].n+', '+c.mods.map(m=>MODS[m]).join(', ')+'. Ball provided (Lv.5). Reward: 150 coins + 3 crystals'+(done?' — <b>already claimed</b>':''),8,`<button onclick="beginDaily()">${done?'Again':'Fight'}</button>`);
+ h+=row('Boss Raid','Rematch a defeated boss (3 phases, you get 2 lives). Reward on win, +1 crystal once a day.',6,rb.length?`<select id="raidsel">${rb.map(l=>`<option value="${l}">${levelInfo(l).bossName} (Lv.${l})</option>`).join('')}</select> <button onclick="startRaid(+document.getElementById('raidsel').value)">Fight</button>`:'<span class="stat">Defeat a boss</span>');
+ for(const k in MODEDEF)h+=row(MODEDEF[k].n,MODEDEF[k].d,MODEDEF[k].lvl,`<button onclick="startMode('${k}')">Play</button>`);
+ h+=row('Survival','Bot waves; between waves pick 1 of 3 upgrades.',1,`<button onclick="closeWin('modes');UI.surv()">Open</button>`);
+ openWin('modes','Modes',`<p>New modes unlock as you progress through the campaign (cleared ${u-1}/${NLV}).</p><table class="t">${h}</table>`,{w:600,icon:'🏁'});};
 function featNotice(){const nw=FEAT.filter(f=>save.unlocked>=f.lvl&&!save.seen[f.id]);if(!nw.length)return '';nw.forEach(f=>save.seen[f.id]=1);persist();
- return '<div class="inset" style="margin-top:8px;text-align:left"><b style="color:#c00000">НОВОЕ!</b><br>'+nw.map(f=>'<b>'+f.n+'</b> — '+f.d).join('<br>')+'</div>';}
-// ----- выживание: улучшения -----
-const SUPG=[{id:'hp',n:'Крепкий корпус',d:'+10% макс. HP',max:3},{id:'dmg',n:'Острые грани',d:'+8% урона',max:3},{id:'spd',n:'Турбо',d:'+5% скорости',max:3},{id:'cd',n:'Быстрая перезарядка',d:'-8% перезарядки',max:3},
- {id:'heal',n:'Аптечка',d:'Сразу +30% HP',max:99},{id:'life',n:'Вампиризм',d:'Удары лечат на 6% урона',max:2},{id:'thorns',n:'Шипованная броня',d:'Возврат 10% урона от ударов',max:2},{id:'regen',n:'Регенерация',d:'+2 HP в секунду',max:2}];
+ return '<div class="inset" style="margin-top:8px;text-align:left"><b style="color:#c00000">NEW!</b><br>'+nw.map(f=>'<b>'+f.n+'</b> — '+f.d).join('<br>')+'</div>';}
+// ----- survival: upgrades -----
+const SUPG=[{id:'hp',n:'Hard Shell',d:'+10% max HP',max:3},{id:'dmg',n:'Sharp Edges',d:'+8% damage',max:3},{id:'spd',n:'Turbo',d:'+5% speed',max:3},{id:'cd',n:'Quick Charge',d:'-8% cooldown',max:3},
+ {id:'heal',n:'Medkit',d:'+30% HP now',max:99},{id:'life',n:'Lifesteal',d:'Hits heal 6% of damage',max:2},{id:'thorns',n:'Spiked Armor',d:'Reflects 10% of hit damage',max:2},{id:'regen',n:'Regen',d:'+2 HP per second',max:2}];
 function survMods(){const m=Object.assign({},myMods(Surv.ball)),u=Surv.up||{},n=k=>u[k]||0;m.hp*=1+.1*n('hp');m.dmg*=1+.08*n('dmg');m.spd=(m.spd||1)*(1+.05*n('spd'));m.cdMul=Math.pow(.92,n('cd'));m.life=.06*n('life');m.thorns=.1*n('thorns');m.regen=2*n('regen');return m;}
 function survFoe(m,w){if(w>20){m.hp*=1+.08*(w-20);m.dmg*=1+.05*(w-20);}return m;}
 function survOffer(){const u=Surv.up;return shuffle(SUPG.filter(s=>(u[s.id]||0)<s.max)).slice(0,3);}
 function survTake(id){Surv.up[id]=(Surv.up[id]||0)+1;if(id==='heal')Surv.hp=Math.min(1,Surv.hp+.3);closeWin('msg');nextWave();}
 
-// ===================== ОНЛАЙН (PeerJS) =====================
+// ===================== ONLINE (PeerJS) =====================
 const Net={peer:null,conn:null,isHost:false,remoteIn:{x:0,y:0,a:false},myPick:null,theirPick:null,sendT:0,lastIn:'',ended:false,
  status(t){const e=document.getElementById('onstatus');if(e)e.textContent=t;},
- load(cb){if(window.Peer)return cb();this.status('Загрузка сетевого модуля...');const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
-  s.onload=cb;s.onerror=()=>this.status('Не удалось загрузить PeerJS. Проверьте интернет.');document.head.appendChild(s);},
+ load(cb){if(window.Peer)return cb();this.status('Loading network module...');const s=document.createElement('script');s.src='https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+  s.onload=cb;s.onerror=()=>this.status('Couldn’t load PeerJS. Check your internet.');document.head.appendChild(s);},
  host(fixed){this.close();this.load(()=>{const code=fixed||Array.from({length:5},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
   this.isHost=true;this.ended=false;this.peer=new Peer('ballfight-cube-'+code);document.getElementById('onmain')?.classList.add('hide');
-  this.peer.on('open',()=>{const oc=document.getElementById('oncode');if(oc)oc.textContent=code;this.status('Комната создана! Сообщите код другу и ждите подключения...');});
+  this.peer.on('open',()=>{const oc=document.getElementById('oncode');if(oc)oc.textContent=code;this.status('Room created! Send the code to a friend and wait for them to join...');});
   this.peer.on('connection',c=>{if(this.conn){c.close();return;}this.setup(c);});
-  this.peer.on('error',e=>{if(e.type==='unavailable-id'&&!fixed)this.host();else this.status('Ошибка сети: '+e.type);});});},
- join(code){code=(code||'').trim().toUpperCase();if(code.length<4){this.status('Введите код комнаты');return;}this.close();this.load(()=>{this.isHost=false;this.ended=false;this.peer=new Peer();
-  this.status('Подключение к комнате '+code+'...');
+  this.peer.on('error',e=>{if(e.type==='unavailable-id'&&!fixed)this.host();else this.status('Network error: '+e.type);});});},
+ join(code){code=(code||'').trim().toUpperCase();if(code.length<4){this.status('Enter a room code');return;}this.close();this.load(()=>{this.isHost=false;this.ended=false;this.peer=new Peer();
+  this.status('Joining room '+code+'...');
   this.peer.on('open',()=>{const c=this.peer.connect('ballfight-cube-'+code,{reliable:true});this.setup(c);});
-  this.peer.on('error',e=>this.status(e.type==='peer-unavailable'?'Комната не найдена':'Ошибка сети: '+e.type));});},
+  this.peer.on('error',e=>this.status(e.type==='peer-unavailable'?'Room not found':'Network error: '+e.type));});},
  setup(c){this.conn=c;this.myPick=null;this.theirPick=null;
-  c.on('open',()=>{this.send({t:'hello',v:VERSION});this.status('Соединено. Проверка версии...');});
+  c.on('open',()=>{this.send({t:'hello',v:VERSION});this.status('Connected. Checking version...');});
   c.on('data',d=>this.onData(d));c.on('close',()=>this.lost());c.on('error',()=>this.lost());},
- startPick(title){this.myPick=null;this.theirPick=null;closeWin('online');const p=myPanel('Ваш выбор');p.keys='A/D — выбор · Пробел — ок · R — переброс';
-  showPick([p],ch=>{this.myPick={id:ch[0],lvl:save.owned[ch[0]]?save.owned[ch[0]].lvl:1};this.send({t:'pick',id:ch[0],lvl:this.myPick.lvl});pickState.wait='⏳ Ожидание выбора соперника...';drawPick();this.tryStart();},title);},
- lost(){if(this.ended)return;this.ended=true;this.close();closePick();if(mode==='game'||mode==='pick'||mode==='msg'){mode='menu';}UI.msg('Соединение потеряно','🔌 Соперник отключился или сеть недоступна.',[['В меню','UI.home()']],'⚠️');},
+ startPick(title){this.myPick=null;this.theirPick=null;closeWin('online');const p=myPanel('Your pick');p.keys='A/D — choose · Space — OK · R — reroll';
+  showPick([p],ch=>{this.myPick={id:ch[0],lvl:save.owned[ch[0]]?save.owned[ch[0]].lvl:1};this.send({t:'pick',id:ch[0],lvl:this.myPick.lvl});pickState.wait='⏳ Waiting for your rival to pick...';drawPick();this.tryStart();},title);},
+ lost(){if(this.ended)return;this.ended=true;this.close();closePick();if(mode==='game'||mode==='pick'||mode==='msg'){mode='menu';}UI.msg('Connection lost','🔌 Rival disconnected or the network is down.',[['To menu','UI.home()']],'⚠️');},
  send(o){try{if(this.conn&&this.conn.open)this.conn.send(o);}catch(e){}},
  onData(d){if(!d||!d.t)return;
-  if(d.t==='hello'){if(d.v!==VERSION){this.status('Разные версии игры! Обновите страницу у обоих игроков.');this.send({t:'bye'});setTimeout(()=>this.close(),300);return;}this.startPick('Соперник подключён! Выберите шар');}
-  else if(d.t==='bye'){this.status('Версии не совпадают. Обновите страницу.');}
+  if(d.t==='hello'){if(d.v!==VERSION){this.status('Different game versions! Both players should refresh the page.');this.send({t:'bye'});setTimeout(()=>this.close(),300);return;}this.startPick('Rival connected! Pick a ball');}
+  else if(d.t==='bye'){this.status('Versions don’t match. Refresh the page.');}
   else if(d.t==='pick'){this.theirPick={id:BY[d.id]?d.id:'dash',lvl:clamp(d.lvl|0,1,10)};this.tryStart();}
   else if(d.t==='in'){this.remoteIn={x:clamp(+d.i.x||0,-1,1),y:clamp(+d.i.y||0,-1,1),a:!!d.i.a};}
-  else if(d.t==='start'&&!this.isHost){closePick();newMatch('online',d.ids,{names:['Хост','Гость'],arena:d.arena|0,me:1,mods0:Object.assign(lvlMods(d.lvls[0]),{lvl:d.lvls[0]}),mods1:Object.assign(lvlMods(d.lvls[1]),{lvl:d.lvls[1]})});}
+  else if(d.t==='start'&&!this.isHost){closePick();newMatch('online',d.ids,{names:['Host','Guest'],arena:d.arena|0,me:1,mods0:Object.assign(lvlMods(d.lvls[0]),{lvl:d.lvls[0]}),mods1:Object.assign(lvlMods(d.lvls[1]),{lvl:d.lvls[1]})});}
   else if(d.t==='s'&&!this.isHost&&G&&G.kind==='online'){Object.assign(G,d.s);(d.ev||[]).forEach(spawnEvent);}
   else if(d.t==='over'&&!this.isHost&&G){G.score=d.score||G.score;this.over(d.w);}
-  else if(d.t==='rematch'){if(mode!=='pick')this.startPick('Реванш! Выберите шар');}},
+  else if(d.t==='rematch'){if(mode!=='pick')this.startPick('Rematch! Pick a ball');}},
  tryStart(){if(this.isHost&&this.myPick&&this.theirPick){const ids=[this.myPick.id,this.theirPick.id],lvls=[this.myPick.lvl,this.theirPick.lvl],arena=Math.random()*ARENAS.length|0;
-  this.send({t:'start',ids,lvls,arena});closePick();newMatch('online',ids,{names:['Хост','Гость'],arena,me:0,mods0:Object.assign(lvlMods(lvls[0]),{lvl:lvls[0]}),mods1:Object.assign(lvlMods(lvls[1]),{lvl:lvls[1]})});}},
+  this.send({t:'start',ids,lvls,arena});closePick();newMatch('online',ids,{names:['Host','Guest'],arena,me:0,mods0:Object.assign(lvlMods(lvls[0]),{lvl:lvls[0]}),mods1:Object.assign(lvlMods(lvls[1]),{lvl:lvls[1]})});}},
  tick(dt){if(this.isHost){this.sendT-=dt;if(this.sendT<=0){this.sendT=1/30;
    const s={balls:G.balls,clones:G.clones,fires:G.fires,proj:G.proj,zones:G.zones,beams:G.beams,score:G.score,round:G.round,phase:G.phase,timer:G.timer,banner:G.banner,bA:G.bA??1,wind:G.wind,time:G.time,dmg:G.dmg};this.send({t:'s',s,ev:G.events});G.events=[];}}
   else{const i=mergeIn(readInput(0),readInput(1));const k=JSON.stringify(i);this.sendT-=dt;if(k!==this.lastIn||this.sendT<=0){this.sendT=.1;this.lastIn=k;this.send({t:'in',i});}}},
  over(w){if(this.isHost)this.send({t:'over',w,score:G.score});G.phase='over';const win=w===G.me;save.stats.online++;if(win){save.coins+=30;save.stats.onlineWins++;}recordMatch(win,win?60:20);
-  UI.msg(win?'🏆 ПОБЕДА В ОНЛАЙНЕ!':'💀 Поражение',`Счёт ${G.score[0]}:${G.score[1]}`+(win?'<br>Награда 🪙30':''),[['Реванш','Net.askRematch()'],['Выйти','Net.close();UI.home()']],win?'🏆':'💀');},
- askRematch(){if(!this.conn||!this.conn.open){UI.msg('Соперник ушёл','Соединение закрыто.',[['Меню','UI.home()']],'⚠️');return;}this.send({t:'rematch'});this.startPick('Реванш! Выберите шар');},
+  UI.msg(win?'🏆 ONLINE VICTORY!':'💀 Defeat',`Score ${G.score[0]}:${G.score[1]}`+(win?'<br>Reward 🪙30':''),[['Rematch','Net.askRematch()'],['Exit','Net.close();UI.home()']],win?'🏆':'💀');},
+ askRematch(){if(!this.conn||!this.conn.open){UI.msg('Rival left','Connection closed.',[['Menu','UI.home()']],'⚠️');return;}this.send({t:'rematch'});this.startPick('Rematch! Pick a ball');},
  close(){this.ended=true;try{this.conn&&this.conn.close();}catch(e){}try{this.peer&&this.peer.destroy();}catch(e){}this.conn=null;this.peer=null;this.remoteIn={x:0,y:0,a:false};}
 };
-// ===================== ЦИКЛ =====================
+// ===================== LOOP =====================
 let last=performance.now();
 function frame(now){const dt=Math.min(.033,(now-last)/1000);last=now;G_t+=dt;
  try{if(G&&mode==='game'&&!paused&&G.phase!=='over'){
@@ -963,76 +963,76 @@ function frame(now){const dt=Math.min(.033,(now-last)/1000);last=now;G_t+=dt;
  requestAnimationFrame(frame);}
 updTray();checkAch();
 if(save.daily.last!==today())setTimeout(()=>UI.daily(),400);
-setTimeout(()=>{const n=featNotice();if(n&&mode!=='game')UI.msg('НОВОЕ!','Открыты новые возможности:'+n,[['Режимы','UI.modes()'],['ОК','']],'⭐');},900);
+setTimeout(()=>{const n=featNotice();if(n&&mode!=='game')UI.msg('NEW!','New stuff unlocked:'+n,[['Modes','UI.modes()'],['OK','']],'⭐');},900);
 requestAnimationFrame(frame);
 window.__test={startBot,beginLevel,beginMode,beginRaid,beginDaily,dailyCfg,startMode,startRaid,survTake,nextWave,Surv,startLocal,startSurvival,startTour,pickChoose,openCrate,finishCrate,upgrade,UI,save:()=>save,get G(){return G},
  sim(n){for(let i=0;i<n&&G&&G.phase!=='over'&&mode==='game';i++){const k=G;step(1/60,G.balls.map((b,j)=>j===G.me?botInput(1/60,.6,j,G.bs[j]):botInput(1/60,b.sk!=null?b.sk:G.opts.sk!=null?G.opts.sk:G.opts.d==null?.5:G.opts.d,j,G.bs[j])));if(G!==k)break;}}};
 
-// ===================== МУЗЫКА =====================
+// ===================== MUSIC =====================
 const Music={a:null,on:localStorage.getItem('ballfight_music')!=='0',
  init(){if(this.a)return;this.a=new Audio('music.mp3');this.a.loop=true;this.a.volume=.4;},
  play(){if(!this.on)return;this.init();const p=this.a.play();if(p&&p.catch)p.catch(()=>{});},
  toggle(){this.on=!this.on;try{localStorage.setItem('ballfight_music',this.on?'1':'0');}catch(e){}if(this.on)this.play();else if(this.a)this.a.pause();this.ui();},
- ui(){const t=document.getElementById('trm');if(t)t.textContent=this.on?'🔊':'🔇';const m=document.getElementById('smmus');if(m)m.lastChild.textContent='Музыка: '+(this.on?'вкл':'выкл');}};
+ ui(){const t=document.getElementById('trm');if(t)t.textContent=this.on?'🔊':'🔇';const m=document.getElementById('smmus');if(m)m.lastChild.textContent='Music: '+(this.on?'on':'off');}};
 ['pointerdown','keydown'].forEach(ev=>addEventListener(ev,function f(){Music.play();removeEventListener('pointerdown',f);removeEventListener('keydown',f);},{once:true}));
 Music.ui();
 
-// ===================== АККАУНТ / ОБЛАКО =====================
+// ===================== ACCOUNT / CLOUD =====================
 const Cloud={api:'https://ballfight-api.onrender.com',auth:null,epoch:+(localStorage.getItem('bf_epoch')||0),epochOk:false,
  applyEpoch(e){e=e|0;if(e>this.epoch){const had=localStorage.getItem(SAVE_KEY)!==null;['ballfight_save_v1','bf_rw','bf_snake','bf_replay'].forEach(k=>{try{localStorage.removeItem(k);}catch(x){}});
    save=defSave();save._t=0;save._epoch=e;try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(x){}if(typeof updTray==='function')updTray();
-   if(had&&typeof toast==='function')toast('🔄 Сброс прогресса','Прогресс всех игроков обнулён. Начинаем заново!');}
+   if(had&&typeof toast==='function')toast('🔄 Progress reset','Everyone’s progress has been wiped. Fresh start!');}
   this.epoch=Math.max(this.epoch,e);try{localStorage.setItem('bf_epoch',String(this.epoch));}catch(x){}save._epoch=this.epoch;this.epochOk=true;},
  async checkEpoch(){try{const j=await this.req('/api/epoch');this.applyEpoch(j.epoch);}catch(e){}return this.epochOk;},state:'off',msg:'',timer:0,busy:false,last:null,
  load(){try{this.auth=JSON.parse(localStorage.getItem('ballfight_auth'))||null;}catch(e){this.auth=null;}},
  store(){try{if(this.auth)localStorage.setItem('ballfight_auth',JSON.stringify(this.auth));else localStorage.removeItem('ballfight_auth');}catch(e){}},
  async req(path,method,body,ms){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms||75000);
-  const slow=setTimeout(()=>this.set('wake','Сервер просыпается… (бесплатный хостинг, до ~60 с)'),2500);
+  const slow=setTimeout(()=>this.set('wake','Server is waking up… (free hosting, up to ~60s)'),2500);
   try{const r=await fetch(this.api+path,{method:method||'GET',signal:c.signal,headers:Object.assign({'Content-Type':'application/json'},this.auth?{Authorization:'Bearer '+this.auth.token}:{}),body:body?JSON.stringify(body):undefined});
    let j={};try{j=await r.json();}catch(e){}if(r.status===401&&this.auth&&path!=='/api/login'){this.auth=null;this.store();}
-   if(!r.ok)throw Object.assign(new Error(j.error||('Ошибка '+r.status)),{status:r.status,data:j});return j;}
-  catch(e){if(e.name==='AbortError')throw new Error('Сервер не отвечает. Попробуйте позже.');if(e instanceof TypeError)throw new Error('Нет связи с сервером');throw e;}
+   if(!r.ok)throw Object.assign(new Error(j.error||('Error '+r.status)),{status:r.status,data:j});return j;}
+  catch(e){if(e.name==='AbortError')throw new Error('Server isn’t responding. Try again later.');if(e instanceof TypeError)throw new Error('Can’t reach the server');throw e;}
   finally{clearTimeout(t);clearTimeout(slow);}},
  set(st,msg){this.state=st;this.msg=msg||'';this.ui();},
- ui(){const t=document.getElementById('tra');if(t){t.textContent=this.auth?(this.state==='wake'||this.state==='sync'?'⏳ ':this.state==='err'?'⚠️ ':'☁️ ')+this.auth.nick:'👤 Гость';t.title=this.msg||'Аккаунт';}
+ ui(){const t=document.getElementById('tra');if(t){t.textContent=this.auth?(this.state==='wake'||this.state==='sync'?'⏳ ':this.state==='err'?'⚠️ ':'☁️ ')+this.auth.nick:'👤 Guest';t.title=this.msg||'Account';}
   const m=document.getElementById('accst');if(m)m.textContent=this.msg;},
- summary(s){return s?`ур. игрока ${s.plvl||1}, 🪙${s.coins||0}, шаров ${Object.keys(s.owned||{}).length}, уровней ${Math.min(60,Math.max(0,(s.unlocked||1)-1))}/60`:'—';},
+ summary(s){return s?`player Lv.${s.plvl||1}, 🪙${s.coins||0}, balls ${Object.keys(s.owned||{}).length}, levels ${Math.min(60,Math.max(0,(s.unlocked||1)-1))}/60`:'—';},
  adopt(cs){save=migrate(cs);try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}updTray();},
  queue(){if(!this.auth||this.applying)return;clearTimeout(this.timer);this.timer=setTimeout(()=>this.push(),3000);},
- async push(){if(!this.auth)return;if(!this.epochOk&&!await this.checkEpoch()){this.set('err','Облако недоступно');return;}save._epoch=this.epoch;if(this.busy){this.queue();return;}this.busy=true;this.set('sync','Сохранение в облако…');
-  try{const j=await this.req('/api/save','PUT',{save});this.last=new Date(j.updated);this.set('ok','Сохранено в облаке '+this.last.toLocaleTimeString('ru-RU'));}
-  catch(e){if(e.status===409&&e.data&&e.data.error==='epoch'){this.applyEpoch(e.data.epoch);this.busy=false;return this.push();}this.set('err','Облако: '+e.message);}finally{this.busy=false;}},
+ async push(){if(!this.auth)return;if(!this.epochOk&&!await this.checkEpoch()){this.set('err','Cloud unavailable');return;}save._epoch=this.epoch;if(this.busy){this.queue();return;}this.busy=true;this.set('sync','Saving to cloud…');
+  try{const j=await this.req('/api/save','PUT',{save});this.last=new Date(j.updated);this.set('ok','Saved to cloud '+this.last.toLocaleTimeString('en-US'));}
+  catch(e){if(e.status===409&&e.data&&e.data.error==='epoch'){this.applyEpoch(e.data.epoch);this.busy=false;return this.push();}this.set('err','Cloud: '+e.message);}finally{this.busy=false;}},
  async afterLogin(j){this.auth={token:j.token,nick:j.nick};this.store();if(j.epoch!=null)this.applyEpoch(j.epoch);
   const cs=j.save,hasLocal=(save.stats&&save.stats.matches>0)||ownedIds().length>3||save.coins!==100;
-  if(!cs){await this.push();toast('☁️ Вход выполнен','Прогресс этого устройства сохранён в облако');UI.account();return;}
-  if(!hasLocal||JSON.stringify(Object.assign({},cs,{_t:0}))===JSON.stringify(Object.assign({},save,{_t:0}))){this.adopt(cs);this.set('ok','Загружено из облака');toast('☁️ Вход выполнен','Прогресс загружен из облака');UI.account();return;}
-  openWin('accpick','Какое сохранение использовать?',`<div class="inset" style="font-size:13px">В облаке и на этом устройстве разные сохранения. Выберите одно — второе будет заменено.<br><br>
-   <b>☁️ Облако:</b> ${this.summary(cs)}<br><b>💻 Это устройство:</b> ${this.summary(save)}</div>
-   <div style="text-align:center;margin-top:10px"><button onclick="Cloud.choose(1)">☁️ Взять из облака</button> <button onclick="Cloud.choose(0)">💻 Оставить это устройство</button></div>`,{w:460,icon:'☁️',modal:1});
+  if(!cs){await this.push();toast('☁️ Signed in','This device’s progress was saved to the cloud');UI.account();return;}
+  if(!hasLocal||JSON.stringify(Object.assign({},cs,{_t:0}))===JSON.stringify(Object.assign({},save,{_t:0}))){this.adopt(cs);this.set('ok','Loaded from cloud');toast('☁️ Signed in','Progress loaded from the cloud');UI.account();return;}
+  openWin('accpick','Which save do you want?',`<div class="inset" style="font-size:13px">The cloud and this device have different saves. Pick one — the other will be replaced.<br><br>
+   <b>☁️ Cloud:</b> ${this.summary(cs)}<br><b>💻 This device:</b> ${this.summary(save)}</div>
+   <div style="text-align:center;margin-top:10px"><button onclick="Cloud.choose(1)">☁️ Use cloud save</button> <button onclick="Cloud.choose(0)">💻 Keep this device</button></div>`,{w:460,icon:'☁️',modal:1});
   this.pending=cs;},
- choose(c){closeWin('accpick');if(c)this.adopt(this.pending);else this.push();this.pending=null;this.set('ok',c?'Загружено из облака':'Сохранение устройства отправлено в облако');UI.account();},
+ choose(c){closeWin('accpick');if(c)this.adopt(this.pending);else this.push();this.pending=null;this.set('ok',c?'Loaded from cloud':'Device save uploaded to the cloud');UI.account();},
  async go(kind){const nick=document.getElementById('accn').value.trim(),pass=document.getElementById('accp').value;
-  document.querySelectorAll('#w_account button').forEach(b=>b.disabled=true);this.set('sync','Подключение…');
+  document.querySelectorAll('#w_account button').forEach(b=>b.disabled=true);this.set('sync','Connecting…');
   try{const j=await this.req('/api/'+kind,'POST',{nick,pass});await this.afterLogin(j);}
   catch(e){this.set('err',e.message);}finally{document.querySelectorAll('#w_account button').forEach(b=>b.disabled=false);}},
- async logout(){try{await this.req('/api/logout','POST',{},10000);}catch(e){}this.auth=null;this.store();this.set('off','');UI.account();toast('Вы вышли','Игра продолжается в гостевом режиме');},
- async startup(){this.load();this.ui();const ok=await this.checkEpoch();if(!this.auth)return;if(!ok){this.set('err','Облако недоступно');return;}this.set('sync','Синхронизация…');
+ async logout(){try{await this.req('/api/logout','POST',{},10000);}catch(e){}this.auth=null;this.store();this.set('off','');UI.account();toast('Signed out','You’re playing as a guest now');},
+ async startup(){this.load();this.ui();const ok=await this.checkEpoch();if(!this.auth)return;if(!ok){this.set('err','Cloud unavailable');return;}this.set('sync','Syncing…');
   try{const j=await this.req('/api/save');if(j.epoch!=null)this.applyEpoch(j.epoch);const cs=j.save;
-   if(cs&&(cs._t||0)>(save._t||0)){this.applying=true;this.adopt(cs);this.applying=false;this.set('ok','Загружено из облака');}
-   else if(!cs||(save._t||0)>(cs._t||0))await this.push();else this.set('ok','Синхронизировано');}
-  catch(e){this.set(this.auth?'err':'off',this.auth?'Облако: '+e.message:'Сессия истекла — войдите снова');}}};
+   if(cs&&(cs._t||0)>(save._t||0)){this.applying=true;this.adopt(cs);this.applying=false;this.set('ok','Loaded from cloud');}
+   else if(!cs||(save._t||0)>(cs._t||0))await this.push();else this.set('ok','Synced');}
+  catch(e){this.set(this.auth?'err':'off',this.auth?'Cloud: '+e.message:'Session expired — sign in again');}}};
 UI.account=function(){const a=Cloud.auth;
- openWin('account','Аккаунт',a?`<div class="inset" style="font-size:13px">Вы вошли как <b>${a.nick.replace(/[<>&]/g,'')}</b>.<br>Прогресс автоматически сохраняется в облако после матчей и покупок и доступен на любом устройстве.<br><br>Текущий прогресс: ${Cloud.summary(save)}</div>
-  <div id="accst" class="hint" style="margin:8px 0;min-height:16px"></div><div style="text-align:center"><button onclick="Cloud.push()">☁️ Сохранить сейчас</button> <button onclick="Cloud.logout()">Выйти</button></div>`
- :`<div class="inset" style="font-size:13px">Войдите, чтобы прогресс синхронизировался между устройствами. Без входа игра работает в гостевом режиме (сохранение только в этом браузере).</div>
-  <table style="margin:10px auto;font-size:13px"><tr><td>Ник:</td><td><input id="accn" maxlength="16" autocomplete="username" style="width:180px"></td></tr><tr><td>Пароль:</td><td><input id="accp" type="password" maxlength="72" autocomplete="current-password" style="width:180px" onkeydown="if(event.key==='Enter')Cloud.go('login')"></td></tr></table>
+ openWin('account','Account',a?`<div class="inset" style="font-size:13px">Signed in as <b>${a.nick.replace(/[<>&]/g,'')}</b>.<br>Progress auto-saves to the cloud after matches and purchases and works on any device.<br><br>Current progress: ${Cloud.summary(save)}</div>
+  <div id="accst" class="hint" style="margin:8px 0;min-height:16px"></div><div style="text-align:center"><button onclick="Cloud.push()">☁️ Save now</button> <button onclick="Cloud.logout()">Exit</button></div>`
+ :`<div class="inset" style="font-size:13px">Sign in to sync progress across devices. Without an account you play as a guest (saved in this browser only).</div>
+  <table style="margin:10px auto;font-size:13px"><tr><td>Nickname:</td><td><input id="accn" maxlength="16" autocomplete="username" style="width:180px"></td></tr><tr><td>Password:</td><td><input id="accp" type="password" maxlength="72" autocomplete="current-password" style="width:180px" onkeydown="if(event.key==='Enter')Cloud.go('login')"></td></tr></table>
   <div id="accst" class="hint" style="margin:4px 0 8px;min-height:16px;text-align:center"></div>
-  <div style="text-align:center"><button onclick="Cloud.go('login')">🔑 Войти</button> <button onclick="Cloud.go('register')">📝 Регистрация</button> <button onclick="closeWin('account')">Гость</button></div>
-  <p class="hint" style="font-size:11px">Ник 3–16 символов, пароль от 6 символов. Первый вход может занять до минуты — бесплатный сервер просыпается.</p>`,{w:440,icon:'👤'});Cloud.ui();};
+  <div style="text-align:center"><button onclick="Cloud.go('login')">🔑 Sign in</button> <button onclick="Cloud.go('register')">📝 Sign up</button> <button onclick="closeWin('account')">Guest</button></div>
+  <p class="hint" style="font-size:11px">Nickname 3–16 characters, password 6+. First sign-in can take up to a minute — the free server is waking up.</p>`,{w:440,icon:'👤'});Cloud.ui();};
 Cloud.startup();
 </script>
 <script src="games98.js"></script>
 <script src="apps98.js"></script>
 <script src="fun98.js"></script>
-<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="prog98.js"></script><script src="qol98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script><script src="iso98.js"></script><script src="bz98.js"></script><script src="ui98.js"></script><script src="theme98.js"></script><script src="nav98.js"></script><script src="mobile98.js"></script>
+<script src="logos98.js"></script><script src="social98.js"></script><script src="events98.js"></script><script src="ie98.js"></script><script src="prog98.js"></script><script src="qol98.js"></script><script src="win98.js"></script><script src="icons98.js"></script><script src="verity98.js"></script><script src="iconstyles98.js"></script><script src="iso98.js"></script><script src="bz98.js"></script><script src="ui98.js"></script><script src="theme98.js"></script><script src="fresh98.js"></script><script src="nav98.js"></script><script src="mobile98.js"></script>
 </body></html>

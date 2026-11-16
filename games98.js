@@ -1,9 +1,9 @@
 'use strict';
-// ===================== САПЁР =====================
-const Mines={lv:{b:[9,9,10,'Новичок',5],i:[16,16,40,'Любитель',10],e:[30,16,99,'Профессионал',20]},cur:'b',
+// ===================== MINESWEEPER =====================
+const Mines={lv:{b:[9,9,10,'Beginner',5],i:[16,16,40,'Intermediate',10],e:[30,16,99,'Expert',20]},cur:'b',
  open(l){if(l)this.cur=l;const [W,H,M,n]=this.lv[this.cur];Object.assign(this,{W,H,M,grid:[],st:'ready',t:0,flags:0,opened:0});clearInterval(this.ti);
   for(let i=0;i<W*H;i++)this.grid.push({m:0,o:0,f:0,n:0});
-  openWin('mines','Сапёр',`<div style="font-size:12px;margin:-4px 0 6px">${Object.entries(this.lv).map(([k,v])=>`<a href="#" onclick="Mines.open('${k}');return false" style="margin-right:10px;color:#000;${k===this.cur?'font-weight:bold':''}">${v[3]}</a>`).join('')}</div>
+  openWin('mines','Minesweeper',`<div style="font-size:12px;margin:-4px 0 6px">${Object.entries(this.lv).map(([k,v])=>`<a href="#" onclick="Mines.open('${k}');return false" style="margin-right:10px;color:#000;${k===this.cur?'font-weight:bold':''}">${v[3]}</a>`).join('')}</div>
   <div class="ms"><div class="hd"><div class="lcd" id="msm"></div><button class="sm" id="mss" onclick="Mines.open()">🙂</button><div class="lcd" id="mst">000</div></div>
   <div class="gr" id="msg" style="grid-template-columns:repeat(${W},22px)" oncontextmenu="return false"></div></div>`,{w:Math.max(260,W*22+40),icon:'💣'});
   const g=document.getElementById('msg');g.innerHTML=this.grid.map((_,i)=>`<div class="c" data-i="${i}"></div>`).join('');
@@ -21,12 +21,12 @@ const Mines={lv:{b:[9,9,10,'Новичок',5],i:[16,16,40,'Любитель',10
   if(this.opened===this.W*this.H-this.M)this.end(true);},
  chord(i){const c=this.grid[i];if(!c.n||this.nb(i).filter(j=>this.grid[j].f).length!==c.n)return;for(const j of this.nb(i))if(this.st==='play')this.reveal(j);},
  end(win){this.st='over';clearInterval(this.ti);document.getElementById('mss').textContent=win?'😎':'😵';this.grid.forEach(c=>{if(c.m&&!c.f&&!win)c.o=1;if(c.m&&win)c.f=1;});
-  if(win){Sfx.startup();Reward.give('mines',this.lv[this.cur][4],'💣 Сапёр пройден! '+this.lv[this.cur][3]+' за '+this.t+' с');}else Sfx.error();this.draw();},
+  if(win){Sfx.startup();Reward.give('mines',this.lv[this.cur][4],'💣 Minesweeper cleared! '+this.lv[this.cur][3]+' in '+this.t+' s');}else Sfx.error();this.draw();},
  draw(){const g=document.getElementById('msg');if(!g)return;const col=['','#00f','#080','#f00','#008','#800','#088','#000','#888'];
   g.querySelectorAll('.c').forEach((el,i)=>{const c=this.grid[i];el.className='c'+(c.o?' o':'')+(c.boom?' boom':'');el.style.color=col[c.n]||'';
    el.textContent=c.o?(c.m?'💣':(c.n||'')):(c.f?'🚩':'');if(this.st==='over'&&c.f&&!c.m){el.textContent='❌';}});
   const m=document.getElementById('msm');if(m)m.textContent=String(Math.max(-99,this.M-this.flags)).padStart(3,'0');}};
-// ===================== ШАХМАТЫ =====================
+// ===================== CHESS =====================
 const CE={V:{p:100,n:320,b:330,r:500,q:900,k:0},
  init(){const r='rnbqkbnr';const b=[];for(let i=0;i<8;i++)b.push(r[i]);for(let i=0;i<8;i++)b.push('p');for(let i=0;i<32;i++)b.push('');for(let i=0;i<8;i++)b.push('P');for(let i=0;i<8;i++)b.push(r[i].toUpperCase());return {b,w:true,cr:'KQkq',ep:-1,hm:0};},
  isW:p=>p&&p===p.toUpperCase(),
@@ -65,10 +65,10 @@ const CE={V:{p:100,n:320,b:330,r:500,q:900,k:0},
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-bt,-a);if(v>a)a=v;if(a>=bt)break;}return a;},
  best(s,d,noise){const ms=this.legal(s);let best=null,bv=-1e9;ms.sort(()=>Math.random()-.5);
   for(const m of ms){const v=-this.search(this.apply(s,m),d-1,-1e9,1e9)+(noise?Math.random()*noise:0)+(m.pr&&m.pr!=='q'?-500:0);if(v>bv){bv=v;best=m;}}return best;}};
-const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёгкий',1,60,10],['Средний',2,15,20],['Сложный',3,0,40]],ai:0,hw:true,flip:false,
- open(){openWin('chess','Шахматы',`<div class="chtool"><label>Соперник: <select id="chai" onchange="Chess.cfg()">${this.lvls.map((l,i)=>`<option value="${i}">🤖 Компьютер — ${l[0]}</option>`).join('')}<option value="-1">👥 Вдвоём</option></select></label>
-  <label id="chcolw">Цвет: <select id="chcol" onchange="Chess.cfg()"><option value="w">♔ Белые</option><option value="b">♚ Чёрные</option></select></label>
-  <button onclick="Chess.start()">🆕 Новая игра</button><button onclick="Chess.undo()" title="Отменить ход">↶</button><button onclick="Chess.flip=!Chess.flip;Chess.draw()" title="Перевернуть доску">⇅</button></div>
+const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Easy',1,60,10],['Medium',2,15,20],['Hard',3,0,40]],ai:0,hw:true,flip:false,
+ open(){openWin('chess','Chess',`<div class="chtool"><label>Opponent: <select id="chai" onchange="Chess.cfg()">${this.lvls.map((l,i)=>`<option value="${i}">🤖 Computer — ${l[0]}</option>`).join('')}<option value="-1">👥 2 players</option></select></label>
+  <label id="chcolw">Color: <select id="chcol" onchange="Chess.cfg()"><option value="w">♔ White</option><option value="b">♚ Black</option></select></label>
+  <button onclick="Chess.start()">🆕 New game</button><button onclick="Chess.undo()" title="Undo move">↶</button><button onclick="Chess.flip=!Chess.flip;Chess.draw()" title="Flip board">⇅</button></div>
   <div class="ch"><div class="bwrap"><div class="cap" id="chcapT"></div><div class="bdo"><div class="bd" id="chb"></div><div class="over hide" id="chover"></div></div><div class="cap" id="chcapB"></div></div>
   <div class="side"><div class="inset log" id="chlog"></div><div id="chpr"></div></div></div><div class="sbar"><span id="chst"></span><span id="chmv"></span></div>`,{w:640,icon:'♞'});
   const w=document.getElementById('w_chess');if(!w.dataset.ro){w.dataset.ro=1;new ResizeObserver(()=>this.fit()).observe(w);}
@@ -92,16 +92,16 @@ const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёг�
   const cp=this.caps();const top=this.flip?'w':'b';// top player's captured pieces: those they took = opponent pieces
   document.getElementById('chcapT').innerHTML=cp[top==='w'?'b':'w']||'&nbsp;';document.getElementById('chcapB').innerHTML=cp[top]||'&nbsp;';
   let st,end=null;
-  if(!ms.length){end=CE.inCheck(s,s.w)?{w:!s.w,t:'Мат!'}:{w:null,t:'Пат — ничья'};}
-  else if(s.hm>=100)end={w:null,t:'Ничья (правило 50 ходов)'};else if(this.insuf())end={w:null,t:'Ничья — недостаточно фигур'};
-  if(end){st=end.t;this.finish(end);}else st=this.thinking?'🤔 Компьютер думает…':`Ход ${s.w?'белых ♔':'чёрных ♚'}${this.ai>=0?(this.human()?' (ваш ход)':''):''}${ck>=0?' — ШАХ!':''}`;
-  document.getElementById('chst').textContent=st;document.getElementById('chmv').textContent=`Ход №${Math.floor(this.log.length/2)+1} · ${this.ai>=0?'vs '+this.lvls[this.ai][0]:'Вдвоём'}`;
-  const lg=document.getElementById('chlog');let h='<table>';for(let i=0;i<this.log.length;i+=2)h+=`<tr><td>${i/2+1}.</td><td>${this.log[i]}</td><td>${this.log[i+1]||''}</td></tr>`;lg.innerHTML=(this.log.length?h+'</table>':'<i style="color:#808080">Ходов пока нет</i>');lg.scrollTop=1e5;
-  document.getElementById('chpr').innerHTML=this.pend?'<b>Превратить пешку в:</b><br>'+'qrbn'.split('').map(q=>`<button class="prb" onclick="Chess.promo('${q}')">${this.glyph(s.w?q.toUpperCase():q)}</button>`).join(''):'';},
+  if(!ms.length){end=CE.inCheck(s,s.w)?{w:!s.w,t:'Checkmate!'}:{w:null,t:'Stalemate — draw'};}
+  else if(s.hm>=100)end={w:null,t:'Draw (50-move rule)'};else if(this.insuf())end={w:null,t:'Draw — insufficient material'};
+  if(end){st=end.t;this.finish(end);}else st=this.thinking?'🤔 Computer is thinking…':`Move ${s.w?'white ♔':'black ♚'}${this.ai>=0?(this.human()?' (your move)':''):''}${ck>=0?' — CHECK!':''}`;
+  document.getElementById('chst').textContent=st;document.getElementById('chmv').textContent=`Move #${Math.floor(this.log.length/2)+1} · ${this.ai>=0?'vs '+this.lvls[this.ai][0]:'Couch 1v1'}`;
+  const lg=document.getElementById('chlog');let h='<table>';for(let i=0;i<this.log.length;i+=2)h+=`<tr><td>${i/2+1}.</td><td>${this.log[i]}</td><td>${this.log[i+1]||''}</td></tr>`;lg.innerHTML=(this.log.length?h+'</table>':'<i style="color:#808080">No moves yet</i>');lg.scrollTop=1e5;
+  document.getElementById('chpr').innerHTML=this.pend?'<b>Promote pawn to:</b><br>'+'qrbn'.split('').map(q=>`<button class="prb" onclick="Chess.promo('${q}')">${this.glyph(s.w?q.toUpperCase():q)}</button>`).join(''):'';},
  insuf(){const p=this.s.b.filter(x=>x&&x.toLowerCase()!=='k');return !p.length||(p.length===1&&'nb'.includes(p[0].toLowerCase()));},
  finish(end){if(this.over)return;this.over=true;let msg=end.t,ico='🤝';
-  if(end.w!==null){const wn=end.w?'белые':'чёрные';if(this.ai>=0){if(end.w===this.hw){const r=Reward.give('chess',this.lvls[this.ai][3],'♞ Победа в шахматах');msg+=r?` Вы победили! +${r} 🪙`:' Вы победили! (лимит наград на сегодня)';ico='🏆';Sfx.startup();}else{msg+=' Компьютер победил.';ico='💀';Sfx.error();}}else{msg+=` Победили ${wn}.`;ico='🏆';Sfx.ding();}}else Sfx.ding();
-  const o=document.getElementById('chover');o.innerHTML=`<div class="dlgw"><div class="tb"><span>♞ Партия окончена</span></div><div style="padding:10px;text-align:center"><div style="font-size:34px">${ico}</div><div style="margin:6px 0 10px">${msg}</div><button onclick="Chess.start()">Новая игра</button> <button onclick="document.getElementById('chover').classList.add('hide')">Смотреть доску</button></div></div>`;
+  if(end.w!==null){const wn=end.w?'white':'black';if(this.ai>=0){if(end.w===this.hw){const r=Reward.give('chess',this.lvls[this.ai][3],'♞ Chess win');msg+=r?` You win! +${r} 🪙`:' You win! (daily reward limit reached)';ico='🏆';Sfx.startup();}else{msg+=' Computer wins.';ico='💀';Sfx.error();}}else{msg+=` Winner: ${wn}.`;ico='🏆';Sfx.ding();}}else Sfx.ding();
+  const o=document.getElementById('chover');o.innerHTML=`<div class="dlgw"><div class="tb"><span>♞ Game over</span></div><div style="padding:10px;text-align:center"><div style="font-size:34px">${ico}</div><div style="margin:6px 0 10px">${msg}</div><button onclick="Chess.start()">New game</button> <button onclick="document.getElementById('chover').classList.add('hide')">View board</button></div></div>`;
   setTimeout(()=>o.classList.remove('hide'),400);},
  down(e){const q=e.target.closest('.q');if(!q||this.over||this.pend||this.thinking||!this.human())return;e.preventDefault();const i=+q.dataset.i,s=this.s,p=s.b[i];
   if(this.sel>=0&&this.tryMove(this.sel,i))return;
@@ -116,7 +116,7 @@ const Chess={G:{p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'},lvls:[['Лёг�
   addEventListener('pointermove',mv);addEventListener('pointerup',up);},
  tryMove(f,t){const ms=CE.legal(this.s).filter(m=>m.f===f&&m.t===t);if(!ms.length)return false;if(ms.length>1){this.pend=ms;this.sel=f;this.draw();return true;}this.make(ms[0]);return true;},
  promo(q){const m=this.pend.find(x=>x.pr===q);this.pend=null;this.make(m);},
- san(s,m){const p=s.b[m.f].toLowerCase();if(m.cs)return (m.t&7)===6?'O-O':'O-O-O';const cap=s.b[m.t]||m.ep;const L={n:'К',b:'С',r:'Л',q:'Ф',k:'Кр'};return (p==='p'?(cap?'abcdefgh'[m.f&7]:''):L[p])+(cap?'x':'')+this.sqName(m.t)+(m.pr?'='+L[m.pr]:'');},
+ san(s,m){const p=s.b[m.f].toLowerCase();if(m.cs)return (m.t&7)===6?'O-O':'O-O-O';const cap=s.b[m.t]||m.ep;const L={n:'N',b:'B',r:'R',q:'Q',k:'K'};return (p==='p'?(cap?'abcdefgh'[m.f&7]:''):L[p])+(cap?'x':'')+this.sqName(m.t)+(m.pr?'='+L[m.pr]:'');},
  make(m){const cap=this.s.b[m.t]||m.ep;this.hist.push({s:this.s,log:this.log.slice(),last:this.last});let n=this.san(this.s,m);this.s=CE.apply(this.s,m);if(CE.inCheck(this.s,this.s.w))n+=CE.legal(this.s).length?'+':'#';this.log.push(n);this.last=m;this.sel=-1;
   Sfx.tone(cap?300:520,0,.06,'square',.06);this.draw();this.aiTurn();},
  aiTurn(){if(this.ai<0||this.over||this.human())return;this.thinking=true;this.draw();const tok=this.tok=(this.tok||0)+1;
