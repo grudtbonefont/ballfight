@@ -979,7 +979,7 @@ Music.ui();
 
 // ===================== ACCOUNT / CLOUD =====================
 const Cloud={api:'https://ballfight-api.onrender.com',auth:null,epoch:+(localStorage.getItem('bf_epoch')||0),epochOk:false,
- applyEpoch(e){e=e|0;if(e>this.epoch){const had=localStorage.getItem(SAVE_KEY)!==null;['ballfight_save_v1','bf_rw','bf_snake','bf_replay'].forEach(k=>{try{localStorage.removeItem(k);}catch(x){}});
+ applyEpoch(e){e=e|0;/* Nov 6–16 2026 the cloud DB was down and /api/epoch reported 0: players first seen then are already post-wipe — adopt epoch 1 without wiping */const outage=e===1&&localStorage.getItem('bf_epoch')==='0';if(e>this.epoch&&!outage){const had=localStorage.getItem(SAVE_KEY)!==null;['ballfight_save_v1','bf_rw','bf_snake','bf_replay'].forEach(k=>{try{localStorage.removeItem(k);}catch(x){}});
    save=defSave();save._t=0;save._epoch=e;try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(x){}if(typeof updTray==='function')updTray();
    if(had&&typeof toast==='function')toast('🔄 Progress reset','Everyone’s progress has been wiped. Fresh start!');}
   this.epoch=Math.max(this.epoch,e);try{localStorage.setItem('bf_epoch',String(this.epoch));}catch(x){}save._epoch=this.epoch;this.epochOk=true;},
